@@ -54,13 +54,9 @@
       <div class="flex-1 flex flex-col">
         <MainEditor />
         
-        <div class="flex">
-          <div class="flex-1">
-            <ActionButtons />
-          </div>
-          <div class="w-80">
-            <WorkFolders />
-          </div>
+        <div class="flex flex-col">
+          <ActionButtons />
+          <WorkFolders />
         </div>
       </div>
     </div>
