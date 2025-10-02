@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import ActionButtons from './components/ActionButtons.svelte';
   import Header from './components/Header.svelte';
-  import { apiService } from './lib/api.ts';
+  import MainEditor from './components/MainEditor.svelte';
+  import Sidebar from './components/Sidebar.svelte';
+  import WorkFolders from './components/WorkFolders.svelte';
+  import { apiService } from './lib/api';
 
   let isLoading = true;
   let error: string | null = null;
@@ -18,30 +22,47 @@
   });
 </script>
 
-<main class="max-w-6xl mx-auto p-5 font-sans">
+<div class="h-screen flex flex-col bg-gray-900 text-white font-sans">
   <Header />
-
+  
   {#if isLoading}
-    <div class="flex flex-col items-center justify-center min-h-96 gap-5">
+    <div class="flex-1 flex flex-col items-center justify-center gap-5">
       <div
-        class="w-10 h-10 border-4 border-gray-200 border-t-primary-500 rounded-full animate-spin"
+        class="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin"
       ></div>
-      <p class="text-gray-600">Loading application...</p>
+      <p class="text-gray-400">Loading application...</p>
     </div>
   {:else if error}
-    <div
-      class="text-center p-10 bg-red-50 border border-red-200 rounded-lg text-red-700"
-    >
-      <h2 class="text-xl font-semibold mb-2">Connection Error</h2>
-      <p class="mb-4">{error}</p>
-      <button
-        class="px-5 py-2.5 bg-red-600 text-white border-0 rounded cursor-pointer hover:bg-red-700 transition-colors"
-        onclick={() => window.location.reload()}
+    <div class="flex-1 flex items-center justify-center">
+      <div
+        class="text-center p-10 bg-red-900 border border-red-700 rounded-lg text-red-300 max-w-md"
       >
-        Retry
-      </button>
+        <h2 class="text-xl font-semibold mb-2">Connection Error</h2>
+        <p class="mb-4">{error}</p>
+        <button
+          class="px-5 py-2.5 bg-red-600 text-white border-0 rounded cursor-pointer hover:bg-red-700 transition-colors"
+          onclick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
     </div>
   {:else}
-    <div>Application loaded successfully</div>
+    <div class="flex-1 flex overflow-hidden">
+      <Sidebar />
+      
+      <div class="flex-1 flex flex-col">
+        <MainEditor />
+        
+        <div class="flex">
+          <div class="flex-1">
+            <ActionButtons />
+          </div>
+          <div class="w-80">
+            <WorkFolders />
+          </div>
+        </div>
+      </div>
+    </div>
   {/if}
-</main>
+</div>

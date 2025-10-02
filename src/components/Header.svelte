@@ -1,58 +1,37 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { apiService } from '../lib/api';
-
-  let healthStatus = 'Checking...';
-  let lastCheck = '';
-
-  onMount(async () => {
-    await checkHealth();
-    // Check API health every 30 seconds
-    setInterval(checkHealth, 30000);
-  });
-
-  async function checkHealth() {
-    try {
-      const response = await apiService.healthCheck();
-      healthStatus = 'Connected';
-      lastCheck = new Date().toLocaleTimeString();
-    } catch (error) {
-      healthStatus = 'Disconnected';
-      lastCheck = new Date().toLocaleTimeString();
-    }
-  }
+  let currentProject = 'Aucun projet chargé';
 </script>
 
-<header class="bg-white shadow-lg mb-8 rounded-lg overflow-hidden">
-  <div class="flex justify-between items-center p-6 flex-wrap gap-5">
-    <div class="title-section">
-      <h1 class="text-gray-800 text-3xl mb-1 font-bold">
-        🚀 PyWebView + Svelte 5
-      </h1>
-      <p class="text-gray-600 text-base">
-        Modern desktop application with Python and TypeScript
-      </p>
-    </div>
-
-    <div class="flex flex-col items-end gap-1">
-      <div
-        class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border-2 border-gray-200 transition-all duration-300"
-        class:bg-green-50={healthStatus === 'Connected'}
-        class:border-green-200={healthStatus === 'Connected'}
-        class:text-green-800={healthStatus === 'Connected'}
-      >
-        <div
-          class="w-2 h-2 rounded-full bg-gray-400 transition-all duration-300"
-          class:bg-green-500={healthStatus === 'Connected'}
-          class:animate-pulse={healthStatus === 'Connected'}
-        ></div>
-        <span class="text-sm font-medium">{healthStatus}</span>
+<header class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700">
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
+        RE
       </div>
-      {#if lastCheck}
-        <small class="text-gray-500 text-xs"
-          >Last check: {lastCheck}</small
-        >
-      {/if}
+      <div>
+        <h1 class="text-lg font-bold">RenExtract</h1>
+        <p class="text-xs text-gray-400">v2.0.0 WebView</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2 ml-8">
+      <span class="text-yellow-500">📁</span>
+      <span class="text-sm">{currentProject}</span>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-medium transition-colors">
+      Parcourir
+    </button>
+    
+    <div class="flex items-center gap-2">
+      <button class="text-gray-400 hover:text-white transition-colors">Aide</button>
+      <button class="text-gray-400 hover:text-white transition-colors">Thème</button>
+      <select class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+        <option>FR Français</option>
+        <option>EN English</option>
+      </select>
     </div>
   </div>
 </header>

@@ -158,7 +158,18 @@ logs
 .Trashes
 ehthumbs.db
 Thumbs.db
+*Zone.Identifier
 
 # Build outputs
 dist/
 build/
+
+# Generated folder
+01_Temporary/
+02_Reports/
+03_Backups/
+04_Configs/
+
+# Backup files/folders
+*.bak
+*-bak/
