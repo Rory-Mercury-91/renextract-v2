@@ -109,6 +109,51 @@ def restore_backup(backup_id):
             'error': str(e)
         }), 500
 
+@app.route('/api/backups/<backup_id>/restore-to', methods=['POST'])
+def restore_backup_to(backup_id):
+    """Restaure une sauvegarde vers un chemin spécifique"""
+    try:
+        data = request.get_json()
+        if not data or 'target_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de destination requis'
+            }), 400
+        
+        target_path = data['target_path']
+        
+        # Trouver le backup dans les métadonnées
+        if backup_id not in backup_manager.metadata:
+            return jsonify({
+                'success': False,
+                'error': 'Sauvegarde introuvable'
+            }), 404
+        
+        backup = backup_manager.metadata[backup_id]
+        
+        # Vérifier que le répertoire de destination existe
+        target_dir = os.path.dirname(target_path)
+        if not os.path.exists(target_dir):
+            return jsonify({
+                'success': False,
+                'error': 'Répertoire de destination inexistant'
+            }), 400
+        
+        # Copier le fichier vers la destination
+        import shutil
+        shutil.copy2(backup['backup_path'], target_path)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Fichier restauré vers {target_path}'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/backups/<backup_id>', methods=['DELETE'])
 def delete_backup(backup_id):
     """Supprime une sauvegarde"""

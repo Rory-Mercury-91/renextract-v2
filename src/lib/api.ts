@@ -112,6 +112,21 @@ export const apiService = {
     }
   },
 
+  async restoreBackupTo(backupId: string, targetPath: string): Promise<BackupActionResponse> {
+    try {
+      const response = await api.post(`/backups/${backupId}/restore-to`, {
+        target_path: targetPath
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Restore Backup To Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
   async deleteBackup(backupId: string): Promise<BackupActionResponse> {
     try {
       const response = await api.delete(`/backups/${backupId}`);

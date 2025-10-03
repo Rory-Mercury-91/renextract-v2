@@ -114,6 +114,34 @@
     }
   }
 
+  async function restoreBackupTo(backup: any) {
+    // Ouvrir le dialogue de sélection de fichier
+    const result = await apiService.openFileDialog();
+    
+    if (!result.success || !result.path) {
+      return;
+    }
+
+    if (!confirm(`Restaurer la sauvegarde vers :\n\n• Destination : ${result.path}\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier de destination sera remplacé !`)) {
+      return;
+    }
+
+    try {
+      statusMessage = '🔄 Restauration vers destination en cours...';
+      const restoreResult = await apiService.restoreBackupTo(backup.id, result.path);
+      
+      if (restoreResult.success) {
+        statusMessage = '✅ Restauration vers destination terminée avec succès';
+      } else {
+        statusMessage = '❌ Erreur lors de la restauration vers destination';
+        alert(`Erreur : ${restoreResult.error}`);
+      }
+    } catch (err) {
+      statusMessage = '❌ Erreur lors de la restauration vers destination';
+      alert(`Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+    }
+  }
+
   async function deleteBackup(backup: any) {
     if (!confirm(`Supprimer définitivement cette sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Taille : ${formatSize(backup.size)}\n\nCette action est irréversible !`)) {
       return;
@@ -290,9 +318,16 @@
                       <button
                         class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
                         onclick={() => restoreBackup(backup)}
-                        title="Restaurer"
+                        title="Restaurer vers l'emplacement d'origine"
                       >
                         💾 Restaurer
+                      </button>
+                      <button
+                        class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
+                        onclick={() => restoreBackupTo(backup)}
+                        title="Restaurer vers un emplacement choisi"
+                      >
+                        📁 Restaurer vers
                       </button>
                       <button
                         class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
