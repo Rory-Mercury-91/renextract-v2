@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "RenExtract v2.0 - WebView Interface",
+    "branding": "RenExtract",
+    "version": "v2.0.0 WebView",
+    "no_project_loaded": "Aucun projet chargé",
+    "browse": "Parcourir",
+    "help": "Aide",
+    "theme": "Thème",
+    "language": "Langue"
+  },
+  "navigation": {
+    "generator": "Générateur",
+    "renextract": "RenExtract",
+    "tools": "Outils spécialisés",
+    "backup": "Sauvegarde",
+    "settings": "Paramètres"
+  },
+  "languages": {
+    "fr": "FR Français",
+    "en": "EN English",
+    "de": "DE Deutsch"
+  },
+  "themes": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "auto": "Auto"
+  },
+  "actions": {
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "ok": "OK",
+    "yes": "Oui",
+    "no": "Non"
+  }
+}

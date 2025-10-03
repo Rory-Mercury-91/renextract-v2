@@ -16,7 +16,7 @@ importers:
         specifier: 9.36.0
         version: 9.36.0
       '@iconify/svelte':
-        specifier: ^5.0.2
+        specifier: 5.0.2
         version: 5.0.2(svelte@5.39.8)
       '@lucide/svelte':
         specifier: 0.544.0

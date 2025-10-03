@@ -1,1 +1,257 @@
 @import 'tailwindcss';
+
+/* ===== SYSTÈME THÈME FORCÉ ===== */
+/* Force chaque classe Tailwind individuellement */
+
+/* Thème clair - TOUT BLANC */
+:root:not(.dark-mode) {
+  color-scheme: light !important;
+}
+
+:root:not(.dark-mode) * {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s !important;
+}
+
+/* Dark mode - TOUT NOIR */
+:root.dark-mode {
+  color-scheme: dark !important;
+}
+
+:root.dark-mode * {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s !important;
+}
+
+/* CSS Variables pour le système de thème */
+:root {
+  /* Thème clair - BLANC PUR et contrasté */
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8fafc;
+  --text-primary: #000000;
+  --text-secondary: #374151;
+  --border-color: #e5e7eb;
+  --accent-color: #3b82f6;
+  --button-bg-inactive: #f9fafb;
+  --button-text-inactive: #374151;
+  --button-bg-active: #3b82f6;
+  --button-text-active: #ffffff;
+  --select-bg: #ffffff;
+  --select-border: #d1d5db;
+  --header-bg: #ffffff;
+  --sidebar-bg: #f8fafc;
+}
+
+:root:not(.dark-mode) {
+  /* Thème clair - FORCÉ BLANC */
+  --bg-primary: #ffffff !important;
+  --bg-secondary: #ffffff !important;
+  --bg-tertiary: #f8fafc !important;
+  --text-primary: #000000 !important;
+  --text-secondary: #374151 !important;
+  --border-color: #e5e7eb !important;
+  --header-bg: #ffffff !important;
+  --sidebar-bg: #f8fafc !important;
+}
+
+:root.dark-mode {
+  /* Thème sombre - PLUS DOUX comme l'image originale */
+  --bg-primary: #1e293b;
+  --bg-secondary: #334155;
+  --bg-tertiary: #475569;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --border-color: #475569;
+  --accent-color: #60a5fa;
+  --button-bg-inactive: #475569;
+  --button-text-inactive: #cbd5e1;
+  --button-bg-active: #2563eb;
+  --button-text-active: #ffffff;
+  --select-bg: #334155;
+  --select-border: #64748b;
+  --header-bg: #334155;
+  --sidebar-bg: #1e293b;
+}
+
+/* Appliquer les variables globalement */
+:root {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Appliquer le thème à tous les éléments Tailwind */
+.dark-mode .bg-gray-900 { background-color: var(--bg-secondary) !important; }
+.dark-mode .bg-gray-800 { background-color: var(--bg-tertiary) !important; }
+.dark-mode .bg-gray-700 { background-color: var(--button-bg-inactive) !important; }
+.dark-mode .bg-gray-600 { background-color: var(--button-bg-inactive) !important; }
+
+.dark-mode .text-white { color: var(--text-primary) !important; }
+.dark-mode .text-gray-300 { color: var(--text-secondary) !important; }
+.dark-mode .text-gray-400 { color: var(--text-secondary) !important; }
+
+.dark-mode .border-gray-700 { border-color: var(--border-color) !important; }
+.dark-mode .border-gray-600 { border-color: var(--border-color) !important; }
+
+/* Header spécifique */
+.dark-mode header { 
+  background-color: var(--bg-tertiary) !important; 
+  color: var(--text-primary) !important; 
+}
+
+/* Sidebar spécifique */
+.dark-mode aside { 
+  background-color: var(--bg-tertiary) !important; 
+  color: var(--text-primary) !important; 
+}
+
+/* Main content */
+.dark-mode main { 
+  background-color: var(--bg-secondary) !important; 
+  color: var(--text-primary) !important; 
+}
+
+/* Styles unifiés pour boutons d'onglets */
+.tab-button {
+  background-color: var(--button-bg-inactive) !important;
+  color: var(--button-text-inactive) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.tab-button:hover {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.tab-button.active {
+  background-color: var(--button-bg-active) !important;
+  color: var(--button-text-active) !important;
+  border-color: var(--accent-color) !important;
+}
+
+/* Styles unifiés pour selects */
+.unified-select {
+  background-color: var(--select-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--select-border) !important;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.unified-select:focus {
+  outline: none !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+.unified-select option {
+  background-color: var(--select-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ===== STYLES SPÉCIFIQUES CONTRASTÉS ===== */
+
+/* Sections Paramètres */
+:not(.dark-mode) .settings-section {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.dark-mode .settings-section {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Checkboxes avec contraste fort */
+:not(.dark-mode) input[type="checkbox"] {
+  accent-color: #3b82f6 !important;
+}
+
+.dark-mode input[type="checkbox"] {
+  accent-color: #60a5fa !important;
+}
+
+/* Fix hover pour les cases à cocher en thème clair */
+:root:not(.dark-mode) label:hover {
+  background-color: var(--bg-tertiary) !important; /* Gris très clair au lieu de noir */
+  color: var(--text-primary) !important; /* Texte sombre */
+}
+
+/* Boutons avec contraste marqué */
+:not(.dark-mode) .action-button {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.dark-mode .action-button {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border: 1px solid #4b5563 !important;
+}
+
+/* Force les borders contrastées */
+:not(.dark-mode) .border-gray-700,
+:not(.dark-mode) .border-gray-600 { 
+  border-color: #e5e7eb !important; 
+}
+
+.dark-mode .border-gray-700,
+.dark-mode .border-gray-600 { 
+  border-color: #374151 !important; 
+}
+
+/* FORCE ABSOLUE PAR TYPE D'ÉLÉMENT */
+
+/* Thème clair - FORCE BLANC */
+:root:not(.dark-mode) body,
+:root:not(.dark-mode) html,
+:root:not(.dark-mode) div.bg-gray-900,
+:root:not(.dark-mode) div.bg-gray-800 { 
+  background-color: #ffffff !important; 
+}
+
+:root:not(.dark-mode) .text-white,
+:root:not(.dark-mode) .text-gray-300,
+:root:not(.dark-mode) .text-gray-400 { 
+  color: #000000 !important; 
+}
+
+
+/* Thème sombre - Plus doux comme l'image */
+:root.dark-mode body,
+:root.dark-mode html,
+:root.dark-mode div.bg-gray-900,
+:root.dark-mode div.bg-gray-800 { 
+  background-color: var(--bg-secondary) !important; 
+}
+
+:root.dark-mode .text-white,
+:root.dark-mode .text-gray-300,
+:root.dark-mode .text-gray-400 { 
+  color: var(--text-primary) !important; 
+}
+
+/* HEADERS et SIDEBARS spécifiques */
+:root:not(.dark-mode) header,
+:root:not(.dark-mode) aside { 
+  background-color: #ffffff !important; 
+  color: #000000 !important; 
+  border-color: #e5e7eb !important;
+}
+
+:root.dark-mode header,
+:root.dark-mode aside { 
+  background-color: var(--header-bg) !important; 
+  color: var(--text-primary) !important; 
+  border-color: var(--border-color) !important;
+}

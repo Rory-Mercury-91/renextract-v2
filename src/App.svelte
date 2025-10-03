@@ -1,11 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ActionButtons from './components/ActionButtons.svelte';
+  import ContentManager from './components/ContentManager.svelte';
   import Header from './components/Header.svelte';
-  import MainEditor from './components/MainEditor.svelte';
   import Sidebar from './components/Sidebar.svelte';
-  import WorkFolders from './components/WorkFolders.svelte';
   import { apiService } from './lib/api';
+  import { appState } from './stores/app';
+
+  // Action pour appliquer le thème au document
+  function themeApplier(node: HTMLElement) {
+    return {
+      update() {
+        const isDark = $appState.currentTheme === 'dark';
+        document.documentElement.classList.toggle('dark-mode', isDark);
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      }
+    };
+  }
 
   let isLoading = true;
   let error: string | null = null;
@@ -22,7 +32,11 @@
   });
 </script>
 
-<div class="h-screen flex flex-col bg-gray-900 text-white font-sans">
+<div 
+  class="h-screen flex flex-col font-sans" 
+  class:dark-mode={$appState.currentTheme === 'dark'}
+  use:themeApplier
+>
   <Header />
   
   {#if isLoading}
@@ -50,15 +64,7 @@
   {:else}
     <div class="flex-1 flex overflow-hidden">
       <Sidebar />
-      
-      <div class="flex-1 flex flex-col">
-        <MainEditor />
-        
-        <div class="flex flex-col">
-          <ActionButtons />
-          <WorkFolders />
-        </div>
-      </div>
+      <ContentManager />
     </div>
   {/if}
 </div>

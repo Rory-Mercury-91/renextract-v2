@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import webview
 from dotenv import load_dotenv
+from hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
 
 # Load environment variables
 load_dotenv()
@@ -109,6 +110,120 @@ def delete_item(item_id):
                 'deleted_item': deleted_item
             })
     return jsonify({'success': False, 'error': 'Item not found'}), 404
+
+
+# Settings endpoints - Structure mise à jour
+settings_data = {
+    'language': 'fr',
+    'theme': 'dark',
+    'debugActive': False,  # false=Level 3, true=Level 4
+    'autoOpenings': {
+        'files': True,
+        'folders': True,
+        'reports': False,
+        'outputField': False
+    },
+    'externalTools': {
+        'textEditor': 'VS Code',
+        'translator': ''
+    },
+    'paths': {
+        'renpySdk': '',
+        'vscode': '',
+        'sublime': '',
+        'notepad': '',
+        'atom': ''
+    },
+    'folders': {
+        'temporary': '01_Temporary/',
+        'reports': '02_Reports/',
+        'backups': '03_Backups/',
+        'configs': '04_Configs/'
+    },
+    'extraction': {
+        'placeholderFormat': 'PLACEHOLDER_{n}',
+        'encoding': 'UTF-8'
+    },
+    'colors': {
+        'extractButton': '#3B82F6',
+        'reconstructButton': '#10B981',
+        'verifyButton': '#F59E0B',
+        'accents': '#6366F1'
+    }
+}
+
+
+@app.route('/api/settings', methods=['GET'])
+def get_settings():
+    """Get current settings"""
+    return jsonify({
+        'success': True,
+        'data': settings_data
+    })
+
+
+@app.route('/api/settings', methods=['POST'])
+def update_settings():
+    """Update settings"""
+    try:
+        new_settings = request.get_json()
+        if not new_settings:
+            return jsonify({'success': False, 'message': 'No settings provided'}), 400
+            
+        # Update settings (basic validation)
+        for key, value in new_settings.items():
+            if key in settings_data:
+                settings_data[key] = value
+                
+        return jsonify({
+            'success': True,
+            'message': 'Settings updated successfully',
+            'data': settings_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error updating settings: {str(e)}'
+        }), 500
+
+@app.route('/api/file-dialog/folder', methods=['GET'])
+def get_folder_dialog():
+    """Open Windows folder selection dialog."""
+    try:
+        folder_path = open_folder_dialog_hybrid()
+        
+        print(f"DEBUG: Folder dialog returned: '{folder_path}'")  # Debug log
+        
+        return jsonify({
+            'success': True,
+            'path': folder_path
+        })
+    except Exception as e:
+        print(f"DEBUG: Folder dialog error: {e}")  # Debug log
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/file-dialog/file', methods=['GET'])
+def get_file_dialog():
+    """Open Windows file selection dialog."""
+    try:
+        file_path = open_file_dialog_hybrid()
+        
+        print(f"DEBUG: File dialog returned: '{file_path}'")  # Debug log
+        
+        return jsonify({
+            'success': True,
+            'path': file_path
+        })
+    except Exception as e:
+        print(f"DEBUG: File dialog error: {e}")  # Debug log
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/')

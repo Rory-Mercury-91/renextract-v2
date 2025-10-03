@@ -1,20 +1,31 @@
 <script lang="ts">
-  let activeSection = 'RenExtract';
+  import { i18n } from '../lib/i18n';
+  import { appActions, appState } from '../stores/app';
+
+  let activeSection = 'settings';
 
   const sections = [
-    { id: 'generator', name: 'Générateur', icon: '⚡', badge: null },
-    { id: 'renextract', name: 'RenExtract', icon: '📄', badge: 5 },
-    { id: 'tools', name: 'Outils spécialisés', icon: '🔧', badge: null },
-    { id: 'backup', name: 'Sauvegarde', icon: '💾', badge: null },
-    { id: 'settings', name: 'Paramètres', icon: '⚙️', badge: null }
+    { id: 'generator', name: i18n.navigation.generator, icon: '⚡', badge: null },
+    { id: 'renextract', name: i18n.navigation.renextract, icon: '📄', badge: 3 },
+    { id: 'tools', name: i18n.navigation.tools, icon: '🔧', badge: null },
+    { id: 'backup', name: i18n.navigation.backup, icon: '💾', badge: null },
+    { id: 'settings', name: i18n.navigation.settings, icon: '⚙️', badge: null }
   ];
 
   function selectSection(sectionId: string) {
+    appActions.setCurrentSection(sectionId);
     activeSection = sectionId;
   }
+
+  $: activeSection = $appState.currentSection;
 </script>
 
 <aside class="w-64 bg-gray-800 text-white h-full flex flex-col">
+  <!-- Logo plus grand -->
+  <div class="p-6 border-b border-gray-700 flex justify-center">
+    <img src="/public/assets/logo.webp" alt="Logo RenExtract" class="w-24 h-24 object-contain" />
+  </div>
+
   <nav class="flex-1 py-4">
     {#each sections as section}
       <button
