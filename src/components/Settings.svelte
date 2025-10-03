@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { apiService } from '../lib/api';
-  import { i18n } from '../lib/i18n';
-  import { appActions } from '../stores/app';
   import CustomModal from './CustomModal.svelte';
   import ThemeCustomizer from './ThemeCustomizer.svelte';
 
@@ -194,9 +191,6 @@
           }
         };
         console.log('Settings loaded:', config);
-        // Sync with global state
-        appActions.setLanguage(config.language as 'fr' | 'en' | 'de');
-        appActions.setTheme(config.theme as 'light' | 'dark');
       }
     } catch (error) {
       console.error('Erreur de chargement des paramètres:', error);
@@ -221,9 +215,6 @@
       
       const result = await apiService.updateSettings(configToSave);
       if (result.success) {
-        // Update global state
-        appActions.setLanguage(config.language as 'fr' | 'en' | 'de');
-        appActions.setTheme(config.theme as 'light' | 'dark');
         alert('✅ Paramètres sauvegardés avec succès !');
       } else {
         alert('❌ Erreur lors de la sauvegarde');
@@ -439,12 +430,6 @@
     config.externalTools.textEditor = 'Sublime Text';
     saveSettings();
   }
-
-  onMount(() => {
-    loadSettings();
-    // Sync language changes to i18n
-    i18n.setLanguage(config.language);
-  });
 </script>
 
 <div class="h-full bg-gray-900 text-white flex flex-col">

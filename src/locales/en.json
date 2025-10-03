@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "RenExtract v2.0 - WebView Interface",
+    "branding": "RenExtract",
+    "version": "v2.0.0 WebView",
+    "no_project_loaded": "No project loaded",
+    "browse": "Browse",
+    "help": "Help",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "navigation": {
+    "generator": "Generator",
+    "renextract": "RenExtract",
+    "tools": "Specialized tools",
+    "backup": "Backup",
+    "settings": "Settings"
+  },
+  "themes": {
+    "dark": "Dark",
+    "light": "Light",
+    "auto": "Auto"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "reset": "Reset",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "theme": {
+    "title": "Appearance settings"
+  },
+  "themeCustomizer": {
+    "title": "Complete theme customization",
+    "description": "Modify each interface color according to your preferences"
+  },
+  "language": {
+    "title": "Interface language",
+    "current": "Current language"
+  },
+  "debugMode": {
+    "title": "Complete debug mode",
+    "description": "Enables detailed logs and development tools"
+  },
+  "autoOpenings": {
+    "title": "Automatic openings",
+    "files": "Automatic file opening",
+    "folders": "Automatic folder opening",
+    "reports": "Automatic report opening",
+    "outputField": "Output path field display"
+  },
+  "externalTools": {
+    "title": "External tools",
+    "textEditor": "External editor"
+  },
+  "buttons": {
+    "save": "Save",
+    "reset": "Reset",
+    "resetSettings": "Reset settings"
+  },
+  "sections": {
+    "appearance": "Appearance and notifications",
+    "editor": "Code editor"
+  }
+}

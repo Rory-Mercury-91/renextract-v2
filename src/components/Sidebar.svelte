@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { i18n } from '../lib/i18n';
+  import { _ } from 'svelte-i18n';
   import { appActions, appState } from '../stores/app';
 
   let activeSection = 'settings';
 
   const sections = [
-    { id: 'generator', name: i18n.navigation.generator, icon: '⚡', badge: null },
-    { id: 'renextract', name: i18n.navigation.renextract, icon: '📄', badge: 3 },
-    { id: 'tools', name: i18n.navigation.tools, icon: '🔧', badge: null },
-    { id: 'backup', name: i18n.navigation.backup, icon: '💾', badge: null },
-    { id: 'settings', name: i18n.navigation.settings, icon: '⚙️', badge: null }
+    { id: 'generator', name: $_('navigation.generator'), icon: '⚡', badge: null },
+    { id: 'renextract', name: $_('navigation.renextract'), icon: '📄', badge: 3 },
+    { id: 'tools', name: $_('navigation.tools'), icon: '🔧', badge: null },
+    { id: 'backup', name: $_('navigation.backup'), icon: '💾', badge: null },
+    { id: 'settings', name: $_('navigation.settings'), icon: '⚙️', badge: null }
   ];
 
   function selectSection(sectionId: string) {

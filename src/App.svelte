@@ -1,21 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { waitLocale } from 'svelte-i18n';
   import ContentManager from './components/ContentManager.svelte';
   import Header from './components/Header.svelte';
   import Sidebar from './components/Sidebar.svelte';
   import { apiService } from './lib/api';
-  import { appState } from './stores/app';
-
-  // Action pour appliquer le thème au document
-  function themeApplier(node: HTMLElement) {
-    return {
-      update() {
-        const isDark = $appState.currentTheme === 'dark';
-        document.documentElement.classList.toggle('dark-mode', isDark);
-        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-      }
-    };
-  }
 
   let isLoading = true;
   let error: string | null = null;
@@ -24,6 +13,7 @@
     try {
       // Check API connection
       await apiService.healthCheck();
+      await waitLocale()
       isLoading = false;
     } catch (err) {
       error = 'Unable to connect to Python backend';
@@ -32,11 +22,7 @@
   });
 </script>
 
-<div 
-  class="h-screen flex flex-col font-sans" 
-  class:dark-mode={$appState.currentTheme === 'dark'}
-  use:themeApplier
->
+<div class="h-screen flex flex-col font-sans">
   <Header />
   
   {#if isLoading}

@@ -1,10 +1,8 @@
-import type { Language, Theme } from '$lib/i18n';
 import { writable } from 'svelte/store';
 
 interface AppState {
   currentSection: string;
-  currentLanguage: Language;
-  currentTheme: Theme;
+  // currentTheme: Theme;
   debugLevel: number;
   isLoading: boolean;
   error: string | null;
@@ -12,8 +10,7 @@ interface AppState {
 
 const initialState: AppState = {
   currentSection: 'settings', // On commence par Paramètres comme demandé
-  currentLanguage: 'fr',
-  currentTheme: 'dark',
+  // currentTheme: 'dark',
   debugLevel: 4, // DEBUG complet par défaut
   isLoading: false,
   error: null
@@ -27,13 +24,9 @@ export const appActions = {
     appState.update(state => ({ ...state, currentSection: section }));
   },
 
-  setLanguage: (lang: Language) => {
-    appState.update(state => ({ ...state, currentLanguage: lang }));
-  },
-
-  setTheme: (theme: Theme) => {
-    appState.update(state => ({ ...state, currentTheme: theme }));
-  },
+  // setTheme: (theme: Theme) => {
+  //   appState.update(state => ({ ...state, currentTheme: theme }));
+  // },
 
   setDebugLevel: (level: number) => {
     appState.update(state => ({ ...state, debugLevel: level }));
