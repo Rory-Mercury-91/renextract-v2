@@ -38,6 +38,112 @@ api_data = {
     'items': []
 }
 
+# Remplacer les lignes 41-49 dans app.py par :
+
+# Importer le nouveau gestionnaire de backup
+from backup_manager import BackupManager
+
+# Initialiser le gestionnaire
+backup_manager = BackupManager()
+
+@app.route('/api/backups', methods=['GET'])
+def get_backups():
+    """Liste toutes les sauvegardes avec filtres optionnels"""
+    try:
+        game_filter = request.args.get('game')
+        type_filter = request.args.get('type')
+        
+        backups = backup_manager.list_all_backups(
+            game_filter=game_filter,
+            type_filter=type_filter
+        )
+        
+        return jsonify({
+            'success': True,
+            'backups': backups
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/backups/<backup_id>/restore', methods=['POST'])
+def restore_backup(backup_id):
+    """Restaure une sauvegarde"""
+    try:
+        # Trouver le backup dans les métadonnées
+        if backup_id not in backup_manager.metadata:
+            return jsonify({
+                'success': False,
+                'error': 'Sauvegarde introuvable'
+            }), 404
+        
+        backup = backup_manager.metadata[backup_id]
+        target_path = backup.get('source_path')
+        
+        if not target_path or not os.path.exists(os.path.dirname(target_path)):
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de destination invalide'
+            }), 400
+        
+        # Copier le fichier
+        import shutil
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        shutil.copy2(backup['backup_path'], target_path)
+        
+        # Supprimer la sauvegarde après restauration
+        os.remove(backup['backup_path'])
+        del backup_manager.metadata[backup_id]
+        backup_manager._save_metadata()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Sauvegarde restaurée avec succès'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/backups/<backup_id>', methods=['DELETE'])
+def delete_backup(backup_id):
+    """Supprime une sauvegarde"""
+    try:
+        # Trouver le backup dans les métadonnées
+        if backup_id not in backup_manager.metadata:
+            return jsonify({
+                'success': False,
+                'error': 'Sauvegarde introuvable'
+            }), 404
+        
+        backup = backup_manager.metadata[backup_id]
+        
+        # Supprimer le fichier
+        if os.path.exists(backup['backup_path']):
+            os.remove(backup['backup_path'])
+        
+        # Supprimer des métadonnées
+        del backup_manager.metadata[backup_id]
+        backup_manager._save_metadata()
+        
+        # Nettoyer les dossiers vides
+        backup_manager.cleanup_empty_folders()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Sauvegarde supprimée avec succès'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 @app.route('/api/health')
 def health_check():

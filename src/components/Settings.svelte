@@ -1,95 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { apiService } from '../lib/api';
+  import { DEFAULT_SETTINGS } from '../lib/constants';
   import { i18n } from '../lib/i18n';
   import { appActions } from '../stores/app';
   import CustomModal from './CustomModal.svelte';
   import ThemeCustomizer from './ThemeCustomizer.svelte';
 
   // Configuration model - simplified debug mode
-  let config = {
-    language: 'fr',
-    theme: 'dark',
-    debugActive: false, // Single debug mode (false=Level 3, true=Level 4)
-    autoOpenings: {
-      files: true,
-      folders: true,
-      reports: false,
-      outputField: false
-    },
-    externalTools: {
-      textEditor: 'VS Code',
-      translator: ''
-    },
-    paths: {
-      renpySdk: '',
-      vscode: '',
-      sublime: '',
-      notepad: '',
-      atom: ''
-    },
-    folders: {
-      temporary: '01_Temporary/',
-      reports: '02_Reports/',
-      backups: '03_Backups/',
-      configs: '04_Configs/'
-    },
-    extraction: {
-      placeholderFormat: 'PLACEHOLDER_{n}',
-      encoding: 'UTF-8'
-    },
-    colors: {
-      // Couleurs de base
-      background: {
-        primary: '#1a1a1a',
-        secondary: '#2a2a2a',
-        tertiary: '#3a3a3a',
-        header: '#262626',
-        sidebar: '#1e1e1e',
-        modal: '#2a2a2a',
-        input: '#3a3a3a'
-      },
-      text: {
-        primary: '#ffffff',
-        secondary: '#cccccc',
-        tertiary: '#999999',
-        placeholder: '#666666',
-        accent: '#60a5fa'
-      },
-      border: {
-        primary: '#4a4a4a',
-        secondary: '#5a5a5a',
-        focus: '#60a5fa',
-        hover: '#6a6a6a'
-      },
-      // Couleurs des boutons
-      buttons: {
-        extract: '#3B82F6',
-        reconstruct: '#10B981',
-        verify: '#F59E0B',
-        dangerous: '#ef4444',
-        warning: '#f59e0b',
-        success: '#10b981',
-        neutral: '#6b7280'
-      },
-      // Couleurs d'accent
-      accent: {
-        primary: '#6366F1',
-        secondary: '#8b5cf6',
-        highlight: '#60a5fa',
-        success: '#10b981',
-        warning: '#f59e0b',
-        danger: '#ef4444'
-      },
-      // États spéciaux
-      states: {
-        hover: '#404040',
-        active: '#505050',
-        disabled: '#666666',
-        selected: '#4f46e5'
-      }
-    }
-  };
+  let config = { ...DEFAULT_SETTINGS };
 
   // Tab management
   let activeTab = 'interface_applications';

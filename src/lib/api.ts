@@ -21,6 +21,18 @@ export interface SettingsUpdateResponse {
   message: string;
 }
 
+export interface BackupListResponse {
+  success: boolean;
+  backups?: any[];
+  error?: string;
+}
+
+export interface BackupActionResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 // Service API
 export const apiService = {
   async healthCheck(): Promise<HealthResponse> {
@@ -63,6 +75,49 @@ export const apiService = {
       };
     } catch (error) {
       console.error('File Dialog Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getBackups(gameFilter?: string, typeFilter?: string): Promise<BackupListResponse> {
+    try {
+      const params = new URLSearchParams();
+      if (gameFilter) params.append('game', gameFilter);
+      if (typeFilter) params.append('type', typeFilter);
+      
+      const response = await api.get(`/backups?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Backups Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async restoreBackup(backupId: string): Promise<BackupActionResponse> {
+    try {
+      const response = await api.post(`/backups/${backupId}/restore`);
+      return response.data;
+    } catch (error) {
+      console.error('Restore Backup Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async deleteBackup(backupId: string): Promise<BackupActionResponse> {
+    try {
+      const response = await api.delete(`/backups/${backupId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete Backup Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

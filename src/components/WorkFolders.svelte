@@ -1,13 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-
-
-  const workFolders = [
-    { id: '01', name: '01_Temporary', icon: 'hugeicons:folder-02', color: 'bg-yellow-700' },
-    { id: '02', name: '02_Reports', icon: 'hugeicons:analysis-text-link', color: 'bg-blue-600' },
-    { id: '03', name: '03_Backups', icon: 'hugeicons:floppy-disk', color: 'bg-purple-600' },
-    { id: '04', name: '04_Configs', icon: 'hugeicons:settings-02', color: 'bg-gray-600' }
-  ];
+  import { WORK_FOLDERS } from '../lib/constants';
 
   let outputFolder = 'Non défini';
 
@@ -24,10 +17,11 @@
   <h3 class="text-blue-400 text-lg font-semibold mb-4">Dossiers de travail</h3>
   
   <div class="grid grid-cols-4 gap-4 mb-6">
-    {#each workFolders as {name, icon, color, id}}
+    {#each WORK_FOLDERS as {name, icon, color, id, description}}
       <button
         onclick={() => selectFolder(id)}
         class="flex items-center gap-3 p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-left"
+        title={description}
       >
         <div class="w-10 h-10 {color} rounded-lg flex items-center justify-center text-white">
           <Icon {icon} class="w-6 h-6" />
