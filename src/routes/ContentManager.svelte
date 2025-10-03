@@ -1,9 +1,9 @@
 <script lang="ts">
+  import ActionButtons from '$components/ActionButtons.svelte';
+  import MainEditor from '$components/MainEditor.svelte';
+  import Settings from '$components/Settings.svelte';
+  import WorkFolders from '$components/WorkFolders.svelte';
   import { appState } from '../stores/app';
-  import ActionButtons from './ActionButtons.svelte';
-  import MainEditor from './MainEditor.svelte';
-  import Settings from './Settings.svelte';
-  import WorkFolders from './WorkFolders.svelte';
 
   let currentSection = 'settings';
   

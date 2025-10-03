@@ -2,15 +2,15 @@
   import Icon from '@iconify/svelte';
 
   function handleExtract() {
-    console.log('Extraire clicked');
+    console.info('Extraire clicked');
   }
 
   function handleReconstruct() {
-    console.log('Reconstruire clicked');
+    console.info('Reconstruire clicked');
   }
 
   function handleVerify() {
-    console.log('Revérifier clicked');
+    console.info('Revérifier clicked');
   }
 </script>
 

@@ -2,14 +2,12 @@
   import { _ } from 'svelte-i18n';
   import { appActions, appState } from '../stores/app';
 
-  let activeSection = 'settings';
-
   const sections = [
-    { id: 'generator', name: $_('navigation.generator'), icon: '⚡', badge: null },
-    { id: 'renextract', name: $_('navigation.renextract'), icon: '📄', badge: 3 },
-    { id: 'tools', name: $_('navigation.tools'), icon: '🔧', badge: null },
-    { id: 'backup', name: $_('navigation.backup'), icon: '💾', badge: null },
-    { id: 'settings', name: $_('navigation.settings'), icon: '⚙️', badge: null }
+    { link: '/', name: $_('navigation.generator'), icon: '⚡', badge: null },
+    { link: '/renextract', name: $_('navigation.renextract'), icon: '📄', badge: 3 },
+    { link: '/tools', name: $_('navigation.tools'), icon: '🔧', badge: null },
+    { link: '/backup', name: $_('navigation.backup'), icon: '💾', badge: null },
+    { link: '/settings', name: $_('navigation.settings'), icon: '⚙️', badge: null }
   ];
 
   function selectSection(sectionId: string) {
@@ -28,11 +26,11 @@
 
   <nav class="flex-1 py-4">
     {#each sections as section}
-      <button
+      <a
+        href={section.link}
         class="w-full flex items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
-        class:bg-blue-600={activeSection === section.id}
-        class:hover:bg-blue-700={activeSection === section.id}
-        onclick={() => selectSection(section.id)}
+        class:bg-blue-600={location.pathname === section.link}
+        class:hover:bg-blue-700={location.pathname === section.link}
       >
         <span class="text-xl mr-3">{section.icon}</span>
         <span class="flex-1">{section.name}</span>
@@ -41,7 +39,7 @@
             {section.badge}
           </span>
         {/if}
-      </button>
+      </a>
     {/each}
   </nav>
 </aside>

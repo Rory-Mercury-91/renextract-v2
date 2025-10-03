@@ -7,7 +7,9 @@
     "browse": "Browse",
     "help": "Help",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "loading": "Loading application...",
+    "connection_error": "Connection error"
   },
   "navigation": {
     "generator": "Generator",

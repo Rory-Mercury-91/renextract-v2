@@ -7,7 +7,9 @@
     "browse": "Parcourir",
     "help": "Aide",
     "theme": "Thème",
-    "language": "Langue"
+    "language": "Langue",
+    "loading": "Chargement de l'application...",
+    "connection_error": "Erreur de connexion"
   },
   "navigation": {
     "generator": "Générateur",

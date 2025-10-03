@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { locale, locales } from 'svelte-i18n';
   import { apiService } from '../lib/api';
-  import CustomModal from './CustomModal.svelte';
-  import ThemeCustomizer from './ThemeCustomizer.svelte';
+
+  const currentTheme = $state<'light' | 'dark' | 'auto'>('dark');
 
   // Configuration model - simplified debug mode
   let config = {
@@ -92,7 +93,7 @@
   let activeTab = 'interface_applications';
   let tabs = ['interface_applications', 'extraction_protection', 'theme_customizer', 'access_paths'];
 
-  let saving = false;
+  let saving = $state(false);
 
   // Modal states
   let helpModal = { isOpen: false, title: '', content: '' };
@@ -106,95 +107,6 @@
 
   function switchTab(tabId: string) {
     activeTab = tabId;
-  }
-
-  async function loadSettings() {
-    try {
-      const result = await apiService.getSettings();
-      if (result.success) {
-        // Merge with default config to ensure all properties exist
-        // Ensure all required fields exist with defaults
-        const apiData = result.data || {};
-        
-        // Ensure the new colors structure exists
-        const defaultColors = {
-          background: {
-            primary: '#1a1a1a',
-            secondary: '#2a2a2a',
-            tertiary: '#3a3a3a',
-            header: '#262626',
-            sidebar: '#1e1e1e',
-            modal: '#2a2a2a',
-            input: '#3a3a3a'
-          },
-          text: {
-            primary: '#ffffff',
-            secondary: '#cccccc',
-            tertiary: '#999999',
-            placeholder: '#666666',
-            accent: '#60a5fa'
-          },
-          border: {
-            primary: '#4a4a4a',
-            secondary: '#5a5a5a',
-            focus: '#60a5fa',
-            hover: '#6a6a6a'
-          },
-          buttons: {
-            extract: '#3B82F6',
-            reconstruct: '#10B981',
-            verify: '#F59E0B',
-            dangerous: '#ef4444',
-            warning: '#f59e0b',
-            success: '#10b981',
-            neutral: '#6b7280'
-          },
-          accent: {
-            primary: '#6366F1',
-            secondary: '#8b5cf6',
-            highlight: '#60a5fa',
-            success: '#10b981',
-            warning: '#f59e0b',
-            danger: '#ef4444'
-          },
-          states: {
-            hover: '#404040',
-            active: '#505050',
-            disabled: '#666666',
-            selected: '#4f46e5'
-          }
-        };
-        
-        config = {
-          ...config,
-          ...apiData,
-          // Ensure paths exists even if not in API response
-          paths: {
-            renpySdk: '',
-            vscode: '',
-            sublime: '',
-            notepad: '',
-            atom: '',
-            ...apiData.paths
-          },
-          // Ensure colors exists with full structure
-          colors: {
-            ...defaultColors,
-            ...apiData.colors,
-            // Deep merge the color categories
-            background: { ...defaultColors.background, ...apiData.colors?.background },
-            text: { ...defaultColors.text, ...apiData.colors?.text },
-            border: { ...defaultColors.border, ...apiData.colors?.border },
-            buttons: { ...defaultColors.buttons, ...apiData.colors?.buttons },
-            accent: { ...defaultColors.accent, ...apiData.colors?.accent },
-            states: { ...defaultColors.states, ...apiData.colors?.states }
-          }
-        };
-        console.log('Settings loaded:', config);
-      }
-    } catch (error) {
-      console.error('Erreur de chargement des paramètres:', error);
-    }
   }
 
   async function saveSettings() {
@@ -224,26 +136,6 @@
       alert('❌ Erreur lors de la sauvegarde');
     } finally {
       saving = false;
-    }
-  }
-
-  // Fonctions pour les boutons Parcourir
-  function browseForFolder(inputId: string) {
-    // Pour les dossiers (SDK Ren'Py)
-    console.log('browseForFolder called with:', inputId);
-    const input = document.getElementById(inputId) as HTMLInputElement;
-    if (input) {
-      // Simulation d'un sélecteur de carte
-      const folderPath = prompt('Entrez le chemin vers le dossier SDK Ren\'Py (doit contenir renpy.exe):', 
-        input.value || 'C:\\RenPy\\renpy-8.0.3');
-      if (folderPath) {
-        if (!config.paths) config.paths = {};
-        config.paths.renpySdk = folderPath;
-        input.value = folderPath;
-        console.log('SDK Ren\'Py path updated:', folderPath);
-      }
-    } else {
-      console.log('Input element not found:', inputId);
     }
   }
 
@@ -366,48 +258,6 @@
     }
   }
 
-  function handleBrowseConfirm(event: CustomEvent) {
-    const { value } = event.detail;
-    if (value && browseModal.inputId) {
-      // Update the corresponding config field
-      if (!config.paths) config.paths = {};
-      
-      switch(browseModal.inputId) {
-        case 'renpy-sdk-path':
-          config.paths.renpySdk = value;
-          break;
-        case 'vscode-path':
-          config.paths.vscode = value;
-          break;
-        case 'sublime-path':
-          config.paths.sublime = value;
-          break;
-        case 'notepad-path':
-          config.paths.notepad = value;
-          break;
-        case 'atom-path':
-          config.paths.atom = value;
-          break;
-      }
-      
-      // Update the actual input element
-      const input = document.getElementById(browseModal.inputId) as HTMLInputElement;
-      if (input) {
-        input.value = value;
-      }
-    }
-  }
-
-  function handleThemeUpdate(event: CustomEvent) {
-    const { colors } = event.detail;
-    
-    // Mettre à jour le thème global en temps réel
-    updateGlobalTheme(colors);
-    
-    // Optionnel: sauvegarder automatiquement les changements de couleur
-    console.log('Theme updated:', colors);
-  }
-
   function updateGlobalTheme(colors: any) {
     // Appeler la fonction de l'application principale pour mettre à jour les styles CSS
     if (typeof window !== 'undefined') {
@@ -468,6 +318,33 @@
           <div>
             <h2 class="text-2xl font-bold text-blue-400 mb-4">Interface et applications</h2>
             <p class="text-gray-400 mb-6">Configuration générale de l'interface utilisateur.</p>
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold flex items-center">
+              Paramètres généraux
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <select bind:value={$locale}>
+                  {#each $locales as locale}
+                    <option value={locale}>{locale}</option>
+                  {/each}
+                </select>
+                <span class="text-white">
+                  Langue de l'interface
+                </span>
+              </div>
+              <!-- Theme Toggle -->
+              <button 
+                class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
+              >
+                {#if currentTheme === 'dark'}
+                  ☀️ Thème clair
+                {:else}
+                  🌙 Thème sombre
+                {/if}
+              </button>
+            </div>
           </div>
 
           <!-- Ouvertures automatiques -->
@@ -618,12 +495,6 @@
           <div>
             <h3 class="text-xl font-semibold mb-4">🎨 Personnalisation complète des thèmes</h3>
             <p class="text-gray-400 mb-6">Modifiez TOUTES les couleurs de l'interface selon vos préférences personnelles.</p>
-            
-            <ThemeCustomizer 
-              bind:config={config}
-              showPreview={true}
-              on:themeUpdate={handleThemeUpdate}
-            />
           </div>
         </div>
 
@@ -853,7 +724,7 @@
                   <div class="space-y-6">
                     <!-- Notepad++ -->
                     <div>
-                      <label for="notepad-path" class="block text-sm font-medium mb-2 flex items-center gap-2">
+                      <label for="notepad-path" class="text-sm font-medium mb-2 flex items-center gap-2">
                         <span class="text-green-500">📝</span>
                         Notepad++ - Chemin vers l-exécutable:
                       </label>
@@ -882,7 +753,7 @@
 
                     <!-- Atom/Pulsar -->
                     <div>
-                      <label for="atom-path" class="block text-sm font-medium mb-2 flex items-center gap-2">
+                      <label for="atom-path" class="text-sm font-medium mb-2 flex items-center gap-2">
                         <span class="text-purple-500">⚛️</span>
                         Atom/Pulsar - Chemin vers l-exécutable:
                       </label>
@@ -957,23 +828,3 @@
     </div>
   </div>
 </div>
-
-<!-- Custom Modals -->
-<CustomModal
-  bind:isOpen={helpModal.isOpen}
-  title={helpModal.title}
-  content={helpModal.content}
-  confirmText="OK"
-  cancelText={null}
-/>
-
-<CustomModal
-  bind:isOpen={browseModal.isOpen}
-  bind:inputValue={browseModal.inputValue}
-  title={browseModal.title}
-  placeholder={browseModal.inputPlaceholder}
-  showInput={true}
-  confirmText="Valider"
-  cancelText="Annuler"
-  on:confirm={handleBrowseConfirm}
-/>
