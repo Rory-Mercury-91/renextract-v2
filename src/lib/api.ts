@@ -53,6 +53,30 @@ export const apiService = {
   async openFolderDialog(): Promise<{success: boolean, path?: string, error?: string}> {
     try {
       const response = await api.get('/file-dialog/folder');
+      
+      // Si c'est le mode WSL, demander le chemin à l'utilisateur
+      if (!response.data.success && response.data.error === 'WSL_MODE') {
+        const folderPath = prompt(
+          'En mode développement WSL, le dialogue de dossier n\'est pas disponible.\n\n' +
+          'Veuillez saisir le chemin du dossier de destination :\n' +
+          'Exemple: C:\\Users\\Public\\Documents'
+        );
+        
+        if (!folderPath) {
+          return {
+            success: false,
+            error: 'Aucun chemin saisi'
+          };
+        }
+        
+        // Envoyer le chemin via POST
+        const postResponse = await api.post('/file-dialog/folder', { path: folderPath });
+        return {
+          success: postResponse.data.success,
+          path: postResponse.data.path
+        };
+      }
+      
       return {
         success: response.data.success,
         path: response.data.path

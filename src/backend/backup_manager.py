@@ -36,23 +36,63 @@ class BackupManager:
     def __init__(self, base_dir: str = None):
         """Initialise le gestionnaire de sauvegardes"""
         if base_dir is None:
-            base_dir = os.path.dirname(os.path.abspath(__file__))
+            # Déterminer le répertoire de base de l'application
+            import sys
+            if getattr(sys, 'frozen', False):
+                # Mode exécutable (build)
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                # Mode développement - remonter de src/backend/ vers la racine
+                current_file = os.path.abspath(__file__)
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
         
         self.base_dir = base_dir
         self.backup_root = os.path.join(base_dir, "03_Backups")
         self.metadata_file = os.path.join(self.backup_root, "backup_metadata.json")
+        
+        # Debug: afficher les chemins
+        print(f"DEBUG BackupManager: base_dir = {self.base_dir}")
+        print(f"DEBUG BackupManager: backup_root = {self.backup_root}")
+        print(f"DEBUG BackupManager: metadata_file = {self.metadata_file}")
         
         # Créer le dossier de backup s'il n'existe pas
         os.makedirs(self.backup_root, exist_ok=True)
         
         self._load_metadata()
     
+    def _normalize_path(self, path: str) -> str:
+        """Normalise un chemin pour qu'il soit accessible sur le système actuel"""
+        if not path:
+            return path
+        
+        # Convertir les chemins WSL Windows vers Linux
+        if path.startswith('\\\\wsl.localhost\\'):
+            # \\wsl.localhost\Arch\home\rory\projets\... -> /home/rory/projets/...
+            path = path.replace('\\\\wsl.localhost\\Arch\\', '/')
+            path = path.replace('\\', '/')
+        
+        # Convertir les chemins Windows vers format Unix
+        if '\\' in path and not path.startswith('/'):
+            path = path.replace('\\', '/')
+        
+        return path
+
     def _load_metadata(self):
         """Charge les métadonnées des sauvegardes"""
         try:
             if os.path.exists(self.metadata_file):
                 with open(self.metadata_file, 'r', encoding='utf-8') as f:
-                    self.metadata = json.load(f)
+                    raw_metadata = json.load(f)
+                
+                # Normaliser les chemins dans les métadonnées
+                self.metadata = {}
+                for backup_id, backup_info in raw_metadata.items():
+                    normalized_info = backup_info.copy()
+                    if 'backup_path' in normalized_info:
+                        normalized_info['backup_path'] = self._normalize_path(normalized_info['backup_path'])
+                    if 'source_path' in normalized_info:
+                        normalized_info['source_path'] = self._normalize_path(normalized_info['source_path'])
+                    self.metadata[backup_id] = normalized_info
             else:
                 self.metadata = {}
         except Exception as e:

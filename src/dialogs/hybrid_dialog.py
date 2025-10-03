@@ -10,12 +10,30 @@ import os
 def open_folder_dialog_hybrid():
     """Essaie plusieurs méthodes pour ouvrir un dialogue de dossier."""
     
-    # Méthode 1: PowerShell + System.Windows.Forms
+    # Détecter l'environnement
+    is_wsl = False
+    try:
+        if hasattr(os, 'uname'):
+            is_wsl = 'microsoft' in os.uname().release.lower()
+        is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+    except:
+        is_wsl = False
+    
+    if is_wsl:
+        print("DEBUG: WSL detected, folder dialog not available in WSL")
+        # En WSL, on ne peut pas ouvrir de dialogue Windows
+        # Retourner un chemin par défaut et afficher un message
+        print("INFO: En mode WSL, le dialogue de dossier n'est pas disponible.")
+        print("INFO: Utilisation du chemin par défaut: C:\\Users\\Public\\Documents")
+        print("INFO: Pour tester avec un autre chemin, modifiez le code ou utilisez Windows natif.")
+        return "C:\\Users\\Public\\Documents"
+    
+    # Méthode 1: PowerShell + System.Windows.Forms (Windows natif seulement)
     try:
         ps_script = """
         Add-Type -AssemblyName System.Windows.Forms
         $folderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
-        $folderBrowser.Description = "Sélectionner le dossier SDK Ren'Py"
+        $folderBrowser.Description = "Sélectionner le dossier de destination pour la restauration"
         $folderBrowser.SelectedPath = "C:\\"
         
         if ($folderBrowser.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
@@ -32,7 +50,11 @@ def open_folder_dialog_hybrid():
         if result.returncode == 0:
             output = result.stdout.strip()
             if output and output != "CANCELLED":
+                print(f"DEBUG: PowerShell folder dialog returned: {output}")
                 return output
+            else:
+                print("DEBUG: PowerShell folder dialog was cancelled")
+                return ""
     except Exception as e:
         print(f"PowerShell method failed: {e}")
     
@@ -41,7 +63,7 @@ def open_folder_dialog_hybrid():
         # Ecrire un script VBS pour utiliser l'explorateur Windows
         vbs_script = """
         Set objShell = CreateObject("Shell.Application")
-        objShell.BrowseForFolder 0, "Sélectionner le dossier SDK Ren'Py:", 0, "C:\\"
+        objShell.BrowseForFolder 0, "Sélectionner le dossier de destination pour la restauration:", 0, "C:\\"
         """
         
         # Créer fichier temporaire VBS
@@ -60,8 +82,9 @@ def open_folder_dialog_hybrid():
     except Exception as e:
         print(f"VBS method failed: {e}")
     
-    # Méthode 3: Fallback vers echo pour test
-    return "C:\\Program Files"  # Valeur de test
+    # Méthode 3: Fallback pour test
+    print("DEBUG: All methods failed, returning fallback path")
+    return "C:\\Users\\Public\\Documents"  # Valeur de test
 
 def open_file_dialog_hybrid():
     """Essaie plusieurs méthodes pour ouvrir un dialogue de fichier."""

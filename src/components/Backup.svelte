@@ -9,6 +9,7 @@
   let loading = true;
   let error: string | null = null;
   let statusMessage = 'Chargement...';
+  let lastScanTime: Date | null = null;
 
   // Filtres
   let selectedGame = 'Tous';
@@ -43,6 +44,7 @@
         filteredBackups = backups;
         updateStatistics();
         updateGameFilter();
+        lastScanTime = new Date();
         statusMessage = `✅ ${backups.length} sauvegardes chargées - Prêt`;
       } else {
         error = result.error || 'Erreur de chargement';
@@ -88,6 +90,22 @@
     }
   }
 
+  // Fonction de rechargement manuel
+  async function refreshBackups() {
+    statusMessage = '🔄 Rechargement des sauvegardes...';
+    await loadBackups();
+  }
+
+  // Fonction pour formater l'heure du dernier scan
+  function formatLastScanTime(): string {
+    if (!lastScanTime) return 'Jamais';
+    return lastScanTime.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
   function handleFilterChange() {
     loadBackups();
   }
@@ -115,20 +133,23 @@
   }
 
   async function restoreBackupTo(backup: any) {
-    // Ouvrir le dialogue de sélection de fichier
-    const result = await apiService.openFileDialog();
+    // Ouvrir le dialogue de sélection de dossier
+    const result = await apiService.openFolderDialog();
     
     if (!result.success || !result.path) {
       return;
     }
 
-    if (!confirm(`Restaurer la sauvegarde vers :\n\n• Destination : ${result.path}\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier de destination sera remplacé !`)) {
+    // Construire le chemin de destination complet
+    const targetPath = `${result.path}/${backup.source_filename}`;
+
+    if (!confirm(`Restaurer la sauvegarde vers :\n\n• Dossier : ${result.path}\n• Fichier : ${backup.source_filename}\n• Chemin complet : ${targetPath}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier de destination sera remplacé !`)) {
       return;
     }
 
     try {
       statusMessage = '🔄 Restauration vers destination en cours...';
-      const restoreResult = await apiService.restoreBackupTo(backup.id, result.path);
+      const restoreResult = await apiService.restoreBackupTo(backup.id, targetPath);
       
       if (restoreResult.success) {
         statusMessage = '✅ Restauration vers destination terminée avec succès';
@@ -200,15 +221,37 @@
 <div class="h-full bg-gray-900 text-white flex flex-col">
   <!-- Header -->
   <div class="p-6 border-b border-gray-700">
-    <h1 class="text-3xl font-bold text-blue-400 mb-2">🗂️ Gestionnaire de Sauvegardes</h1>
-    <p class="text-gray-400 text-sm">Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract</p>
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-blue-400 mb-2">🗂️ Gestionnaire de Sauvegardes</h1>
+        <p class="text-gray-400 text-sm">Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract</p>
+      </div>
+      <button
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+        onclick={refreshBackups}
+        disabled={loading}
+        title="Recharger la liste des sauvegardes"
+      >
+        {#if loading}
+          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        {:else}
+          🔄
+        {/if}
+        Recharger
+      </button>
+    </div>
   </div>
 
   <!-- Content -->
   <div class="flex-1 overflow-y-auto p-6">
     <!-- Statistiques -->
     <div class="bg-gray-800 rounded-lg p-6 mb-6">
-      <h2 class="text-lg font-semibold text-blue-400 mb-4">📊 Statistiques des sauvegardes</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-blue-400">📊 Statistiques des sauvegardes</h2>
+        <div class="text-sm text-gray-400">
+          <span class="text-green-400">●</span> Dernier scan: {formatLastScanTime()}
+        </div>
+      </div>
       <div class="grid grid-cols-3 gap-6">
         <div>
           <p class="text-gray-400 text-sm">Sauvegardes totales</p>
@@ -325,7 +368,7 @@
                       <button
                         class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
                         onclick={() => restoreBackupTo(backup)}
-                        title="Restaurer vers un emplacement choisi"
+                        title="Restaurer vers un dossier choisi"
                       >
                         📁 Restaurer vers
                       </button>

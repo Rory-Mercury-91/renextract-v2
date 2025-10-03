@@ -60,4 +60,5 @@ exe = EXE(
     entitlements_file=None,
     icon=None,
     onefile=True,
+    exclude_binaries=False,
 )

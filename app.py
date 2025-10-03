@@ -11,10 +11,53 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import webview
 from dotenv import load_dotenv
-from hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
+from src.dialogs.hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
 
 # Load environment variables
 load_dotenv()
+
+def initialize_application_folders():
+    """Crée les dossiers nécessaires au premier lancement de l'application"""
+    try:
+        # Déterminer le répertoire de base (où se trouve l'exécutable)
+        if getattr(sys, 'frozen', False):
+            # Mode exécutable (build)
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            # Mode développement
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Dossiers à créer
+        folders = [
+            '01_Temporary',
+            '02_Reports', 
+            '03_Backups',
+            '04_Configs'
+        ]
+        
+        created_folders = []
+        for folder in folders:
+            folder_path = os.path.join(base_dir, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path, exist_ok=True)
+                created_folders.append(folder)
+                print(f"DEBUG: Created folder: {folder_path}")
+            else:
+                print(f"DEBUG: Folder already exists: {folder_path}")
+        
+        if created_folders:
+            print(f"DEBUG: Created {len(created_folders)} new folders: {created_folders}")
+        else:
+            print("DEBUG: All folders already exist")
+        
+        return base_dir
+        
+    except Exception as e:
+        print(f"ERROR: Failed to initialize folders: {e}")
+        return None
+
+# Initialiser les dossiers au démarrage
+app_base_dir = initialize_application_folders()
 
 # Determine the path to static files based on execution context
 def get_static_path():
@@ -41,7 +84,7 @@ api_data = {
 # Remplacer les lignes 41-49 dans app.py par :
 
 # Importer le nouveau gestionnaire de backup
-from backup_manager import BackupManager
+from src.backend.backup_manager import BackupManager
 
 # Initialiser le gestionnaire
 backup_manager = BackupManager()
@@ -114,41 +157,63 @@ def restore_backup_to(backup_id):
     """Restaure une sauvegarde vers un chemin spécifique"""
     try:
         data = request.get_json()
+        print(f"DEBUG: restore_backup_to called with backup_id: {backup_id}")
+        print(f"DEBUG: request data: {data}")
+        
         if not data or 'target_path' not in data:
+            print("DEBUG: Missing target_path in request data")
             return jsonify({
                 'success': False,
                 'error': 'Chemin de destination requis'
             }), 400
         
         target_path = data['target_path']
+        print(f"DEBUG: Target path: {target_path}")
         
         # Trouver le backup dans les métadonnées
         if backup_id not in backup_manager.metadata:
+            print(f"DEBUG: Backup {backup_id} not found in metadata")
             return jsonify({
                 'success': False,
                 'error': 'Sauvegarde introuvable'
             }), 404
         
         backup = backup_manager.metadata[backup_id]
+        print(f"DEBUG: Backup found: {backup}")
         
         # Vérifier que le répertoire de destination existe
-        target_dir = os.path.dirname(target_path)
-        if not os.path.exists(target_dir):
-            return jsonify({
-                'success': False,
-                'error': 'Répertoire de destination inexistant'
-            }), 400
+        from pathlib import Path
+        target_path_obj = Path(target_path)
+        target_dir = target_path_obj.parent
+        print(f"DEBUG: Target directory: {target_dir}")
+        print(f"DEBUG: Target directory exists: {target_dir.exists()}")
+        
+        if not target_dir.exists():
+            print(f"DEBUG: Target directory does not exist: {target_dir}")
+            # Créer le répertoire s'il n'existe pas
+            try:
+                target_dir.mkdir(parents=True, exist_ok=True)
+                print(f"DEBUG: Created target directory: {target_dir}")
+            except Exception as e:
+                print(f"DEBUG: Failed to create target directory: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f'Impossible de créer le répertoire de destination: {target_dir}'
+                }), 400
         
         # Copier le fichier vers la destination
         import shutil
+        print(f"DEBUG: Copying from {backup['backup_path']} to {target_path}")
         shutil.copy2(backup['backup_path'], target_path)
         
+        print(f"DEBUG: Restore successful")
         return jsonify({
             'success': True,
             'message': f'Fichier restauré vers {target_path}'
         })
         
     except Exception as e:
+        print(f"DEBUG: Exception in restore_backup_to: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -342,6 +407,23 @@ def update_settings():
 def get_folder_dialog():
     """Open Windows folder selection dialog."""
     try:
+        # Détecter WSL
+        is_wsl = False
+        try:
+            if hasattr(os, 'uname'):
+                is_wsl = 'microsoft' in os.uname().release.lower()
+            is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+        except:
+            is_wsl = False
+        
+        if is_wsl:
+            # En WSL, retourner un message indiquant qu'il faut utiliser l'endpoint POST
+            return jsonify({
+                'success': False,
+                'error': 'WSL_MODE',
+                'message': 'En mode WSL, utilisez POST /api/file-dialog/folder avec le chemin en paramètre'
+            }), 400
+        
         folder_path = open_folder_dialog_hybrid()
         
         print(f"DEBUG: Folder dialog returned: '{folder_path}'")  # Debug log
@@ -352,6 +434,31 @@ def get_folder_dialog():
         })
     except Exception as e:
         print(f"DEBUG: Folder dialog error: {e}")  # Debug log
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/file-dialog/folder', methods=['POST'])
+def set_folder_path():
+    """Set folder path manually (for WSL mode)."""
+    try:
+        data = request.get_json()
+        if not data or 'path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin requis'
+            }), 400
+        
+        folder_path = data['path']
+        print(f"DEBUG: Manual folder path set: '{folder_path}'")
+        
+        return jsonify({
+            'success': True,
+            'path': folder_path
+        })
+    except Exception as e:
+        print(f"DEBUG: Manual folder path error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -391,8 +498,23 @@ def start_flask():
 def main():
     """Main function"""
     # Check if we're in WSL or if PyWebView is not available
-    is_wsl = 'microsoft' in os.uname().release.lower() if hasattr(os, 'uname') else False
+    is_wsl = False
+    try:
+        if hasattr(os, 'uname'):
+            is_wsl = 'microsoft' in os.uname().release.lower()
+        # Also check environment variables
+        is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+    except:
+        is_wsl = False
 
+    # Debug information
+    print(f"DEBUG: is_wsl = {is_wsl}")
+    print(f"DEBUG: platform = {sys.platform}")
+    print(f"DEBUG: frozen = {getattr(sys, 'frozen', False)}")
+    if getattr(sys, 'frozen', False):
+        print(f"DEBUG: _MEIPASS = {sys._MEIPASS}")
+        print(f"DEBUG: static_path = {get_static_path()}")
+    
     try:
         # Try to start PyWebView
         if not is_wsl:
