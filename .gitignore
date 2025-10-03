@@ -117,3 +117,6 @@ build/
 # Backup files/folders
 *.bak
 *-bak/
+
+# Documentation locale
+docs/
