@@ -19,12 +19,42 @@ export const appState = writable<AppState>(initialState);
 const appActions = {
   setState: <K extends keyof AppState>(key: K, value: AppState[K]) => {
     appState.update(state => ({ ...state, [key]: value }));
-  }
+  },
 };
 
 interface AppSettings {
   language: string;
   theme: 'light' | 'dark' | 'auto';
+  debugActive: boolean; // Single debug mode (false=Level 3, true=Level 4)
+  autoOpenings: {
+    files: boolean;
+    folders: boolean;
+    reports: boolean;
+    outputField: boolean;
+  };
+  externalTools: {
+    textEditor: string;
+    translator: string;
+  };
+  paths: {
+    editor: string;
+    renpySdk: string;
+  };
+  folders: {
+    temporary: string;
+    reports: string;
+    backups: string;
+    configs: string;
+  };
+  extraction: {
+    placeholderFormat: string;
+    encoding: string;
+  };
+}
+
+const initialSettings: AppSettings = {
+  language: 'fr',
+  theme: 'auto',
   debugActive: false, // Single debug mode (false=Level 3, true=Level 4)
   autoOpenings: {
     files: true,
@@ -37,11 +67,8 @@ interface AppSettings {
     translator: '',
   },
   paths: {
+    editor: '',
     renpySdk: '',
-    vscode: '',
-    sublime: '',
-    notepad: '',
-    atom: '',
   },
   folders: {
     temporary: '01_Temporary/',
@@ -53,39 +80,6 @@ interface AppSettings {
     placeholderFormat: 'PLACEHOLDER_{n}',
     encoding: 'UTF-8',
   },
-}
-
-const initialSettings: AppSettings = {
-  language: 'fr',
-  theme: 'auto',
-  debugActive: false, // Single debug mode (false=Level 3, true=Level 4)
-    autoOpenings: {
-      files: true,
-      folders: true,
-      reports: false,
-      outputField: false,
-    },
-    externalTools: {
-      textEditor: 'VS Code',
-      translator: '',
-    },
-    paths: {
-      renpySdk: '',
-      vscode: '',
-      sublime: '',
-      notepad: '',
-      atom: '',
-    },
-    folders: {
-      temporary: '01_Temporary/',
-      reports: '02_Reports/',
-      backups: '03_Backups/',
-      configs: '04_Configs/',
-    },
-    extraction: {
-      placeholderFormat: 'PLACEHOLDER_{n}',
-      encoding: 'UTF-8',
-    },
 };
 
 const appSettings = writable<AppSettings>(initialSettings);
@@ -97,7 +91,11 @@ const appSettingsActions = {
 
   resetSettings: () => {
     appSettings.set(initialSettings);
-  }
-}
+  },
+
+  resetSettingsPaths: () => {
+    appSettings.set({ ...initialSettings, paths: { ...initialSettings.paths, editor: '', renpySdk: '' } });
+  },
+};
 
 export { appActions, appSettings, appSettingsActions };

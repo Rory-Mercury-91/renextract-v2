@@ -5,7 +5,7 @@
   const language = {
     fr: 'Français',
     en: 'Anglais',
-  }
+  };
 </script>
 
 <section class="h-full w-fulln space-y-8 p-6 rounded-lg">
@@ -18,14 +18,16 @@
     </p>
   </div>
   <div class="space-y-4">
-    <h3 class="text-lg font-semibold flex items-center">
-      Paramètres généraux
-    </h3>
+    <h3 class="text-lg font-semibold flex items-center">Paramètres généraux</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
         <select bind:value={$locale} class="bg-primary rounded-lg px-2 py-1">
           {#each $locales as locale}
-            <option value={locale}>{locale.toUpperCase()} - {language[locale as keyof typeof language]}</option>
+            <option value={locale}
+              >{locale.toUpperCase()} - {language[
+                locale as keyof typeof language
+              ]}</option
+            >
           {/each}
         </select>
         <span class="text-white ml-2"> Langue de l'interface </span>
@@ -59,9 +61,7 @@
             bind:checked={$appSettings.autoOpenings.files}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white">
-            Ouverture automatique des fichiers
-          </span>
+          <span class="text-white"> Ouverture automatique des fichiers </span>
         </label>
 
         <label
@@ -72,9 +72,7 @@
             bind:checked={$appSettings.autoOpenings.folders}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white">
-            Ouverture automatique des dossiers
-          </span>
+          <span class="text-white"> Ouverture automatique des dossiers </span>
         </label>
       </div>
 
@@ -87,9 +85,7 @@
             bind:checked={$appSettings.autoOpenings.reports}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white">
-            Ouverture automatique du rapport
-          </span>
+          <span class="text-white"> Ouverture automatique du rapport </span>
         </label>
 
         <label
@@ -118,12 +114,13 @@
       <!-- Colonne gauche -->
       <div class="space-y-4">
         <div>
-          <label
-            for="notification-mode"
-            class="block text-sm font-medium mb-2"
+          <label for="notification-mode" class="block text-sm font-medium mb-2"
             >Mode de notification des résultats :</label
           >
-          <select id="notification-mode" class="bg-primary rounded-lg px-2 py-1">
+          <select
+            id="notification-mode"
+            class="bg-primary rounded-lg px-2 py-1"
+          >
             <option value="status">Statut seulement</option>
             <option value="dialog">Dialogue complet</option>
             <option value="none">Aucune notification</option>
@@ -145,9 +142,7 @@
       <!-- Colonne droite - Éditeur -->
       <div class="space-y-4">
         <div>
-          <label
-            for="text-editor"
-            class="block text-sm font-medium mb-2"
+          <label for="text-editor" class="block text-sm font-medium mb-2"
             >Éditeur externe :</label
           >
           <select
@@ -161,8 +156,8 @@
             <option value="Sublime Text">Sublime Text</option>
           </select>
           <p class="text-xs text-gray-400 mt-1">
-            Éditeur pour ouvrir les fichiers depuis l'interface temps
-            réel et les rapports HTML.
+            Éditeur pour ouvrir les fichiers depuis l'interface temps réel et
+            les rapports HTML.
           </p>
         </div>
       </div>

@@ -129,10 +129,7 @@ settings_data = {
     },
     'paths': {
         'renpySdk': '',
-        'vscode': '',
-        'sublime': '',
-        'notepad': '',
-        'atom': ''
+        'editor': ''
     },
     'folders': {
         'temporary': '01_Temporary/',
@@ -169,18 +166,18 @@ def update_settings():
         new_settings = request.get_json()
         if not new_settings:
             return jsonify({'success': False, 'message': 'No settings provided'}), 400
-            
+
         # Update settings (basic validation)
         for key, value in new_settings.items():
             if key in settings_data:
                 settings_data[key] = value
-                
+
         return jsonify({
             'success': True,
             'message': 'Settings updated successfully',
             'data': settings_data
         })
-        
+
     except Exception as e:
         return jsonify({
             'success': False,
@@ -192,9 +189,9 @@ def get_folder_dialog():
     """Open Windows folder selection dialog."""
     try:
         folder_path = open_folder_dialog_hybrid()
-        
+
         print(f"DEBUG: Folder dialog returned: '{folder_path}'")  # Debug log
-        
+
         return jsonify({
             'success': True,
             'path': folder_path
@@ -211,9 +208,9 @@ def get_file_dialog():
     """Open Windows file selection dialog."""
     try:
         file_path = open_file_dialog_hybrid()
-        
+
         print(f"DEBUG: File dialog returned: '{file_path}'")  # Debug log
-        
+
         return jsonify({
             'success': True,
             'path': file_path

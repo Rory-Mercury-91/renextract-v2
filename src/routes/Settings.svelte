@@ -10,25 +10,25 @@
     label: string;
     component: Component<any, Record<string, any>>;
   }
-  
+
   let activeTab = $state('interface_applications');
-  
+
   let tabs: Tab[] = [
     {
       id: 'interface_applications',
       label: 'Interface et applications',
-      component: SettingsApp
+      component: SettingsApp,
     },
     {
       id: 'extraction_protection',
       label: 'Extraction et protection',
-      component: SettingsExtract
+      component: SettingsExtract,
     },
     {
       id: 'access_paths',
-      label: 'Chemins d\'accès',
-      component: SettingsAccess
-    }
+      label: "Chemins d'accès",
+      component: SettingsAccess,
+    },
   ];
 
   let saving = $state(false);
@@ -45,7 +45,7 @@
         <button
           class="tab-button text-sm font-medium w-full h-10 flex justify-center items-center bg-gray-800 hover:bg-gray-700"
           class:bg-blue-600!={activeTab === tab.id}
-          onclick={() => activeTab = tab.id}
+          onclick={() => (activeTab = tab.id)}
         >
           {tab.label}
         </button>
@@ -83,7 +83,7 @@
         onclick={() => {
           if (
             confirm(
-              "Êtes-vous sûr de vouloir réinitialiser TOUTE l'application ? Ceci remettra tous les paramètres, projets et configurations à leurs valeurs par défaut.",
+              "Êtes-vous sûr de vouloir réinitialiser TOUTE l'application ? Ceci remettra tous les paramètres, projets et configurations à leurs valeurs par défaut."
             )
           ) {
             alert("🔄 Réinitialisation complète de l'application...");

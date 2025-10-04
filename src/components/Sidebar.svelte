@@ -3,7 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { Link } from 'svelte5-router';
 
-  let isOpen = $state(false)
+  let isOpen = $state(false);
 
   interface Section {
     link: string;
@@ -47,7 +47,7 @@
     <button
       class="hidden lg:flex mx-auto items-center justify-center"
       class:rotate-180={isOpen}
-      onclick={() => isOpen = !isOpen}
+      onclick={() => (isOpen = !isOpen)}
     >
       <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
     </button>
