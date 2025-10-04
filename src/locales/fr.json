@@ -9,12 +9,14 @@
     "theme": "Thème",
     "language": "Langue",
     "loading": "Chargement de l'application...",
-    "connection_error": "Erreur de connexion"
+    "connection_error": "Erreur de connexion",
+    "retry": "Réessayer",
+    "not_found": "Page non trouvée"
   },
   "navigation": {
     "generator": "Générateur",
-    "renextract": "RenExtract",
-    "tools": "Outils spécialisés",
+    "extract": "Extracteur",
+    "tools": "Outils",
     "backup": "Sauvegarde",
     "settings": "Paramètres"
   },

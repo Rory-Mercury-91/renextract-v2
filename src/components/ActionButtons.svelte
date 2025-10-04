@@ -16,7 +16,7 @@
 
 <div class="bg-gray-800 p-6">
   <h3 class="text-blue-400 text-lg font-semibold mb-4">Actions principales</h3>
-  
+
   <div class="flex gap-4 mb-6 justify-center">
     <button
       onclick={handleExtract}

@@ -11,9 +11,10 @@ export default defineConfig({
     extensions: ['.js', '.ts', '.svelte', '.json'],
     mainFields: ['browser', 'module', 'jsnext:main', 'jsnext'],
     alias: {
-      '$components': path.resolve(__dirname, 'src/components'),
-      '$lib': path.resolve(__dirname, 'src/lib'),
-    }
+      $components: path.resolve(__dirname, 'src/components'),
+      $routes: path.resolve(__dirname, 'src/routes'),
+      $lib: path.resolve(__dirname, 'src/lib'),
+    },
   },
   build: {
     outDir: 'dist',

@@ -9,12 +9,14 @@
     "theme": "Theme",
     "language": "Language",
     "loading": "Loading application...",
-    "connection_error": "Connection error"
+    "connection_error": "Connection error",
+    "retry": "Retry",
+    "not_found": "Page not found"
   },
   "navigation": {
     "generator": "Generator",
-    "renextract": "RenExtract",
-    "tools": "Specialized tools",
+    "extract": "Extract",
+    "tools": "Tools",
     "backup": "Backup",
     "settings": "Settings"
   },

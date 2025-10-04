@@ -1,46 +1,56 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
-  import { appActions, appState } from '../stores/app';
+  import { Link } from 'svelte5-router';
 
-  const sections = [
-    { link: '/', name: $_('navigation.generator'), icon: '⚡', badge: null },
-    { link: '/renextract', name: $_('navigation.renextract'), icon: '📄', badge: 3 },
-    { link: '/tools', name: $_('navigation.tools'), icon: '🔧', badge: null },
-    { link: '/backup', name: $_('navigation.backup'), icon: '💾', badge: null },
-    { link: '/settings', name: $_('navigation.settings'), icon: '⚙️', badge: null }
-  ];
+  let isOpen = $state(false)
 
-  function selectSection(sectionId: string) {
-    appActions.setCurrentSection(sectionId);
-    activeSection = sectionId;
+  interface Section {
+    link: string;
+    name: string;
+    icon: string;
   }
 
-  $: activeSection = $appState.currentSection;
+  const sections: Section[] = [
+    { link: '/', name: $_('navigation.generator'), icon: '⚡' },
+    { link: '/extract', name: $_('navigation.extract'), icon: '📄' },
+    { link: '/tools', name: $_('navigation.tools'), icon: '🔧' },
+    { link: '/backups', name: $_('navigation.backup'), icon: '💾' },
+    { link: '/settings', name: $_('navigation.settings'), icon: '⚙️' },
+  ];
 </script>
 
-<aside class="w-64 bg-gray-800 text-white h-full flex flex-col">
-  <!-- Logo plus grand -->
-  <div class="p-6 border-b border-gray-700 flex justify-center">
-    <img src="/public/assets/logo.webp" alt="Logo RenExtract" class="w-24 h-24 object-contain" />
-  </div>
+<aside
+  class="max-w-64 bg-gray-800 text-white h-full flex flex-col border-r border-gray-700"
+  class:lg:w-64={!isOpen}
+>
+  <nav class="flex flex-col justify-between py-4 h-full">
+    <div class="flex flex-col gap-1">
+      {#each sections as section}
+        <Link to={section.link}>
+          {#snippet children(active)}
+            <div
+              class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
+              class:bg-blue-600={active}
+              class:hover:bg-blue-700={active}
+            >
+              <span class="text-xl">{section.icon}</span>
+              {#if !isOpen}
+                <span class="flex-1 hidden lg:block">{section.name}</span>
+              {/if}
+            </div>
+          {/snippet}
+        </Link>
+      {/each}
+    </div>
 
-  <nav class="flex-1 py-4">
-    {#each sections as section}
-      <a
-        href={section.link}
-        class="w-full flex items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
-        class:bg-blue-600={location.pathname === section.link}
-        class:hover:bg-blue-700={location.pathname === section.link}
-      >
-        <span class="text-xl mr-3">{section.icon}</span>
-        <span class="flex-1">{section.name}</span>
-        {#if section.badge}
-          <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-            {section.badge}
-          </span>
-        {/if}
-      </a>
-    {/each}
+    <button
+      class="hidden lg:flex mx-auto items-center justify-center"
+      class:rotate-180={isOpen}
+      onclick={() => isOpen = !isOpen}
+    >
+      <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
+    </button>
   </nav>
 </aside>
 

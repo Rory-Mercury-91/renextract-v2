@@ -1,26 +1,17 @@
 <script lang="ts">
   import ActionButtons from '$components/ActionButtons.svelte';
   import MainEditor from '$components/MainEditor.svelte';
-  import Settings from '$components/Settings.svelte';
   import WorkFolders from '$components/WorkFolders.svelte';
-  import { appState } from '../stores/app';
-
-  let currentSection = 'settings';
-  
-  $: currentSection = $appState.currentSection;
 </script>
 
-<div class="flex-1 flex flex-col bg-gray-900">
-  {#if currentSection === 'settings'}
-    <Settings />
-  {:else if currentSection === 'renextract'}
-    <div class="flex flex-col h-full">
-      <MainEditor />
-      <div class="flex flex-col">
-        <ActionButtons />
-        <WorkFolders />
-      </div>
-    </div>
+<section class="flex flex-col h-full w-full">
+  <MainEditor />
+  <div class="flex flex-col">
+    <ActionButtons />
+    <WorkFolders />
+  </div>
+</section>
+<!-- 
   {:else if currentSection === 'generator'}
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-4">⚡ Générateur</h2>
@@ -67,12 +58,10 @@
       </div>
     </div>
   {:else}
-    <!-- Fallback -->
     <div class="p-6">
       <h2 class="text-2xl font-bold mb-4">📋 Section non trouvée</h2>
       <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
         <p class="text-gray-300">Cette section n'est pas encore implémentée : {currentSection}</p>
       </div>
     </div>
-  {/if}
-</div>
+  {/if}-->

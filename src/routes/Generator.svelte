@@ -1,12 +1,7 @@
 <script lang="ts">
-  import { appState } from '../stores/app';
-
-  let currentSection = 'settings';
-  
-  $: currentSection = $appState.currentSection;
 </script>
 
-<div class="flex-1 flex flex-col bg-gray-900">
+<section class="flex flex-col h-full w-full">
   <div class="p-6">
     <h2 class="text-2xl font-bold mb-4">⚡ Générateur</h2>
     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
@@ -23,4 +18,4 @@
       </div>
     </div>
   </div>
-</div>
+</section>

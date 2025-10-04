@@ -9,7 +9,9 @@
   "bracketSameLine": false,
   "arrowParens": "avoid",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-svelte"],
+  "plugins": [
+    "prettier-plugin-svelte"
+  ],
   "overrides": [
     {
       "files": "*.svelte",

@@ -30,7 +30,7 @@
 </script>
 
 {#if isOpen}
-  <div 
+  <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
     on:click={closeModal}
     on:keydown={handleKeydown}
@@ -38,7 +38,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div 
+    <div
       class="max-w-md w-full rounded-xl shadow-xl border"
       on:click|stopPropagation
       on:keydown={handleKeydown}
@@ -48,17 +48,29 @@
       aria-labelledby="modal-title"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b dark:border-b-gray-700">
+      <div
+        class="flex items-center justify-between p-6 border-b dark:border-b-gray-700"
+      >
         <h3 id="modal-title" class="text-lg font-semibold">
           {title}
         </h3>
-        <button 
+        <button
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           on:click={closeModal}
           aria-label="Fermer"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
           </svg>
         </button>
       </div>
@@ -66,10 +78,10 @@
       <!-- Content -->
       <div class="p-6">
         <p class="mb-4 text-gray-600 dark:text-gray-300">{content}</p>
-        
+
         {#if showInput}
-          <input 
-            type="text" 
+          <input
+            type="text"
             bind:value={inputValue}
             placeholder={inputPlaceholder}
             class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -80,14 +92,14 @@
       <!-- Footer -->
       <div class="flex justify-end gap-3 p-6 border-t dark:border-t-gray-700">
         {#if cancelText}
-          <button 
+          <button
             class="px-4 py-2 rounded-lg font-medium transition-colors"
             on:click={closeModal}
           >
             {cancelText}
           </button>
         {/if}
-        <button 
+        <button
           class="px-4 py-2 rounded-lg font-medium transition-colors"
           on:click={handleConfirm}
         >
