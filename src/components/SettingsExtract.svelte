@@ -27,7 +27,7 @@
               type="text"
               bind:value={$appSettings.extraction.placeholderFormat}
               placeholder="Ex: PLACEHOLDER_N"
-              class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+              class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
             />
             <p class="text-sm text-gray-400 mt-1">
               Format utilisé pour marquer les éléments à traduire

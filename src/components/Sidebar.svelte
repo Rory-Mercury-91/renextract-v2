@@ -20,39 +20,37 @@
   ];
 </script>
 
-<aside
-  class="max-w-64 bg-gray-800 text-white h-full flex flex-col border-r border-gray-700"
+<nav 
+  class="max-w-64 bg-gray-800 text-white flex flex-col border-r border-gray-700 justify-between py-4"
   class:lg:w-64={!isOpen}
 >
-  <nav class="flex flex-col justify-between py-4 h-full">
-    <div class="flex flex-col gap-1">
-      {#each sections as section}
-        <Link to={section.link}>
-          {#snippet children(active)}
-            <div
-              class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
-              class:bg-blue-600={active}
-              class:hover:bg-blue-700={active}
-            >
-              <span class="text-xl">{section.icon}</span>
-              {#if !isOpen}
-                <span class="flex-1 hidden lg:block">{section.name}</span>
-              {/if}
-            </div>
-          {/snippet}
-        </Link>
-      {/each}
-    </div>
+  <div class="flex flex-col gap-1">
+    {#each sections as section}
+      <Link to={section.link}>
+        {#snippet children(active)}
+          <div
+            class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
+            class:bg-blue-600={active}
+            class:hover:bg-blue-700={active}
+          >
+            <span class="text-xl">{section.icon}</span>
+            {#if !isOpen}
+              <span class="flex-1 hidden lg:block">{section.name}</span>
+            {/if}
+          </div>
+        {/snippet}
+      </Link>
+    {/each}
+  </div>
 
-    <button
-      class="hidden lg:flex mx-auto items-center justify-center"
-      class:rotate-180={isOpen}
-      onclick={() => (isOpen = !isOpen)}
-    >
-      <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
-    </button>
-  </nav>
-</aside>
+  <button
+    class="hidden lg:flex mx-auto items-center justify-center"
+    class:rotate-180={isOpen}
+    onclick={() => (isOpen = !isOpen)}
+  >
+    <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
+  </button>
+</nav>
 
 <style>
   aside {

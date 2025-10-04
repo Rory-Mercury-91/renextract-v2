@@ -2,9 +2,10 @@
 """
 Main launch script for PyWebView + Svelte application
 """
-import sys
 import subprocess
+import sys
 from pathlib import Path
+
 from app import main as app_main
 
 
@@ -33,8 +34,13 @@ def check_dependencies():
 
     for cmd, name in checks:
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True,
-                                    encoding='utf-8', errors='replace', check=False)
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                check=False)
 
             if result.returncode == 0:
                 print(f"OK: {name} installed: {result.stdout.strip()}")
@@ -56,26 +62,36 @@ def install_frontend_dependencies():
 
         # Try pnpm first
         try:
-            result = subprocess.run(['pnpm', 'install'], capture_output=True, text=True,
-                                    encoding='utf-8', errors='replace', check=False)
+            result = subprocess.run(['pnpm',
+                                     'install'],
+                                    capture_output=True,
+                                    text=True,
+                                    encoding='utf-8',
+                                    errors='replace',
+                                    check=False)
             if result.returncode == 0:
                 print("OK: Frontend dependencies installed with pnpm")
                 return True
-            else:
-                print(f"WARNING: pnpm failed: {result.stderr}")
+
+            print(f"WARNING: pnpm failed: {result.stderr}")
         except FileNotFoundError:
             print("WARNING: pnpm not found, trying npm...")
 
         # Try npm as alternative
         try:
-            result = subprocess.run(['npm', 'install'], capture_output=True, text=True,
-                                    encoding='utf-8', errors='replace', check=False)
+            result = subprocess.run(['npm',
+                                     'install'],
+                                    capture_output=True,
+                                    text=True,
+                                    encoding='utf-8',
+                                    errors='replace',
+                                    check=False)
             if result.returncode == 0:
                 print("OK: Frontend dependencies installed with npm")
                 return True
-            else:
-                print(f"ERROR: npm also failed: {result.stderr}")
-                return False
+
+            print(f"ERROR: npm also failed: {result.stderr}")
+            return False
         except FileNotFoundError:
             print("ERROR: Neither pnpm nor npm are installed")
             print("ADVICE: Install Node.js from https://nodejs.org/")
@@ -101,25 +117,37 @@ def build_frontend():
     try:
         # Try pnpm first
         try:
-            result = subprocess.run(['pnpm', 'run', 'build'], capture_output=True, text=True,
-                                    encoding='utf-8', errors='replace', check=False)
+            result = subprocess.run(['pnpm',
+                                     'run',
+                                     'build'],
+                                    capture_output=True,
+                                    text=True,
+                                    encoding='utf-8',
+                                    errors='replace',
+                                    check=False)
             if result.returncode == 0:
                 print("OK: Frontend built successfully (pnpm)")
                 return True
-            else:
-                print(f"WARNING: pnpm build failed: {result.stderr}")
+
+            print(f"WARNING: pnpm build failed: {result.stderr}")
         except FileNotFoundError:
             print("WARNING: pnpm not found, trying npm...")
 
         # Try npm as alternative
         try:
-            result = subprocess.run(['npm', 'run', 'build'], capture_output=True, text=True,
-                                    encoding='utf-8', errors='replace', check=False)
+            result = subprocess.run(['npm',
+                                     'run',
+                                     'build'],
+                                    capture_output=True,
+                                    text=True,
+                                    encoding='utf-8',
+                                    errors='replace',
+                                    check=False)
             if result.returncode == 0:
                 print("OK: Frontend built successfully (npm)")
                 return True
-            else:
-                print(f"WARNING: npm build also failed: {result.stderr}")
+
+            print(f"WARNING: npm build also failed: {result.stderr}")
         except FileNotFoundError:
             print("WARNING: npm not found either")
 

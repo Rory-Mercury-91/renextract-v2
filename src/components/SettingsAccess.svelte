@@ -3,35 +3,8 @@
   import { appSettings, appSettingsActions } from '../stores/app';
 
   let editorPath = $state($appSettings.paths.editor)
-  
-  let helpModal = { isOpen: false, title: '', content: '' };
-  let browseModal = {
-    isOpen: false,
-    title: '',
-    inputValue: '',
-    inputPlaceholder: '',
-    inputId: '',
-  };
-
-  const openPathDefault = (editorName: string) => {
-    // Ouvrir les options par défaut et détecter automatiquement
-    const defaultPaths: { [key: string]: string } = {
-      vscode:
-        'C:\\Users\\VotreNom\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe',
-      sublime: 'C:\\Program Files\\Sublime Text\\subl.exe',
-      notepad: 'C:\\Program Files\\Notepad++\\notepad++.exe',
-      atom: 'C:\\Users\\VotreNom\\AppData\\Local\\atom\\atom.exe',
-    };
-
-    alert(
-      `💡 Chemins par défaut pour ${editorName.toUpperCase()}:\n\n${defaultPaths[editorName]}\n\nCes chemins peuvent varier selon votre installation.`
-    );
-  };
-
-  // New modal functions
-  const showHelp = (title: string, content: string) => {
-    helpModal = { isOpen: true, title, content };
-  }
+    // État de chargement pour les dialogues
+  let isDialogLoading = $state(false);
 
   const showBrowse = async (
     title: string,
@@ -40,6 +13,7 @@
     currentValue: string = ''
   ) => {
     // Essayer le dialogue Windows natif d'abord
+    isDialogLoading = true;
     try {
       let result;
       if (inputId === 'renpy-sdk-path') {
@@ -48,7 +22,7 @@
         result = await apiService.openFileDialog();
       }
 
-      if (result.success && result.path) {
+      if (result.success && result.path && result.path.trim() !== '') {
         // Mettre à jour directement
         if (!$appSettings.paths) appSettingsActions.resetSettingsPaths()
 
@@ -67,24 +41,17 @@
         console.log(`${inputId} path updated via Windows dialog:`, result.path);
       } else {
         // Fallback vers le modal custom si le dialogue Windows échoue
-        browseModal = {
-          isOpen: true,
-          title,
-          inputPlaceholder: placeholder,
-          inputValue: currentValue,
-          inputId,
-        };
+        console.log('Windows dialog failed or returned empty, using fallback modal');
       }
     } catch (error) {
       console.warn('Windows dialog failed, falling back to modal:', error);
-      // Fallback vers le modal custom
-      browseModal = {
-        isOpen: true,
-        title,
-        inputPlaceholder: placeholder,
-        inputValue: currentValue,
-        inputId,
-      };
+      
+      // Vérifier si c'est un timeout
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.warn('Dialog timeout - user took too long to select a file/folder');
+      }
+    } finally {
+      isDialogLoading = false;
     }
   }
 </script>
@@ -110,21 +77,21 @@
                 id="renpy-sdk-path"
                 bind:value={$appSettings.paths.renpySdk}
                 placeholder="Ex: C:\Ren'Py\ren'py-8.0.3"
-                class="w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm"
+                class="w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm"
               />
               <div class="flex flex-col gap-1">
                 <button
-                  class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors flex items-center gap-1"
+                  class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors flex items-center gap-1"
                   onclick={() =>
-                    showHelp(
-                      "💡 SDK Ren'Py",
-                      "Le SDK Ren'Py doit contenir le fichier renpy.exe. Vous pouvez télécharger la dernière version depuis le site officiel.\n\nLe dossier SDK doit contenir :\n• renpy.exe\n• renpy.py\n• Les scripts RenPy"
+                    alert(
+                      "💡 Le SDK Ren'Py doit contenir le fichier renpy.exe. Vous pouvez télécharger la dernière version depuis le site officiel.\n\nLe dossier SDK doit contenir :\n• renpy.exe\n• renpy.py\n• Les scripts RenPy"
                     )}
                 >
                   <span class="text-xs">?</span> Aide
                 </button>
                 <button
-                  class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"
+                  class="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded text-sm transition-colors flex items-center gap-1"
+                  disabled={isDialogLoading}
                   onclick={() =>
                     showBrowse(
                       "📁 Sélectionner le SDK Ren'Py",
@@ -133,7 +100,7 @@
                       $appSettings.paths?.renpySdk || ''
                     )}
                 >
-                  📁 Parcourir
+                  {isDialogLoading ? '⏳ Ouverture...' : '📁 Parcourir'}
                 </button>
               </div>
             </div>
@@ -163,10 +130,11 @@
               id="path"
               bind:value={$appSettings.paths.editor}
               placeholder="Ex: C:\Program Files\Notepad++\notepad++.exe"
-              class="w-full p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm text-sm"
+              class="w-full p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm text-sm"
             />
             <button
-              class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+              class="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded text-sm transition-colors"
+              disabled={isDialogLoading}
               onclick={() => showBrowse(
                 "📁 Sélectionner l'éditeur",
                 'C:\Program Files\Notepad++\notepad++.exe',
@@ -174,13 +142,7 @@
                 $appSettings.paths?.editor || ''
               )}
             >
-              📁 Parcourir
-            </button>
-            <button
-              class="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
-              onclick={() => openPathDefault('editor')}
-            >
-              📝
+              {isDialogLoading ? '⏳ Ouverture...' : '📁 Parcourir'}
             </button>
           </div>
         </div>

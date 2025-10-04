@@ -3,20 +3,25 @@
 Main application using pywebview with Flask backend
 """
 import os
+import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+
 import webview
 from dotenv import load_dotenv
-from hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+from file_dialog import open_file_dialog_hybrid, open_folder_dialog_hybrid
 
 # Load environment variables
 load_dotenv()
 
 # Determine the path to static files based on execution context
+
+
 def get_static_path():
     """Determine the path to static files based on execution context"""
     if getattr(sys, 'frozen', False):
@@ -26,6 +31,7 @@ def get_static_path():
         # Development mode
         static_path = Path('dist')
     return str(static_path)
+
 
 # Flask configuration
 app = Flask(__name__, static_folder=get_static_path(), static_url_path='')
@@ -165,7 +171,8 @@ def update_settings():
     try:
         new_settings = request.get_json()
         if not new_settings:
-            return jsonify({'success': False, 'message': 'No settings provided'}), 400
+            return jsonify(
+                {'success': False, 'message': 'No settings provided'}), 400
 
         # Update settings (basic validation)
         for key, value in new_settings.items():
@@ -178,11 +185,12 @@ def update_settings():
             'data': settings_data
         })
 
-    except Exception as e:
+    except (ValueError, KeyError, OSError) as e:
         return jsonify({
             'success': False,
             'message': f'Error updating settings: {str(e)}'
         }), 500
+
 
 @app.route('/api/file-dialog/folder', methods=['GET'])
 def get_folder_dialog():
@@ -196,12 +204,13 @@ def get_folder_dialog():
             'success': True,
             'path': folder_path
         })
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"DEBUG: Folder dialog error: {e}")  # Debug log
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/file-dialog/file', methods=['GET'])
 def get_file_dialog():
@@ -215,7 +224,7 @@ def get_file_dialog():
             'success': True,
             'path': file_path
         })
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"DEBUG: File dialog error: {e}")  # Debug log
         return jsonify({
             'success': False,

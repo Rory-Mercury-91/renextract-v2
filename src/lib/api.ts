@@ -40,7 +40,8 @@ export const apiService = {
 
   async openFolderDialog(): Promise<{success: boolean, path?: string, error?: string}> {
     try {
-      const response = await api.get('/file-dialog/folder');
+      // Utiliser un timeout plus long pour les dialogues (60 secondes)
+      const response = await api.get('/file-dialog/folder', { timeout: 60000 });
       return {
         success: response.data.success,
         path: response.data.path
@@ -56,7 +57,8 @@ export const apiService = {
 
   async openFileDialog(): Promise<{success: boolean, path?: string, error?: string}> {
     try {
-      const response = await api.get('/file-dialog/file');
+      // Utiliser un timeout plus long pour les dialogues (60 secondes)
+      const response = await api.get('/file-dialog/file', { timeout: 60000 });
       return {
         success: response.data.success,
         path: response.data.path

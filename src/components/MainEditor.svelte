@@ -30,7 +30,7 @@
   }
 </script>
 
-<div class="flex-1 flex flex-col bg-gray-900 text-white">
+<div class="flex-1 flex flex-col bg-gray-900 text-white min-h-[35rem]">
   <!-- Header with controls -->
   <div class="bg-gray-800 p-4 border-b border-gray-700">
     <div class="flex items-center justify-between mb-4">

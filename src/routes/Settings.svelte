@@ -11,7 +11,7 @@
     component: Component<any, Record<string, any>>;
   }
 
-  let activeTab = $state('interface_applications');
+  let activeTab = $state('extraction_protection');
 
   let tabs: Tab[] = [
     {
@@ -34,28 +34,27 @@
   let saving = $state(false);
 </script>
 
-<div class="h-full w-full bg-gray-900 text-white flex flex-col">
+<section class="min-h-full flex flex-col justify-between text-white">
   <!-- Title -->
-  <div class="pt-6 border-b border-gray-700">
-    <h1 class="mx-6 text-3xl font-bold text-blue-400">Paramètres</h1>
-
-    <!-- Navigation tabs -->
-    <div class="mt-6 flex space-x-1 w-full justify-between">
-      {#each tabs as tab}
-        <button
-          class="tab-button text-sm font-medium w-full h-10 flex justify-center items-center bg-gray-800 hover:bg-gray-700"
-          class:bg-blue-600!={activeTab === tab.id}
-          onclick={() => (activeTab = tab.id)}
-        >
-          {tab.label}
-        </button>
-      {/each}
+  <div class="border-gray-700 h-full">
+    <div class="bg-gray-900">
+      <h1 class="mx-6 text-3xl font-bold text-blue-400 py-4">Paramètres</h1>
+      <!-- Navigation tabs -->
+      <div class="flex space-x-1 w-full justify-between">
+        {#each tabs as tab}
+          <button
+            class="tab-button text-sm font-medium w-full h-10 flex justify-center items-center hover:bg-gray-700"
+            class:bg-blue-600!={activeTab === tab.id}
+            onclick={() => (activeTab = tab.id)}
+          >
+            {tab.label}
+          </button>
+        {/each}
+      </div>
     </div>
-  </div>
-
-  <!-- Tab Content -->
-  <section class="flex-1 overflow-y-auto">
-    <div class="p-6 h-full">
+      
+    <!-- Tab Content -->
+    <div class="flex-1 p-6 h-full">
       {#each tabs as tab}
         {#if activeTab === tab.id}
           {@const Component = tab.component}
@@ -63,14 +62,14 @@
         {/if}
       {/each}
     </div>
-  </section>
+  </div>
 
   <!-- Action buttons -->
   <div class="p-6 border-t border-gray-700 bg-gray-800 flex justify-center">
     <div class="flex items-center space-x-4">
       <!-- Bouton de ménage -->
       <button
-        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center"
+        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors flex items-center"
         onclick={() =>
           alert('🧹 Nettoyage des fichiers temporaires, backups et reports...')}
       >
@@ -79,7 +78,7 @@
 
       <!-- Bouton réinitialiser application -->
       <button
-        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center"
+        class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center"
         onclick={() => {
           if (
             confirm(
@@ -96,7 +95,7 @@
 
       <!-- Bouton réinitialiser paramètres seulement -->
       <button
-        class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
+        class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
         onclick={() => {
           if (
             confirm('Réinitialiser seulement les paramètres de cette page ?')
@@ -110,4 +109,4 @@
       </button>
     </div>
   </div>
-</div>
+</section>

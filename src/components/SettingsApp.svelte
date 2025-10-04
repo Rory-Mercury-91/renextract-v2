@@ -21,7 +21,8 @@
     <h3 class="text-lg font-semibold flex items-center">Paramètres généraux</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <select bind:value={$locale} class="bg-primary rounded-lg px-2 py-1">
+        <label for="language-select" class="block text-sm font-medium mb-2">Langue de l'interface</label>
+        <select id="language-select " bind:value={$locale} class="bg-gray-100 text-black rounded-lg px-2 py-1">
           {#each $locales as locale}
             <option value={locale}
               >{locale.toUpperCase()} - {language[
@@ -30,16 +31,15 @@
             >
           {/each}
         </select>
-        <span class="text-white ml-2"> Langue de l'interface </span>
       </div>
       <!-- Theme Toggle -->
       <div>
-        <select class="bg-primary rounded-lg px-2 py-1">
+        <label for="theme-select" class="block text-sm font-medium mb-2"> Thème de l'interface </label>
+        <select id="theme-select" class="bg-gray-100 text-black rounded-lg px-2 py-1">
           <option value="auto">Auto</option>
           <option value="light">Clair</option>
           <option value="dark">Sombre</option>
         </select>
-        <span class="text-white ml-2"> Thème de l'interface </span>
       </div>
     </div>
   </div>
@@ -61,7 +61,7 @@
             bind:checked={$appSettings.autoOpenings.files}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white"> Ouverture automatique des fichiers </span>
+          <span class=""> Ouverture automatique des fichiers </span>
         </label>
 
         <label
@@ -72,7 +72,7 @@
             bind:checked={$appSettings.autoOpenings.folders}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white"> Ouverture automatique des dossiers </span>
+          <span class=""> Ouverture automatique des dossiers </span>
         </label>
       </div>
 
@@ -85,7 +85,7 @@
             bind:checked={$appSettings.autoOpenings.reports}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white"> Ouverture automatique du rapport </span>
+          <span class=""> Ouverture automatique du rapport </span>
         </label>
 
         <label
@@ -96,7 +96,7 @@
             bind:checked={$appSettings.autoOpenings.outputField}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white">
+          <span class="">
             Affichage du champ de chemin de sortie
           </span>
         </label>
@@ -119,7 +119,7 @@
           >
           <select
             id="notification-mode"
-            class="bg-primary rounded-lg px-2 py-1"
+            class="bg-gray-100 text-black rounded-lg px-2 py-1"
           >
             <option value="status">Statut seulement</option>
             <option value="dialog">Dialogue complet</option>
@@ -135,7 +135,7 @@
             bind:checked={$appSettings.debugActive}
             class="mr-3 w-4 h-4"
           />
-          <span class="text-white"> Mode debug complet </span>
+          <span class=""> Mode debug complet </span>
         </label>
       </div>
 
@@ -148,7 +148,7 @@
           <select
             id="text-editor"
             bind:value={$appSettings.externalTools.textEditor}
-            class="bg-primary rounded-lg px-2 py-1"
+            class="bg-gray-100 text-black rounded-lg px-2 py-1"
           >
             <option value="VS Code">VS Code</option>
             <option value="Notepad++">Notepad++</option>

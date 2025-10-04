@@ -1,7 +1,7 @@
 <script lang="ts">
 </script>
 
-<section class="flex flex-col h-full w-full">
+<section class="flex flex-col">
   <div class="p-6">
     <h2 class="text-2xl font-bold mb-4">⚡ Générateur</h2>
     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">

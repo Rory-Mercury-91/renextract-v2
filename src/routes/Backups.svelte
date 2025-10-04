@@ -1,3 +1,3 @@
 <script lang="ts"></script>
 
-<div class="flex flex-col w-full h-full"></div>
+<section></section>

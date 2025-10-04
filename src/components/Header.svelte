@@ -59,7 +59,7 @@
       onclick={() => (showAboutModal = true)}
       title="Informations sur RenExtract"
     >
-      ℹ️ À propos
+      ℹ️ {$_('app.about')}
     </button>
   </div>
 </header>

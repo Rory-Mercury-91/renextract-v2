@@ -61,15 +61,17 @@
     <div class="h-screen max-h-screen flex flex-col relative">
       <Header />
 
-      <div class="flex h-full relative">
+      <div class="flex h-full box-content overflow-scroll">
         <Sidebar />
 
-        <Route path="/" component={Generator} />
-        <Route path="/extract" component={Extractor} />
-        <Route path="/tools" component={Tools} />
-        <Route path="/backups" component={Backups} />
-        <Route path="/settings" component={Settings} />
-        <Route path="*" component={NotFound} />
+        <div class="h-full w-full max-h-full overflow-y-scroll">
+          <Route path="/" component={Generator} />
+          <Route path="/extract" component={Extractor} />
+          <Route path="/tools" component={Tools} />
+          <Route path="/backups" component={Backups} />
+          <Route path="/settings" component={Settings} />
+          <Route path="*" component={NotFound} />
+        </div>
       </div>
     </div>
   {/if}
