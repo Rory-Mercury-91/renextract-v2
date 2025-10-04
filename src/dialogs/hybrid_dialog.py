@@ -121,6 +121,71 @@ def open_file_dialog_hybrid():
     # Fallback temporaire pour test
     return "C:\\Windows\\notepad.exe"  # Valeur de test
 
+def open_save_dialog_hybrid(title="Enregistrer sous...", initialfile="", defaultextension="", filetypes=None):
+    """Essaie plusieurs méthodes pour ouvrir un dialogue de sauvegarde (asksaveasfilename equivalent)."""
+    
+    if filetypes is None:
+        filetypes = [("Tous les fichiers", "*.*")]
+    
+    # Détecter l'environnement
+    is_wsl = False
+    try:
+        if hasattr(os, 'uname'):
+            is_wsl = 'microsoft' in os.uname().release.lower()
+        is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+    except:
+        is_wsl = False
+    
+    if is_wsl:
+        print("DEBUG: WSL detected, save dialog not available in WSL")
+        # En WSL, on ne peut pas ouvrir de dialogue Windows
+        print("INFO: En mode WSL, le dialogue de sauvegarde n'est pas disponible.")
+        return ""
+    
+    # Méthode 1: PowerShell + System.Windows.Forms (Windows natif seulement)
+    try:
+        # Construire le filtre pour PowerShell
+        filter_parts = []
+        for desc, ext in filetypes:
+            filter_parts.append(f"{desc}|{ext}")
+        filter_string = "|".join(filter_parts)
+        
+        ps_script = f"""
+        Add-Type -AssemblyName System.Windows.Forms
+        
+        $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
+        $saveFileDialog.Title = "{title}"
+        $saveFileDialog.FileName = "{initialfile}"
+        $saveFileDialog.DefaultExt = "{defaultextension}"
+        $saveFileDialog.Filter = "{filter_string}"
+        $saveFileDialog.FilterIndex = 1
+        
+        if ($saveFileDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {{
+            Write-Output $saveFileDialog.FileName
+        }} else {{
+            Write-Output "CANCELLED"
+        }}
+        """
+        
+        result = subprocess.run([
+            "powershell.exe", "-WindowStyle", "Hidden", "-Command", ps_script
+        ], capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            if output and output != "CANCELLED":
+                print(f"DEBUG: PowerShell save dialog returned: {output}")
+                return output
+            else:
+                print("DEBUG: PowerShell save dialog was cancelled")
+                return ""
+    except Exception as e:
+        print(f"PowerShell save dialog method failed: {e}")
+    
+    # Méthode 2: Fallback - retourner un chemin par défaut
+    print("DEBUG: All save dialog methods failed, returning empty string")
+    return ""
+
 if __name__ == "__main__":
     print("Testing hybrid dialogs...")
     

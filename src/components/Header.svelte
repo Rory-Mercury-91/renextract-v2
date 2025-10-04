@@ -1,5 +1,6 @@
 <script lang="ts">
   import packageJson from '../../package.json' assert { type: 'json' };
+  import { apiService } from '../lib/api';
   import { i18n } from '../lib/i18n';
   import { appActions, appState } from '../stores/app';
 
@@ -41,9 +42,31 @@
     document.documentElement.style.colorScheme = newTheme === 'dark' ? 'dark' : 'light';
   }
 
-  function quitApplication() {
+  async function quitApplication() {
     if (confirm('Êtes-vous sûr de vouloir quitter RenExtract ?')) {
-      window.close ? window.close() : location.reload();
+      try {
+        // Utiliser l'API backend pour fermer l'application
+        const result = await apiService.quitApplication();
+        if (result.success) {
+          // L'application va se fermer via le backend
+        } else {
+          console.error('Erreur lors de la fermeture:', result.error);
+          // Fallback - essayer les méthodes natives
+          if (typeof window.close === 'function') {
+            window.close();
+          } else {
+            location.reload();
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la fermeture:', error);
+        // Fallback - essayer les méthodes natives
+        if (typeof window.close === 'function') {
+          window.close();
+        } else {
+          location.reload();
+        }
+      }
     }
   }
 

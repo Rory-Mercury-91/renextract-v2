@@ -6,13 +6,14 @@ from pathlib import Path
 # Chemin vers le dossier dist
 dist_path = Path('dist')
 
-# Collecter tous les fichiers statiques
+# Collecter tous les fichiers statiques pour les intégrer dans l'exécutable
 datas = []
 if dist_path.exists():
     for file_path in dist_path.rglob('*'):
         if file_path.is_file():
             # Calculer le chemin relatif pour l'inclusion
             rel_path = file_path.relative_to(dist_path)
+            # Inclure tous les fichiers statiques dans l'exécutable
             datas.append((str(file_path), str(rel_path.parent) if rel_path.parent != Path('.') else '.'))
 
 a = Analysis(
@@ -46,13 +47,13 @@ exe = EXE(
     a.datas,
     [],
     name='app-temp',
-    debug=False,
+    debug=True,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

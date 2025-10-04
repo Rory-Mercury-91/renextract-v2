@@ -63,10 +63,11 @@ app_base_dir = initialize_application_folders()
 def get_static_path():
     """Determine the path to static files based on execution context"""
     if getattr(sys, 'frozen', False):
+        # Mode exécutable - les fichiers statiques sont dans _MEIPASS
         base_path = Path(sys._MEIPASS)  # pylint: disable=protected-access
         static_path = base_path
     else:
-        # Development mode
+        # Mode développement
         static_path = Path('dist')
     return str(static_path)
 
@@ -263,6 +264,33 @@ def health_check():
         'message': 'Python API is working correctly',
         'timestamp': time.time()
     })
+
+@app.route('/api/quit', methods=['POST'])
+def quit_application():
+    """Quit the application"""
+    try:
+        # Fermer l'application PyWebView
+        import threading
+        def close_app():
+            time.sleep(0.5)  # Petit délai pour laisser la réponse se terminer
+            if 'webview' in globals():
+                webview.destroy_window()
+            else:
+                import sys
+                sys.exit(0)
+        
+        # Lancer la fermeture dans un thread séparé
+        threading.Thread(target=close_app, daemon=True).start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Application fermée'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/api/message')
@@ -478,6 +506,90 @@ def get_file_dialog():
         })
     except Exception as e:
         print(f"DEBUG: File dialog error: {e}")  # Debug log
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/file-dialog/save', methods=['POST'])
+def get_save_dialog():
+    """Open Windows save file dialog (asksaveasfilename equivalent)."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données requises'
+            }), 400
+        
+        # Paramètres du dialogue de sauvegarde
+        title = data.get('title', 'Enregistrer sous...')
+        initialfile = data.get('initialfile', '')
+        defaultextension = data.get('defaultextension', '')
+        filetypes = data.get('filetypes', [("Tous les fichiers", "*.*")])
+        
+        print(f"DEBUG: Save dialog params - title: {title}, initialfile: {initialfile}, defaultextension: {defaultextension}")
+        
+        # Détecter WSL
+        is_wsl = False
+        try:
+            if hasattr(os, 'uname'):
+                is_wsl = 'microsoft' in os.uname().release.lower()
+            is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+        except:
+            is_wsl = False
+        
+        if is_wsl:
+            # En WSL, retourner une erreur indiquant qu'il faut utiliser l'endpoint POST avec le chemin
+            return jsonify({
+                'success': False,
+                'error': 'WSL_MODE',
+                'message': 'En mode WSL, le dialogue de sauvegarde n\'est pas disponible. Utilisez POST /api/file-dialog/save avec le chemin en paramètre'
+            }), 400
+        
+        # En mode normal, utiliser le dialogue natif
+        from src.dialogs.hybrid_dialog import open_save_dialog_hybrid
+        file_path = open_save_dialog_hybrid(
+            title=title,
+            initialfile=initialfile,
+            defaultextension=defaultextension,
+            filetypes=filetypes
+        )
+        
+        print(f"DEBUG: Save dialog returned: '{file_path}'")
+        
+        return jsonify({
+            'success': True,
+            'path': file_path
+        })
+        
+    except Exception as e:
+        print(f"DEBUG: Save dialog error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/file-dialog/save-path', methods=['POST'])
+def set_save_path():
+    """Set save file path manually (for WSL mode)."""
+    try:
+        data = request.get_json()
+        if not data or 'path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin requis'
+            }), 400
+        
+        file_path = data['path']
+        print(f"DEBUG: Manual save path set: '{file_path}'")
+        
+        return jsonify({
+            'success': True,
+            'path': file_path
+        })
+    except Exception as e:
+        print(f"DEBUG: Manual save path error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

@@ -106,6 +106,56 @@ export const apiService = {
     }
   },
 
+  async openSaveDialog(params: {
+    title?: string;
+    initialfile?: string;
+    defaultextension?: string;
+    filetypes?: [string, string][];
+  }): Promise<{success: boolean, path?: string, error?: string}> {
+    try {
+      const response = await api.post('/file-dialog/save', params);
+      
+      // Si c'est le mode WSL, demander le chemin à l'utilisateur
+      if (!response.data.success && response.data.error === 'WSL_MODE') {
+        const filetypes_str = params.filetypes?.map(([desc, ext]) => `${desc} (${ext})`).join(' | ') || 'Tous les fichiers (*.*)';
+        const prompt_text = `En mode WSL, le dialogue de sauvegarde n'est pas disponible.\n\n` +
+                          `Titre: ${params.title || 'Enregistrer sous...'}\n` +
+                          `Fichier initial: ${params.initialfile || ''}\n` +
+                          `Extension par défaut: ${params.defaultextension || ''}\n` +
+                          `Types de fichiers: ${filetypes_str}\n\n` +
+                          `Veuillez saisir le chemin complet du fichier de destination :\n` +
+                          `Exemple: C:\\Users\\Public\\Documents\\mon_fichier.rpy`;
+        
+        const filePath = prompt(prompt_text);
+        
+        if (!filePath) {
+          return {
+            success: false,
+            error: 'Aucun chemin saisi'
+          };
+        }
+        
+        // Envoyer le chemin via l'endpoint dédié
+        const pathResponse = await api.post('/file-dialog/save-path', { path: filePath });
+        return {
+          success: pathResponse.data.success,
+          path: pathResponse.data.path
+        };
+      }
+      
+      return {
+        success: response.data.success,
+        path: response.data.path
+      };
+    } catch (error) {
+      console.error('Save Dialog Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
   async getBackups(gameFilter?: string, typeFilter?: string): Promise<BackupListResponse> {
     try {
       const params = new URLSearchParams();
@@ -157,6 +207,19 @@ export const apiService = {
       return response.data;
     } catch (error) {
       console.error('Delete Backup Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async quitApplication(): Promise<{success: boolean, message?: string, error?: string}> {
+    try {
+      const response = await api.post('/quit');
+      return response.data;
+    } catch (error) {
+      console.error('Quit Application Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
