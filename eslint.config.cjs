@@ -58,7 +58,7 @@ module.exports = [
     rules: {
       // Base ESLint rules
       ...js.configs.recommended.rules,
- 
+
       // General rules
       'no-console': 'warn',
       'no-debugger': 'error',
@@ -80,7 +80,7 @@ module.exports = [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
- 
+
       // Custom TypeScript rules
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -106,7 +106,7 @@ module.exports = [
     },
     rules: {
       ...sveltePlugin.configs.recommended.rules,
- 
+
       // Custom Svelte rules
       'svelte/no-at-html-tags': 'error',
       'svelte/no-target-blank': 'error',

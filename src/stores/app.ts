@@ -1,49 +1,101 @@
-import type { Language, Theme } from '$lib/i18n';
 import { writable } from 'svelte/store';
 
 interface AppState {
-  currentSection: string;
-  currentLanguage: Language;
-  currentTheme: Theme;
+  // currentTheme: Theme;
   debugLevel: number;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: AppState = {
-  currentSection: 'settings', // On commence par Paramètres comme demandé
-  currentLanguage: 'fr',
-  currentTheme: 'dark',
+  // currentTheme: 'dark',
   debugLevel: 4, // DEBUG complet par défaut
   isLoading: false,
-  error: null
+  error: null,
 };
 
 export const appState = writable<AppState>(initialState);
 
-// Actions pour modifier l'état
-export const appActions = {
-  setCurrentSection: (section: string) => {
-    appState.update(state => ({ ...state, currentSection: section }));
+const appActions = {
+  setState: <K extends keyof AppState>(key: K, value: AppState[K]) => {
+    appState.update(state => ({ ...state, [key]: value }));
   },
-
-  setLanguage: (lang: Language) => {
-    appState.update(state => ({ ...state, currentLanguage: lang }));
-  },
-
-  setTheme: (theme: Theme) => {
-    appState.update(state => ({ ...state, currentTheme: theme }));
-  },
-
-  setDebugLevel: (level: number) => {
-    appState.update(state => ({ ...state, debugLevel: level }));
-  },
-
-  setLoading: (loading: boolean) => {
-    appState.update(state => ({ ...state, isLoading: loading }));
-  },
-
-  setError: (error: string | null) => {
-    appState.update(state => ({ ...state, error }));
-  }
 };
+
+interface AppSettings {
+  language: string;
+  theme: 'light' | 'dark' | 'auto';
+  debugActive: boolean; // Single debug mode (false=Level 3, true=Level 4)
+  autoOpenings: {
+    files: boolean;
+    folders: boolean;
+    reports: boolean;
+    outputField: boolean;
+  };
+  externalTools: {
+    textEditor: string;
+    translator: string;
+  };
+  paths: {
+    editor: string;
+    renpySdk: string;
+  };
+  folders: {
+    temporary: string;
+    reports: string;
+    backups: string;
+    configs: string;
+  };
+  extraction: {
+    placeholderFormat: string;
+    encoding: string;
+  };
+}
+
+const initialSettings: AppSettings = {
+  language: 'fr',
+  theme: 'auto',
+  debugActive: false, // Single debug mode (false=Level 3, true=Level 4)
+  autoOpenings: {
+    files: true,
+    folders: true,
+    reports: false,
+    outputField: false,
+  },
+  externalTools: {
+    textEditor: 'VS Code',
+    translator: '',
+  },
+  paths: {
+    editor: '',
+    renpySdk: '',
+  },
+  folders: {
+    temporary: '01_Temporary/',
+    reports: '02_Reports/',
+    backups: '03_Backups/',
+    configs: '04_Configs/',
+  },
+  extraction: {
+    placeholderFormat: 'PLACEHOLDER_{n}',
+    encoding: 'UTF-8',
+  },
+};
+
+const appSettings = writable<AppSettings>(initialSettings);
+
+const appSettingsActions = {
+  setSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    appSettings.update(setting => ({ ...setting, [key]: value }));
+  },
+
+  resetSettings: () => {
+    appSettings.set(initialSettings);
+  },
+
+  resetSettingsPaths: () => {
+    appSettings.set({ ...initialSettings, paths: { ...initialSettings.paths, editor: '', renpySdk: '' } });
+  },
+};
+
+export { appActions, appSettings, appSettingsActions };

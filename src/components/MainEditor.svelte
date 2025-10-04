@@ -14,12 +14,10 @@
     'C++',
     'C#',
     'Go',
-    'Rust'
+    'Rust',
   ];
 
-  const files = [
-    '— Aucun fichier —'
-  ];
+  const files = ['— Aucun fichier —'];
 
   function handleLanguageChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -32,7 +30,7 @@
   }
 </script>
 
-<div class="flex-1 flex flex-col bg-gray-900 text-white">
+<div class="flex-1 flex flex-col bg-gray-900 text-white min-h-[35rem]">
   <!-- Header with controls -->
   <div class="bg-gray-800 p-4 border-b border-gray-700">
     <div class="flex items-center justify-between mb-4">
@@ -42,11 +40,11 @@
         <span>{encoding}</span>
       </div>
     </div>
-    
+
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-2">
         <label for="language-select" class="text-sm">Langue:</label>
-        <select 
+        <select
           id="language-select"
           bind:value={selectedLanguage}
           on:change={handleLanguageChange}
@@ -60,7 +58,7 @@
 
       <div class="flex items-center gap-2">
         <label for="file-select" class="text-sm">Fichier:</label>
-        <select 
+        <select
           id="file-select"
           bind:value={selectedFile}
           on:change={handleFileChange}
@@ -73,10 +71,14 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+        <button
+          class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
+        >
           📁
         </button>
-        <button class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+        <button
+          class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
+        >
           💾
         </button>
       </div>
@@ -92,10 +94,12 @@
     <div class="absolute inset-0 bg-gray-900">
       <div class="h-full flex">
         <!-- Line numbers -->
-        <div class="bg-gray-800 px-3 py-4 text-gray-500 text-sm font-mono border-r border-gray-700 min-w-[60px]">
+        <div
+          class="bg-gray-800 px-3 py-4 text-gray-500 text-sm font-mono border-r border-gray-700 min-w-[60px]"
+        >
           <div class="text-right">1</div>
         </div>
-        
+
         <!-- Code area -->
         <div class="flex-1 p-4">
           <textarea
@@ -109,7 +113,9 @@
   </div>
 
   <!-- Status bar -->
-  <div class="bg-gray-800 px-4 py-2 border-t border-gray-700 text-sm text-gray-400 flex items-center justify-between">
+  <div
+    class="bg-gray-800 px-4 py-2 border-t border-gray-700 text-sm text-gray-400 flex items-center justify-between"
+  >
     <span>Ligne 1, Colonne 1</span>
     <span>1 lignes, 0 caractères</span>
   </div>

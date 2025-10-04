@@ -2,19 +2,23 @@
 """
 Main application using pywebview with Flask backend
 """
+from src.backend.backup_manager import BackupManager
 import os
+import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+
 import webview
 from dotenv import load_dotenv
 from src.dialogs.hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 # Load environment variables
 load_dotenv()
+
 
 def initialize_application_folders():
     """Crée les dossiers nécessaires au premier lancement de l'application"""
@@ -26,15 +30,15 @@ def initialize_application_folders():
         else:
             # Mode développement
             base_dir = os.path.dirname(os.path.abspath(__file__))
-        
+
         # Dossiers à créer
         folders = [
             '01_Temporary',
-            '02_Reports', 
+            '02_Reports',
             '03_Backups',
             '04_Configs'
         ]
-        
+
         created_folders = []
         for folder in folders:
             folder_path = os.path.join(base_dir, folder)
@@ -44,22 +48,26 @@ def initialize_application_folders():
                 print(f"DEBUG: Created folder: {folder_path}")
             else:
                 print(f"DEBUG: Folder already exists: {folder_path}")
-        
+
         if created_folders:
-            print(f"DEBUG: Created {len(created_folders)} new folders: {created_folders}")
+            print(
+                f"DEBUG: Created {len(created_folders)} new folders: {created_folders}")
         else:
             print("DEBUG: All folders already exist")
-        
+
         return base_dir
-        
+
     except Exception as e:
         print(f"ERROR: Failed to initialize folders: {e}")
         return None
+
 
 # Initialiser les dossiers au démarrage
 app_base_dir = initialize_application_folders()
 
 # Determine the path to static files based on execution context
+
+
 def get_static_path():
     """Determine the path to static files based on execution context"""
     if getattr(sys, 'frozen', False):
@@ -70,6 +78,7 @@ def get_static_path():
         # Mode développement
         static_path = Path('dist')
     return str(static_path)
+
 
 # Flask configuration
 app = Flask(__name__, static_folder=get_static_path(), static_url_path='')
@@ -85,10 +94,10 @@ api_data = {
 # Remplacer les lignes 41-49 dans app.py par :
 
 # Importer le nouveau gestionnaire de backup
-from src.backend.backup_manager import BackupManager
 
 # Initialiser le gestionnaire
 backup_manager = BackupManager()
+
 
 @app.route('/api/backups', methods=['GET'])
 def get_backups():
@@ -96,12 +105,12 @@ def get_backups():
     try:
         game_filter = request.args.get('game')
         type_filter = request.args.get('type')
-        
+
         backups = backup_manager.list_all_backups(
             game_filter=game_filter,
             type_filter=type_filter
         )
-        
+
         return jsonify({
             'success': True,
             'backups': backups
@@ -111,6 +120,7 @@ def get_backups():
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/backups/<backup_id>/restore', methods=['POST'])
 def restore_backup(backup_id):
@@ -122,36 +132,37 @@ def restore_backup(backup_id):
                 'success': False,
                 'error': 'Sauvegarde introuvable'
             }), 404
-        
+
         backup = backup_manager.metadata[backup_id]
         target_path = backup.get('source_path')
-        
+
         if not target_path or not os.path.exists(os.path.dirname(target_path)):
             return jsonify({
                 'success': False,
                 'error': 'Chemin de destination invalide'
             }), 400
-        
+
         # Copier le fichier
         import shutil
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         shutil.copy2(backup['backup_path'], target_path)
-        
+
         # Supprimer la sauvegarde après restauration
         os.remove(backup['backup_path'])
         del backup_manager.metadata[backup_id]
         backup_manager._save_metadata()
-        
+
         return jsonify({
             'success': True,
             'message': 'Sauvegarde restaurée avec succès'
         })
-        
+
     except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/backups/<backup_id>/restore-to', methods=['POST'])
 def restore_backup_to(backup_id):
@@ -160,17 +171,17 @@ def restore_backup_to(backup_id):
         data = request.get_json()
         print(f"DEBUG: restore_backup_to called with backup_id: {backup_id}")
         print(f"DEBUG: request data: {data}")
-        
+
         if not data or 'target_path' not in data:
             print("DEBUG: Missing target_path in request data")
             return jsonify({
                 'success': False,
                 'error': 'Chemin de destination requis'
             }), 400
-        
+
         target_path = data['target_path']
         print(f"DEBUG: Target path: {target_path}")
-        
+
         # Trouver le backup dans les métadonnées
         if backup_id not in backup_manager.metadata:
             print(f"DEBUG: Backup {backup_id} not found in metadata")
@@ -178,17 +189,17 @@ def restore_backup_to(backup_id):
                 'success': False,
                 'error': 'Sauvegarde introuvable'
             }), 404
-        
+
         backup = backup_manager.metadata[backup_id]
         print(f"DEBUG: Backup found: {backup}")
-        
+
         # Vérifier que le répertoire de destination existe
         from pathlib import Path
         target_path_obj = Path(target_path)
         target_dir = target_path_obj.parent
         print(f"DEBUG: Target directory: {target_dir}")
         print(f"DEBUG: Target directory exists: {target_dir.exists()}")
-        
+
         if not target_dir.exists():
             print(f"DEBUG: Target directory does not exist: {target_dir}")
             # Créer le répertoire s'il n'existe pas
@@ -201,24 +212,25 @@ def restore_backup_to(backup_id):
                     'success': False,
                     'error': f'Impossible de créer le répertoire de destination: {target_dir}'
                 }), 400
-        
+
         # Copier le fichier vers la destination
         import shutil
         print(f"DEBUG: Copying from {backup['backup_path']} to {target_path}")
         shutil.copy2(backup['backup_path'], target_path)
-        
+
         print(f"DEBUG: Restore successful")
         return jsonify({
             'success': True,
             'message': f'Fichier restauré vers {target_path}'
         })
-        
+
     except Exception as e:
         print(f"DEBUG: Exception in restore_backup_to: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/backups/<backup_id>', methods=['DELETE'])
 def delete_backup(backup_id):
@@ -230,25 +242,25 @@ def delete_backup(backup_id):
                 'success': False,
                 'error': 'Sauvegarde introuvable'
             }), 404
-        
+
         backup = backup_manager.metadata[backup_id]
-        
+
         # Supprimer le fichier
         if os.path.exists(backup['backup_path']):
             os.remove(backup['backup_path'])
-        
+
         # Supprimer des métadonnées
         del backup_manager.metadata[backup_id]
         backup_manager._save_metadata()
-        
+
         # Nettoyer les dossiers vides
         backup_manager.cleanup_empty_folders()
-        
+
         return jsonify({
             'success': True,
             'message': 'Sauvegarde supprimée avec succès'
         })
-        
+
     except Exception as e:
         return jsonify({
             'success': False,
@@ -265,12 +277,14 @@ def health_check():
         'timestamp': time.time()
     })
 
+
 @app.route('/api/quit', methods=['POST'])
 def quit_application():
     """Quit the application"""
     try:
         # Fermer l'application PyWebView
         import threading
+
         def close_app():
             time.sleep(0.5)  # Petit délai pour laisser la réponse se terminer
             if 'webview' in globals():
@@ -278,10 +292,10 @@ def quit_application():
             else:
                 import sys
                 sys.exit(0)
-        
+
         # Lancer la fermeture dans un thread séparé
         threading.Thread(target=close_app, daemon=True).start()
-        
+
         return jsonify({
             'success': True,
             'message': 'Application fermée'
@@ -373,10 +387,7 @@ settings_data = {
     },
     'paths': {
         'renpySdk': '',
-        'vscode': '',
-        'sublime': '',
-        'notepad': '',
-        'atom': ''
+        'editor': ''
     },
     'folders': {
         'temporary': '01_Temporary/',
@@ -412,24 +423,26 @@ def update_settings():
     try:
         new_settings = request.get_json()
         if not new_settings:
-            return jsonify({'success': False, 'message': 'No settings provided'}), 400
-            
+            return jsonify(
+                {'success': False, 'message': 'No settings provided'}), 400
+
         # Update settings (basic validation)
         for key, value in new_settings.items():
             if key in settings_data:
                 settings_data[key] = value
-                
+
         return jsonify({
             'success': True,
             'message': 'Settings updated successfully',
             'data': settings_data
         })
-        
-    except Exception as e:
+
+    except (ValueError, KeyError, OSError) as e:
         return jsonify({
             'success': False,
             'message': f'Error updating settings: {str(e)}'
         }), 500
+
 
 @app.route('/api/file-dialog/folder', methods=['GET'])
 def get_folder_dialog():
@@ -443,7 +456,7 @@ def get_folder_dialog():
             is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
         except:
             is_wsl = False
-        
+
         if is_wsl:
             # En WSL, retourner un message indiquant qu'il faut utiliser l'endpoint POST
             return jsonify({
@@ -451,21 +464,22 @@ def get_folder_dialog():
                 'error': 'WSL_MODE',
                 'message': 'En mode WSL, utilisez POST /api/file-dialog/folder avec le chemin en paramètre'
             }), 400
-        
+
         folder_path = open_folder_dialog_hybrid()
-        
+
         print(f"DEBUG: Folder dialog returned: '{folder_path}'")  # Debug log
-        
+
         return jsonify({
             'success': True,
             'path': folder_path
         })
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"DEBUG: Folder dialog error: {e}")  # Debug log
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/file-dialog/folder', methods=['POST'])
 def set_folder_path():
@@ -477,10 +491,10 @@ def set_folder_path():
                 'success': False,
                 'error': 'Chemin requis'
             }), 400
-        
+
         folder_path = data['path']
         print(f"DEBUG: Manual folder path set: '{folder_path}'")
-        
+
         return jsonify({
             'success': True,
             'path': folder_path
@@ -492,24 +506,26 @@ def set_folder_path():
             'error': str(e)
         }), 500
 
+
 @app.route('/api/file-dialog/file', methods=['GET'])
 def get_file_dialog():
     """Open Windows file selection dialog."""
     try:
         file_path = open_file_dialog_hybrid()
-        
+
         print(f"DEBUG: File dialog returned: '{file_path}'")  # Debug log
-        
+
         return jsonify({
             'success': True,
             'path': file_path
         })
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"DEBUG: File dialog error: {e}")  # Debug log
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/file-dialog/save', methods=['POST'])
 def get_save_dialog():
@@ -521,15 +537,17 @@ def get_save_dialog():
                 'success': False,
                 'error': 'Données requises'
             }), 400
-        
+
         # Paramètres du dialogue de sauvegarde
         title = data.get('title', 'Enregistrer sous...')
         initialfile = data.get('initialfile', '')
         defaultextension = data.get('defaultextension', '')
         filetypes = data.get('filetypes', [("Tous les fichiers", "*.*")])
-        
-        print(f"DEBUG: Save dialog params - title: {title}, initialfile: {initialfile}, defaultextension: {defaultextension}")
-        
+
+        print(
+            f"DEBUG: Save dialog params - title: {title}, initialfile: {initialfile}, \
+              defaultextension: {defaultextension}")
+
         # Détecter WSL
         is_wsl = False
         try:
@@ -538,7 +556,7 @@ def get_save_dialog():
             is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
         except:
             is_wsl = False
-        
+
         if is_wsl:
             # En WSL, retourner une erreur indiquant qu'il faut utiliser l'endpoint POST avec le chemin
             return jsonify({
@@ -546,7 +564,7 @@ def get_save_dialog():
                 'error': 'WSL_MODE',
                 'message': 'En mode WSL, le dialogue de sauvegarde n\'est pas disponible. Utilisez POST /api/file-dialog/save avec le chemin en paramètre'
             }), 400
-        
+
         # En mode normal, utiliser le dialogue natif
         from src.dialogs.hybrid_dialog import open_save_dialog_hybrid
         file_path = open_save_dialog_hybrid(
@@ -555,20 +573,21 @@ def get_save_dialog():
             defaultextension=defaultextension,
             filetypes=filetypes
         )
-        
+
         print(f"DEBUG: Save dialog returned: '{file_path}'")
-        
+
         return jsonify({
             'success': True,
             'path': file_path
         })
-        
+
     except Exception as e:
         print(f"DEBUG: Save dialog error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/api/file-dialog/save-path', methods=['POST'])
 def set_save_path():
@@ -580,10 +599,10 @@ def set_save_path():
                 'success': False,
                 'error': 'Chemin requis'
             }), 400
-        
+
         file_path = data['path']
         print(f"DEBUG: Manual save path set: '{file_path}'")
-        
+
         return jsonify({
             'success': True,
             'path': file_path
@@ -626,7 +645,7 @@ def main():
     if getattr(sys, 'frozen', False):
         print(f"DEBUG: _MEIPASS = {sys._MEIPASS}")
         print(f"DEBUG: static_path = {get_static_path()}")
-    
+
     try:
         # Try to start PyWebView
         if not is_wsl:

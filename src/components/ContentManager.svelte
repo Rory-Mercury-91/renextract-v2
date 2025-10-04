@@ -1,7 +1,7 @@
 <script lang="ts">
+  import Backup from '../routes/Backups.svelte';
   import { appState } from '../stores/app';
   import ActionButtons from './ActionButtons.svelte';
-  import Backup from './Backup.svelte';
   import MainEditor from './MainEditor.svelte';
   import Settings from './Settings.svelte';
   import WorkFolders from './WorkFolders.svelte';
