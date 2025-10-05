@@ -9,14 +9,15 @@
     link: string;
     name: string;
     icon: string;
+    color: string
   }
 
   const sections: Section[] = [
-    { link: '/', name: $_('navigation.generator'), icon: '⚡' },
-    { link: '/extract', name: $_('navigation.extract'), icon: '📄' },
-    { link: '/tools', name: $_('navigation.tools'), icon: '🔧' },
-    { link: '/backups', name: $_('navigation.backup'), icon: '💾' },
-    { link: '/settings', name: $_('navigation.settings'), icon: '⚙️' },
+    { link: '/', name: $_('navigation.generator'), icon: 'hugeicons:magic-wand-04', color: 'text-yellow-300' },
+    { link: '/extract', name: $_('navigation.extract'), icon: 'hugeicons:injection', color: 'text-blue-300' },
+    { link: '/tools', name: $_('navigation.tools'), icon: 'hugeicons:tools', color: 'text-green-300' },
+    { link: '/backups', name: $_('navigation.backup'), icon: 'hugeicons:floppy-disk', color: 'text-purple-300' },
+    { link: '/settings', name: $_('navigation.settings'), icon: 'hugeicons:settings-01', color: 'text-gray-300' },
   ];
 </script>
 
@@ -29,13 +30,15 @@
       <Link to={section.link}>
         {#snippet children(active)}
           <div
-            class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative"
+            class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative {section.color}"
             class:bg-blue-600={active}
             class:hover:bg-blue-700={active}
           >
-            <span class="text-xl">{section.icon}</span>
+            <span class="text-xl">
+              <Icon icon={section.icon} class="w-6 h-6" />
+            </span>
             {#if !isOpen}
-              <span class="flex-1 hidden lg:block">{section.name}</span>
+              <span class="flex-1 hidden lg:block font-bold">{section.name}</span>
             {/if}
           </div>
         {/snippet}
@@ -44,7 +47,7 @@
   </div>
 
   <button
-    class="hidden lg:flex mx-auto items-center justify-center"
+    class="hidden lg:flex mx-auto items-center justify-center transition-all duration-400 bg-slate-700 hover:bg-slate-600 rounded-full p-1"
     class:rotate-180={isOpen}
     onclick={() => (isOpen = !isOpen)}
   >

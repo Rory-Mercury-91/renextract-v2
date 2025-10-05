@@ -18,7 +18,7 @@ export const WORK_FOLDERS = [
   { 
     id: '01', 
     name: FOLDERS.TEMPORARY, 
-    icon: 'hugeicons:folder-02', 
+    icon: 'hugeicons:folder-sync', 
     color: 'bg-yellow-700',
     description: 'Fichiers temporaires et de travail'
   },
@@ -32,14 +32,14 @@ export const WORK_FOLDERS = [
   { 
     id: '03', 
     name: FOLDERS.BACKUPS, 
-    icon: 'hugeicons:floppy-disk', 
+    icon: 'hugeicons:folder-security', 
     color: 'bg-purple-600',
     description: 'Sauvegardes automatiques et manuelles'
   },
   { 
     id: '04', 
     name: FOLDERS.CONFIGS, 
-    icon: 'hugeicons:settings-02', 
+    icon: 'hugeicons:folder-management', 
     color: 'bg-gray-600',
     description: 'Fichiers de configuration et paramètres'
   }

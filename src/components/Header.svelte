@@ -1,9 +1,10 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
   import AboutModal from './AboutModal.svelte';
 
-  const currentProject = $state('Aucun projet chargé');
+  const currentProject = $state('');
 
   let showAboutModal = $state(false);
 
@@ -35,8 +36,8 @@
 
   <!-- Center: Project Bar -->
   <div class="flex items-center gap-2">
-    <span class="text-yellow-500">📁</span>
-    <span class="text-sm text-gray-300">{currentProject}</span>
+    <Icon icon="hugeicons:folder-01" class="w-6 h-6 text-yellow-500" />
+    <input class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg" value={currentProject} placeholder="Aucun projet chargé" readonly />
     <button
       class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
     >
@@ -47,19 +48,21 @@
   <!-- Right: Controls -->
   <div class="flex items-center gap-4">
     <button
-      class="text-gray-400 hover:text-white transition-colors px-2 py-1"
+      class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
       onclick={showHelp}
       title="Aide et documentation"
     >
-      ℹ️ {$_('app.help')}
+      <Icon icon="hugeicons:help-square" class="w-6 h-6 text-blue-600" />
+      {$_('app.help')}
     </button>
 
     <button
-      class="text-gray-400 hover:text-white transition-colors px-2 py-1"
+      class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
       onclick={() => (showAboutModal = true)}
       title="Informations sur RenExtract"
     >
-      ℹ️ {$_('app.about')}
+      <Icon icon="hugeicons:information-square" class="w-6 h-6 text-blue-600" />
+      {$_('app.about')}
     </button>
   </div>
 </header>

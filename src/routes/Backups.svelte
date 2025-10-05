@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
   import { apiService } from '../lib/api';
   import { BACKUP_DESCRIPTIONS } from '../lib/constants';
@@ -251,13 +252,14 @@
 
 <div class="h-full text-white flex flex-col">
   <!-- Header -->
-  <div class="border-b border-gray-700">
-    <div class="p-6 flex items-center justify-between bg-gray-900">
+  <div class="border-b border-gray-700 bg-gray-900">
+    <div class="p-6 flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-blue-400 mb-2">
-          🗂️ Gestionnaire de Sauvegardes
+        <h1 class="text-3xl font-bold text-purple-300 mb-2 flex gap-3 items-center">
+          <Icon icon="hugeicons:floppy-disk" class="w-8 h-8 text-purple-300" />
+          Gestionnaire de Sauvegardes
         </h1>
-        <p class="text-gray-400 text-sm">
+        <p class="text-purple-200 text-sm">
           Gérez, restaurez et organisez toutes vos sauvegardes de fichiers
           RenExtract
         </p>

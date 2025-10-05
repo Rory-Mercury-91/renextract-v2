@@ -1,23 +1,18 @@
 <script lang="ts">
-  let selectedLanguage = '— Sélectionner —';
+  import Icon from '@iconify/svelte';
+
+  let selectedLanguage = 'Originale (none)';
   let selectedFile = '— Aucun fichier —';
   let code = 'Glissez un fichier .py ici ou utilisez les contrôles ci-dessus';
   const encoding = 'UTF-8';
   const availableFiles = 0;
 
   const languages = [
-    '— Sélectionner —',
-    'Python',
-    'JavaScript',
-    'TypeScript',
-    'Java',
-    'C++',
-    'C#',
-    'Go',
-    'Rust',
+    'Originale (none)',
+    'Français',
   ];
 
-  const files = ['— Aucun fichier —'];
+  const files: string[] = [];
 
   function handleLanguageChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -66,6 +61,8 @@
         >
           {#each files as file}
             <option value={file}>{file}</option>
+          {:else}
+            <option value="— Aucun fichier —">— Aucun fichier —</option>
           {/each}
         </select>
       </div>
@@ -74,12 +71,12 @@
         <button
           class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
         >
-          📁
+          <Icon icon="hugeicons:folder-01" class="w-5 h-5 text-yellow-500" />
         </button>
         <button
           class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
         >
-          💾
+          <Icon icon="hugeicons:floppy-disk" class="w-5 h-5 text-blue-500" />
         </button>
       </div>
 

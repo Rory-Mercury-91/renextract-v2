@@ -2,6 +2,7 @@
   import SettingsAccess from '$components/SettingsAccess.svelte';
   import SettingsApp from '$components/SettingsApp.svelte';
   import SettingsExtract from '$components/SettingsExtract.svelte';
+  import Icon from '@iconify/svelte';
   import type { Component } from 'svelte';
   import { appSettingsActions } from '../stores/app';
   // Tab management
@@ -11,7 +12,7 @@
     component: Component<any, Record<string, any>>;
   }
 
-  let activeTab = $state('extraction_protection');
+  let activeTab = $state('interface_applications');
 
   const tabs: Tab[] = [
     {
@@ -35,33 +36,39 @@
 </script>
 
 <section class="min-h-full flex flex-col justify-between text-white">
-  <!-- Title -->
-  <div class="border-gray-700 h-full">
-    <div class="bg-gray-900">
-      <h1 class="mx-6 text-3xl font-bold text-blue-400 py-4">Paramètres</h1>
-      <!-- Navigation tabs -->
-      <div class="flex space-x-1 w-full justify-between">
-        {#each tabs as tab}
-          <button
-            class="tab-button text-sm font-medium w-full h-10 flex justify-center items-center hover:bg-gray-700"
-            class:bg-blue-600!={activeTab === tab.id}
-            onclick={() => (activeTab = tab.id)}
-          >
-            {tab.label}
-          </button>
-        {/each}
+  <div class="border-b border-gray-700 bg-gray-900">
+    <div class="p-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-300 mb-2 flex gap-3 items-center">
+          <Icon icon="hugeicons:settings-01" class="w-8 h-8 text-gray-300" />
+          Paramètres
+        </h1>
+        <p class="text-gray-200 text-sm">
+          Configurez les paramètres de l'application
+        </p>
       </div>
     </div>
-
-    <!-- Tab Content -->
-    <div class="flex-1 p-6 h-full">
+    <div class="flex space-x-1 w-full justify-between">
       {#each tabs as tab}
-        {#if activeTab === tab.id}
-          {@const Component = tab.component}
-          <Component />
-        {/if}
+        <button
+          class="tab-button text-sm font-medium w-full h-10 flex justify-center items-center hover:bg-gray-700"
+          class:bg-blue-600!={activeTab === tab.id}
+          onclick={() => (activeTab = tab.id)}
+        >
+          {tab.label}
+        </button>
       {/each}
     </div>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="flex-1 p-6 h-full">
+    {#each tabs as tab}
+      {#if activeTab === tab.id}
+        {@const Component = tab.component}
+        <Component />
+      {/if}
+    {/each}
   </div>
 
   <!-- Action buttons -->
