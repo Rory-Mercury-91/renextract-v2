@@ -1,6 +1,8 @@
 <script lang="ts">
   import RouteHeader from '$components/RouteHeader.svelte';
+  import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import { apiService } from '../lib/api';
   import { BACKUP_DESCRIPTIONS } from '../lib/constants';
 
@@ -251,20 +253,14 @@
 </script>
 
 <div class="h-full text-white flex flex-col">
-  <RouteHeader title="Gestionnaire de Sauvegardes" description="Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract" icon="hugeicons:floppy-disk" color="purple">
+  <RouteHeader title={$_('navigation.backup')} description={$_('navigation.backup_description')} icon="hugeicons:floppy-disk" color="purple">
     <button
-      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+      class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2 mr-6"
       onclick={refreshBackups}
       disabled={loading}
       title="Recharger la liste des sauvegardes"
     >
-      {#if loading}
-        <div
-          class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-        ></div>
-      {:else}
-        🔄
-      {/if}
+      <Icon icon="hugeicons:refresh" class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
       Recharger
     </button>
   </RouteHeader>

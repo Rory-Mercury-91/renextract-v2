@@ -16,10 +16,17 @@
   },
   "navigation": {
     "generator": "Générateur",
+    "generator_description": "Générez des fichiers TL à partir de vos fichiers RPA/RPYC",
     "extract": "Extracteur",
+    "extract_description": "Extrayez les dialogues de vos jeux",
+    "translator": "Traducteur",
+    "translator_description": "Traduisez vos fichiers TL à partir de vos fichiers RPA/RPYC",
     "tools": "Outils",
+    "tools_description": "Outils pour aider à gérer vos traductions",
     "backup": "Sauvegarde",
-    "settings": "Paramètres"
+    "backup_description": "Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract",
+    "settings": "Paramètres",
+    "settings_description": "Configurez les paramètres de l'application"
   },
   "themes": {
     "dark": "Sombre",

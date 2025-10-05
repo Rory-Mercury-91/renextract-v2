@@ -8,9 +8,11 @@
   import NotFound from '$routes/NotFound.svelte';
   import Settings from '$routes/Settings.svelte';
   import Tools from '$routes/Tools.svelte';
+  import Translator from '$routes/Translator.svelte';
   import { onMount } from 'svelte';
   import { _, waitLocale } from 'svelte-i18n';
   import { Route, Router } from 'svelte5-router';
+  import { appSettings } from './stores/app';
 
   let isLoading = $state(true);
   let error: string | null = $state(null);
@@ -67,6 +69,9 @@
         <div class="h-full w-full max-h-full overflow-y-scroll">
           <Route path="/" component={Generator} />
           <Route path="/extract" component={Extractor} />
+          {#if $appSettings.translatorFeature}
+            <Route path="/translator" component={Translator} />
+          {/if}
           <Route path="/tools" component={Tools} />
           <Route path="/backups" component={Backups} />
           <Route path="/settings" component={Settings} />

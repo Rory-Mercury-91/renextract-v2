@@ -26,6 +26,7 @@ interface AppSettings {
   language: string;
   theme: 'light' | 'dark' | 'auto';
   debugActive: boolean; // Single debug mode (false=Level 3, true=Level 4)
+  translatorFeature: boolean;
   autoOpenings: {
     files: boolean;
     folders: boolean;
@@ -56,6 +57,7 @@ const initialSettings: AppSettings = {
   language: 'fr',
   theme: 'auto',
   debugActive: false, // Single debug mode (false=Level 3, true=Level 4)
+  translatorFeature: false,
   autoOpenings: {
     files: true,
     folders: true,

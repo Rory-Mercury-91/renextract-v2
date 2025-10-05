@@ -348,6 +348,7 @@ settings_data = {
     'language': 'fr',
     'theme': 'dark',
     'debugActive': False,  # false=Level 3, true=Level 4
+    'translateFeature': False,
     'autoOpenings': {
         'files': True,
         'folders': True,

@@ -5,6 +5,6 @@
 </script>
 
 <section class="min-h-full flex flex-col text-white">
-  <RouteHeader title={$_('navigation.tools')} description={$_('navigation.tools_description')} icon="hugeicons:tools" color="green" />
+  <RouteHeader title={$_('navigation.translator')} description={$_('navigation.translator_description')} icon="hugeicons:tools" color="red" />
   
 </section>

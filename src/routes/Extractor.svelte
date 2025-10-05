@@ -3,10 +3,11 @@
   import MainEditor from '$components/MainEditor.svelte';
   import RouteHeader from '$components/RouteHeader.svelte';
   import WorkFolders from '$components/WorkFolders.svelte';
+  import { _ } from 'svelte-i18n';
 </script>
 
 <section class="flex flex-col">
-  <RouteHeader title="Extracteur" description="Extrayez les dialogues de vos jeux" icon="hugeicons:injection" color="blue" />
+  <RouteHeader title={$_('navigation.extract')} description={$_('navigation.extract_description')} icon="hugeicons:injection" color="blue" />
   
   <MainEditor />
   <div class="flex flex-col">
