@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Icon from '@iconify/svelte';
+  import RouteHeader from '$components/RouteHeader.svelte';
   import { onMount } from 'svelte';
   import { apiService } from '../lib/api';
   import { BACKUP_DESCRIPTIONS } from '../lib/constants';
@@ -251,36 +251,23 @@
 </script>
 
 <div class="h-full text-white flex flex-col">
-  <!-- Header -->
-  <div class="border-b border-gray-700 bg-gray-900">
-    <div class="p-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-purple-300 mb-2 flex gap-3 items-center">
-          <Icon icon="hugeicons:floppy-disk" class="w-8 h-8 text-purple-300" />
-          Gestionnaire de Sauvegardes
-        </h1>
-        <p class="text-purple-200 text-sm">
-          Gérez, restaurez et organisez toutes vos sauvegardes de fichiers
-          RenExtract
-        </p>
-      </div>
-      <button
-        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
-        onclick={refreshBackups}
-        disabled={loading}
-        title="Recharger la liste des sauvegardes"
-      >
-        {#if loading}
-          <div
-            class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-          ></div>
-        {:else}
-          🔄
-        {/if}
-        Recharger
-      </button>
-    </div>
-  </div>
+  <RouteHeader title="Gestionnaire de Sauvegardes" description="Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract" icon="hugeicons:floppy-disk" color="purple">
+    <button
+      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+      onclick={refreshBackups}
+      disabled={loading}
+      title="Recharger la liste des sauvegardes"
+    >
+      {#if loading}
+        <div
+          class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+        ></div>
+      {:else}
+        🔄
+      {/if}
+      Recharger
+    </button>
+  </RouteHeader>
 
   <!-- Content -->
   <div class="flex-1 overflow-y-auto p-6">

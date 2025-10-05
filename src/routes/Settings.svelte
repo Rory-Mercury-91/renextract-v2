@@ -1,8 +1,8 @@
 <script lang="ts">
+  import RouteHeader from '$components/RouteHeader.svelte';
   import SettingsAccess from '$components/SettingsAccess.svelte';
   import SettingsApp from '$components/SettingsApp.svelte';
   import SettingsExtract from '$components/SettingsExtract.svelte';
-  import Icon from '@iconify/svelte';
   import type { Component } from 'svelte';
   import { appSettingsActions } from '../stores/app';
   // Tab management
@@ -36,18 +36,7 @@
 </script>
 
 <section class="min-h-full flex flex-col justify-between text-white">
-  <div class="border-b border-gray-700 bg-gray-900">
-    <div class="p-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-300 mb-2 flex gap-3 items-center">
-          <Icon icon="hugeicons:settings-01" class="w-8 h-8 text-gray-300" />
-          Paramètres
-        </h1>
-        <p class="text-gray-200 text-sm">
-          Configurez les paramètres de l'application
-        </p>
-      </div>
-    </div>
+  <RouteHeader title="Paramètres" description="Configurez les paramètres de l'application" icon="hugeicons:settings-01" color="gray">
     <div class="flex space-x-1 w-full justify-between">
       {#each tabs as tab}
         <button
@@ -59,7 +48,7 @@
         </button>
       {/each}
     </div>
-  </div>
+  </RouteHeader>
 
   <!-- Tab Content -->
   <div class="flex-1 p-6 h-full">
