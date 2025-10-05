@@ -26,7 +26,7 @@
   let sortDirection: 'asc' | 'desc' = 'asc';
 
   // Backup sélectionné
-  let selectedBackup: any = null;
+  const selectedBackup: any = null;
 
   async function loadBackups() {
     loading = true;
@@ -83,7 +83,7 @@
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch {
       return isoString;
@@ -102,7 +102,7 @@
     return lastScanTime.toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   }
 
@@ -111,14 +111,18 @@
   }
 
   async function restoreBackup(backup: any) {
-    if (!confirm(`Restaurer la sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier actuel sera remplacé !`)) {
+    if (
+      !confirm(
+        `Restaurer la sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier actuel sera remplacé !`
+      )
+    ) {
       return;
     }
 
     try {
       statusMessage = '🔄 Restauration en cours...';
       const result = await apiService.restoreBackup(backup.id);
-      
+
       if (result.success) {
         statusMessage = '✅ Restauration terminée avec succès';
         loadBackups(); // Recharger la liste
@@ -128,14 +132,16 @@
       }
     } catch (err) {
       statusMessage = '❌ Erreur lors de la restauration';
-      alert(`Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      alert(
+        `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+      );
     }
   }
 
   async function restoreBackupTo(backup: any) {
     // Préparer le nom de fichier initial
     let originalFilename = backup.source_filename || 'fichier_restaure';
-    
+
     // S'assurer que le fichier a l'extension .rpy
     if (!originalFilename.endsWith('.rpy')) {
       originalFilename += '.rpy';
@@ -143,15 +149,15 @@
 
     // Ouvrir le dialogue de sauvegarde (équivalent à asksaveasfilename)
     const result = await apiService.openSaveDialog({
-      title: "Restaurer vers...",
+      title: 'Restaurer vers...',
       initialfile: originalFilename,
-      defaultextension: ".rpy",
+      defaultextension: '.rpy',
       filetypes: [
-        ["Fichiers Ren'Py", "*.rpy"],
-        ["Tous les fichiers", "*.*"]
-      ]
+        ["Fichiers Ren'Py", '*.rpy'],
+        ['Tous les fichiers', '*.*'],
+      ],
     });
-    
+
     if (!result.success || !result.path) {
       return;
     }
@@ -161,29 +167,40 @@
     // Pas de confirmation - l'utilisateur a déjà choisi l'emplacement
     try {
       statusMessage = '🔄 Restauration vers chemin personnalisé en cours...';
-      const restoreResult = await apiService.restoreBackupTo(backup.id, targetPath);
-      
+      const restoreResult = await apiService.restoreBackupTo(
+        backup.id,
+        targetPath
+      );
+
       if (restoreResult.success) {
         statusMessage = '✅ Restauration vers chemin personnalisé terminée';
       } else {
-        statusMessage = '❌ Erreur lors de la restauration vers chemin personnalisé';
+        statusMessage =
+          '❌ Erreur lors de la restauration vers chemin personnalisé';
         alert(`Erreur : ${restoreResult.error}`);
       }
     } catch (err) {
-      statusMessage = '❌ Erreur lors de la restauration vers chemin personnalisé';
-      alert(`Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      statusMessage =
+        '❌ Erreur lors de la restauration vers chemin personnalisé';
+      alert(
+        `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+      );
     }
   }
 
   async function deleteBackup(backup: any) {
-    if (!confirm(`Supprimer définitivement cette sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Taille : ${formatSize(backup.size)}\n\nCette action est irréversible !`)) {
+    if (
+      !confirm(
+        `Supprimer définitivement cette sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Taille : ${formatSize(backup.size)}\n\nCette action est irréversible !`
+      )
+    ) {
       return;
     }
 
     try {
       statusMessage = '🗑️ Suppression en cours...';
       const result = await apiService.deleteBackup(backup.id);
-      
+
       if (result.success) {
         statusMessage = '✅ Sauvegarde supprimée avec succès';
         loadBackups(); // Recharger la liste
@@ -193,7 +210,9 @@
       }
     } catch (err) {
       statusMessage = '❌ Erreur lors de la suppression';
-      alert(`Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      alert(
+        `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+      );
     }
   }
 
@@ -230,13 +249,18 @@
   });
 </script>
 
-<div class="h-full bg-gray-900 text-white flex flex-col">
+<div class="h-full text-white flex flex-col">
   <!-- Header -->
-  <div class="p-6 border-b border-gray-700">
-    <div class="flex items-center justify-between">
+  <div class="border-b border-gray-700">
+    <div class="p-6 flex items-center justify-between bg-gray-900">
       <div>
-        <h1 class="text-3xl font-bold text-blue-400 mb-2">🗂️ Gestionnaire de Sauvegardes</h1>
-        <p class="text-gray-400 text-sm">Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract</p>
+        <h1 class="text-3xl font-bold text-blue-400 mb-2">
+          🗂️ Gestionnaire de Sauvegardes
+        </h1>
+        <p class="text-gray-400 text-sm">
+          Gérez, restaurez et organisez toutes vos sauvegardes de fichiers
+          RenExtract
+        </p>
       </div>
       <button
         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
@@ -245,7 +269,9 @@
         title="Recharger la liste des sauvegardes"
       >
         {#if loading}
-          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div
+            class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+          ></div>
         {:else}
           🔄
         {/if}
@@ -257,9 +283,11 @@
   <!-- Content -->
   <div class="flex-1 overflow-y-auto p-6">
     <!-- Statistiques -->
-    <div class="bg-gray-800 rounded-lg p-6 mb-4">
+    <div class="rounded-lg p-6 mb-4">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-blue-400">📊 Statistiques des sauvegardes</h2>
+        <h2 class="text-lg font-semibold text-blue-400">
+          📊 Statistiques des sauvegardes
+        </h2>
         <div class="text-sm text-gray-400">
           <span class="text-green-400">●</span> Dernier scan: {formatLastScanTime()}
         </div>
@@ -275,17 +303,21 @@
         </div>
         <div>
           <p class="text-gray-400 text-sm">Taille totale</p>
-          <p class="text-2xl font-bold text-blue-400">{formatSize(totalSize)}</p>
+          <p class="text-2xl font-bold text-blue-400">
+            {formatSize(totalSize)}
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Filtres -->
-    <div class="bg-gray-800 rounded-lg p-6 mb-4">
+    <div class="rounded-lg p-6 mb-4">
       <h2 class="text-lg font-semibold text-blue-400 mb-4">🔍 Filtres</h2>
       <div class="grid grid-cols-2 gap-6">
         <div>
-          <label for="game-filter" class="block text-sm font-medium mb-2">🎮 Filtrer par jeu :</label>
+          <label for="game-filter" class="block text-sm font-medium mb-2"
+            >🎮 Filtrer par jeu :</label
+          >
           <select
             id="game-filter"
             bind:value={selectedGame}
@@ -298,7 +330,9 @@
           </select>
         </div>
         <div>
-          <label for="type-filter" class="block text-sm font-medium mb-2">🏷️ Filtrer par type :</label>
+          <label for="type-filter" class="block text-sm font-medium mb-2"
+            >🏷️ Filtrer par type :</label
+          >
           <select
             id="type-filter"
             bind:value={selectedType}
@@ -315,12 +349,16 @@
     </div>
 
     <!-- Liste des sauvegardes -->
-    <div class="bg-gray-800 rounded-lg p-6">
-      <h2 class="text-lg font-semibold text-blue-400 mb-4">📋 Liste des sauvegardes</h2>
-      
+    <div class="rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-blue-400 mb-4">
+        📋 Liste des sauvegardes
+      </h2>
+
       {#if loading}
         <div class="flex items-center justify-center py-12">
-          <div class="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
+          <div
+            class="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin"
+          ></div>
           <p class="ml-4 text-gray-400">Chargement...</p>
         </div>
       {:else if error}
@@ -342,30 +380,70 @@
           <table class="w-full">
             <thead class="bg-gray-700">
               <tr>
-                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600" onclick={() => sortBy('game_name')}>
-                  Jeu {sortColumn === 'game_name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                <th
+                  class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600"
+                  onclick={() => sortBy('game_name')}
+                >
+                  Jeu {sortColumn === 'game_name'
+                    ? sortDirection === 'asc'
+                      ? '↑'
+                      : '↓'
+                    : ''}
                 </th>
-                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600" onclick={() => sortBy('source_filename')}>
-                  Fichier {sortColumn === 'source_filename' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                <th
+                  class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600"
+                  onclick={() => sortBy('source_filename')}
+                >
+                  Fichier {sortColumn === 'source_filename'
+                    ? sortDirection === 'asc'
+                      ? '↑'
+                      : '↓'
+                    : ''}
                 </th>
-                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600" onclick={() => sortBy('type')}>
-                  Type {sortColumn === 'type' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                <th
+                  class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600"
+                  onclick={() => sortBy('type')}
+                >
+                  Type {sortColumn === 'type'
+                    ? sortDirection === 'asc'
+                      ? '↑'
+                      : '↓'
+                    : ''}
                 </th>
-                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600" onclick={() => sortBy('created')}>
-                  Date {sortColumn === 'created' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                <th
+                  class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600"
+                  onclick={() => sortBy('created')}
+                >
+                  Date {sortColumn === 'created'
+                    ? sortDirection === 'asc'
+                      ? '↑'
+                      : '↓'
+                    : ''}
                 </th>
-                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600" onclick={() => sortBy('size')}>
-                  Taille {sortColumn === 'size' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                <th
+                  class="px-4 py-3 text-left cursor-pointer hover:bg-gray-600"
+                  onclick={() => sortBy('size')}
+                >
+                  Taille {sortColumn === 'size'
+                    ? sortDirection === 'asc'
+                      ? '↑'
+                      : '↓'
+                    : ''}
                 </th>
                 <th class="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {#each filteredBackups as backup}
-                <tr class="border-t border-gray-700 hover:bg-gray-750 transition-colors">
+                <tr
+                  class="border-t border-gray-700 hover:bg-gray-750 transition-colors"
+                >
                   <td class="px-4 py-3">{backup.game_name}</td>
                   <td class="px-4 py-3">{backup.source_filename}</td>
-                  <td class="px-4 py-3">{(BACKUP_DESCRIPTIONS as any)[backup.type] || backup.type}</td>
+                  <td class="px-4 py-3"
+                    >{(BACKUP_DESCRIPTIONS as any)[backup.type] ||
+                      backup.type}</td
+                  >
                   <td class="px-4 py-3">{formatDate(backup.created)}</td>
                   <td class="px-4 py-3">{formatSize(backup.size)}</td>
                   <td class="px-4 py-3 text-center">

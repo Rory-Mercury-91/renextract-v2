@@ -25,6 +25,12 @@
       "$routes/*": ["./src/routes/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte",
+    "src/components/ContentManager.svelte.bak",
+    "src/components/ContentManager.svelte.b"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

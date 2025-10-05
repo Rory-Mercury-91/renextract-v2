@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Icon from "@iconify/svelte";
+  import Icon from '@iconify/svelte';
   import { WORK_FOLDERS } from '../lib/constants';
   import { appSettings } from '../stores/app';
 
-  let outputFolder = '';
+  const outputFolder = '';
 
   function selectFolder(folderId: string) {
     console.log('Selected folder:', folderId);
@@ -16,15 +16,17 @@
 
 <div class="bg-gray-800 flex flex-col gap-2 px-4 mt-2 mb-2">
   <h3 class="text-blue-400 text-lg font-semibold">Dossiers de travail</h3>
-  
+
   <div class="grid grid-cols-4 gap-4">
-    {#each WORK_FOLDERS as {name, icon, color, id, description}}
+    {#each WORK_FOLDERS as { name, icon, color, id, description }}
       <button
         onclick={() => selectFolder(id)}
         class="flex items-center gap-3 p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-left"
         title={description}
       >
-        <div class="w-6 h-6 {color} rounded-lg flex items-center justify-center text-white">
+        <div
+          class="w-6 h-6 {color} rounded-lg flex items-center justify-center text-white"
+        >
           <Icon {icon} class="w-4 h-4" />
         </div>
         <div class="text-white font-medium">{name}</div>

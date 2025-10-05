@@ -21,8 +21,14 @@
     <h3 class="text-lg font-semibold flex items-center">Paramètres généraux</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label for="language-select" class="block text-sm font-medium mb-2">Langue de l'interface</label>
-        <select id="language-select " bind:value={$locale} class="bg-gray-100 text-black rounded-lg px-2 py-1">
+        <label for="language-select" class="block text-sm font-medium mb-2"
+          >Langue de l'interface</label
+        >
+        <select
+          id="language-select "
+          bind:value={$locale}
+          class="bg-gray-100 text-black rounded-lg px-2 py-1"
+        >
           {#each $locales as locale}
             <option value={locale}
               >{locale.toUpperCase()} - {language[
@@ -34,8 +40,13 @@
       </div>
       <!-- Theme Toggle -->
       <div>
-        <label for="theme-select" class="block text-sm font-medium mb-2"> Thème de l'interface </label>
-        <select id="theme-select" class="bg-gray-100 text-black rounded-lg px-2 py-1">
+        <label for="theme-select" class="block text-sm font-medium mb-2">
+          Thème de l'interface
+        </label>
+        <select
+          id="theme-select"
+          class="bg-gray-100 text-black rounded-lg px-2 py-1"
+        >
           <option value="auto">Auto</option>
           <option value="light">Clair</option>
           <option value="dark">Sombre</option>
@@ -96,9 +107,7 @@
             bind:checked={$appSettings.autoOpenings.outputField}
             class="mr-3 w-4 h-4"
           />
-          <span class="">
-            Affichage du champ de chemin de sortie
-          </span>
+          <span class=""> Affichage du champ de chemin de sortie </span>
         </label>
       </div>
     </div>

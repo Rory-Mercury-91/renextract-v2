@@ -3,7 +3,7 @@
   import packageJson from '../../package.json' assert { type: 'json' };
   import AboutModal from './AboutModal.svelte';
 
-  let currentProject = $state('Aucun projet chargé');
+  const currentProject = $state('Aucun projet chargé');
 
   let showAboutModal = $state(false);
 

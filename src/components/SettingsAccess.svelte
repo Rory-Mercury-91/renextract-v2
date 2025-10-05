@@ -2,8 +2,8 @@
   import { apiService } from '$lib/api';
   import { appSettings, appSettingsActions } from '../stores/app';
 
-  let editorPath = $state($appSettings.paths.editor)
-    // État de chargement pour les dialogues
+  let editorPath = $state($appSettings.paths.editor);
+  // État de chargement pour les dialogues
   let isDialogLoading = $state(false);
 
   const showBrowse = async (
@@ -24,7 +24,7 @@
 
       if (result.success && result.path && result.path.trim() !== '') {
         // Mettre à jour directement
-        if (!$appSettings.paths) appSettingsActions.resetSettingsPaths()
+        if (!$appSettings.paths) appSettingsActions.resetSettingsPaths();
 
         switch (inputId) {
           case 'renpy-sdk-path':
@@ -41,19 +41,23 @@
         console.log(`${inputId} path updated via Windows dialog:`, result.path);
       } else {
         // Fallback vers le modal custom si le dialogue Windows échoue
-        console.log('Windows dialog failed or returned empty, using fallback modal');
+        console.log(
+          'Windows dialog failed or returned empty, using fallback modal'
+        );
       }
     } catch (error) {
       console.warn('Windows dialog failed, falling back to modal:', error);
-      
+
       // Vérifier si c'est un timeout
       if (error instanceof Error && error.message.includes('timeout')) {
-        console.warn('Dialog timeout - user took too long to select a file/folder');
+        console.warn(
+          'Dialog timeout - user took too long to select a file/folder'
+        );
       }
     } finally {
       isDialogLoading = false;
     }
-  }
+  };
 </script>
 
 <div class="space-y-8">
@@ -77,7 +81,7 @@
                 id="renpy-sdk-path"
                 bind:value={$appSettings.paths.renpySdk}
                 placeholder="Ex: C:\Ren'Py\ren'py-8.0.3"
-                class="w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm"
+                class="w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm"
               />
               <div class="flex flex-col gap-1">
                 <button
@@ -130,17 +134,18 @@
               id="path"
               bind:value={$appSettings.paths.editor}
               placeholder="Ex: C:\Program Files\Notepad++\notepad++.exe"
-              class="w-full p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm text-sm"
+              class="w-full p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm text-sm"
             />
             <button
               class="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded text-sm transition-colors"
               disabled={isDialogLoading}
-              onclick={() => showBrowse(
-                "📁 Sélectionner l'éditeur",
-                'C:\Program Files\Notepad++\notepad++.exe',
-                'editor-path',
-                $appSettings.paths?.editor || ''
-              )}
+              onclick={() =>
+                showBrowse(
+                  "📁 Sélectionner l'éditeur",
+                  'C:\Program Files\Notepad++\notepad++.exe',
+                  'editor-path',
+                  $appSettings.paths?.editor || ''
+                )}
             >
               {isDialogLoading ? '⏳ Ouverture...' : '📁 Parcourir'}
             </button>

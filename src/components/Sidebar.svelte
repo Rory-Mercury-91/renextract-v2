@@ -20,7 +20,7 @@
   ];
 </script>
 
-<nav 
+<nav
   class="max-w-64 bg-gray-800 text-white flex flex-col border-r border-gray-700 justify-between py-4"
   class:lg:w-64={!isOpen}
 >
@@ -51,9 +51,3 @@
     <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
   </button>
 </nav>
-
-<style>
-  aside {
-    min-height: 100vh;
-  }
-</style>

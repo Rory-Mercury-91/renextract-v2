@@ -94,7 +94,10 @@ const appSettingsActions = {
   },
 
   resetSettingsPaths: () => {
-    appSettings.set({ ...initialSettings, paths: { ...initialSettings.paths, editor: '', renpySdk: '' } });
+    appSettings.set({
+      ...initialSettings,
+      paths: { ...initialSettings.paths, editor: '', renpySdk: '' },
+    });
   },
 };
 

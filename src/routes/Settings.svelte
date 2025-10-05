@@ -13,7 +13,7 @@
 
   let activeTab = $state('extraction_protection');
 
-  let tabs: Tab[] = [
+  const tabs: Tab[] = [
     {
       id: 'interface_applications',
       label: 'Interface et applications',
@@ -31,7 +31,7 @@
     },
   ];
 
-  let saving = $state(false);
+  const saving = $state(false);
 </script>
 
 <section class="min-h-full flex flex-col justify-between text-white">
@@ -52,7 +52,7 @@
         {/each}
       </div>
     </div>
-      
+
     <!-- Tab Content -->
     <div class="flex-1 p-6 h-full">
       {#each tabs as tab}

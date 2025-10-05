@@ -15,7 +15,7 @@
   let isLoading = $state(true);
   let error: string | null = $state(null);
 
-  let url = $state(window.location.pathname);
+  const url = $state(window.location.pathname);
 
   onMount(async () => {
     try {

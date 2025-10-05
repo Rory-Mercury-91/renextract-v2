@@ -92,7 +92,7 @@ export const apiService = {
   }): Promise<{success: boolean, path?: string, error?: string}> {
     try {
       const response = await api.post('/file-dialog/save', params);
-      
+
       // Si c'est le mode WSL, demander le chemin à l'utilisateur
       if (!response.data.success && response.data.error === 'WSL_MODE') {
         const filetypes_str = params.filetypes?.map(([desc, ext]) => `${desc} (${ext})`).join(' | ') || 'Tous les fichiers (*.*)';
@@ -103,16 +103,16 @@ export const apiService = {
                           `Types de fichiers: ${filetypes_str}\n\n` +
                           `Veuillez saisir le chemin complet du fichier de destination :\n` +
                           `Exemple: C:\\Users\\Public\\Documents\\mon_fichier.rpy`;
-        
+
         const filePath = prompt(prompt_text);
-        
+
         if (!filePath) {
           return {
             success: false,
             error: 'Aucun chemin saisi'
           };
         }
-        
+
         // Envoyer le chemin via l'endpoint dédié
         const pathResponse = await api.post('/file-dialog/save-path', { path: filePath });
         return {
@@ -120,7 +120,7 @@ export const apiService = {
           path: pathResponse.data.path
         };
       }
-      
+
       return {
         success: response.data.success,
         path: response.data.path
@@ -139,7 +139,7 @@ export const apiService = {
       const params = new URLSearchParams();
       if (gameFilter) params.append('game', gameFilter);
       if (typeFilter) params.append('type', typeFilter);
-      
+
       const response = await api.get(`/backups?${params.toString()}`);
       return response.data;
     } catch (error) {

@@ -82,6 +82,46 @@ def open_file_dialog_hybrid():
     return ""
 
 
+def open_save_dialog_hybrid(title="Enregistrer sous...", initialfile="",
+                            defaultextension="", filetypes=None):
+    """Ouvre un dialogue de sauvegarde de fichier avec tkinter ou fallback."""
+    if filetypes is None:
+        filetypes = [("Tous les fichiers", "*.*")]
+
+    # Méthode 1: Essayer tkinter (fonctionne sur Windows avec interface graphique)
+    try:
+        # Créer une fenêtre racine cachée
+        root = tk.Tk()
+        root.withdraw()  # Cacher la fenêtre principale
+
+        # Ouvrir le dialogue de sauvegarde de fichier
+        file_path = filedialog.asksaveasfilename(
+            title=title,
+            initialfile=initialfile,
+            defaultextension=defaultextension,
+            filetypes=filetypes
+        )
+
+        # Nettoyer
+        root.destroy()
+
+        if file_path:
+            return file_path
+
+    except (tk.TclError, OSError) as e:
+        print(f"Tkinter save dialog failed: {e}")
+
+    # Méthode 2: Fallback - ouvrir l'explorateur Windows
+    try:
+        subprocess.run(["explorer.exe", "C:\\"], timeout=2, check=False)
+        print("Explorateur Windows ouvert pour aide visuelle")
+    except (OSError, subprocess.TimeoutExpired) as e:
+        print(f"Explorer fallback failed: {e}")
+
+    # Retourner vide pour déclencher le modal web
+    return ""
+
+
 if __name__ == "__main__":
     print("Testing tkinter dialogs...")
 

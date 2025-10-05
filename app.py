@@ -2,8 +2,8 @@
 """
 Main application using pywebview with Flask backend
 """
-from src.backend.backup_manager import BackupManager
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -12,9 +12,13 @@ from pathlib import Path
 
 import webview
 from dotenv import load_dotenv
-from src.dialogs.hybrid_dialog import open_folder_dialog_hybrid, open_file_dialog_hybrid
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+from src.backend.backup_manager import BackupManager
+from src.dialogs.file_dialog import (open_file_dialog_hybrid,
+                                     open_folder_dialog_hybrid,
+                                     open_save_dialog_hybrid)
 
 # Load environment variables
 load_dotenv()
@@ -51,13 +55,14 @@ def initialize_application_folders():
 
         if created_folders:
             print(
-                f"DEBUG: Created {len(created_folders)} new folders: {created_folders}")
+                f"DEBUG: Created {
+                    len(created_folders)} new folders: {created_folders}")
         else:
             print("DEBUG: All folders already exist")
 
         return base_dir
 
-    except Exception as e:
+    except (OSError, PermissionError) as e:
         print(f"ERROR: Failed to initialize folders: {e}")
         return None
 
@@ -115,7 +120,7 @@ def get_backups():
             'success': True,
             'backups': backups
         })
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         return jsonify({
             'success': False,
             'error': str(e)
@@ -143,21 +148,20 @@ def restore_backup(backup_id):
             }), 400
 
         # Copier le fichier
-        import shutil
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         shutil.copy2(backup['backup_path'], target_path)
 
         # Supprimer la sauvegarde après restauration
         os.remove(backup['backup_path'])
         del backup_manager.metadata[backup_id]
-        backup_manager._save_metadata()
+        backup_manager.save_metadata()
 
         return jsonify({
             'success': True,
             'message': 'Sauvegarde restaurée avec succès'
         })
 
-    except Exception as e:
+    except (OSError, KeyError, FileNotFoundError) as e:
         return jsonify({
             'success': False,
             'error': str(e)
@@ -194,7 +198,6 @@ def restore_backup_to(backup_id):
         print(f"DEBUG: Backup found: {backup}")
 
         # Vérifier que le répertoire de destination existe
-        from pathlib import Path
         target_path_obj = Path(target_path)
         target_dir = target_path_obj.parent
         print(f"DEBUG: Target directory: {target_dir}")
@@ -206,7 +209,7 @@ def restore_backup_to(backup_id):
             try:
                 target_dir.mkdir(parents=True, exist_ok=True)
                 print(f"DEBUG: Created target directory: {target_dir}")
-            except Exception as e:
+            except (OSError, PermissionError) as e:
                 print(f"DEBUG: Failed to create target directory: {e}")
                 return jsonify({
                     'success': False,
@@ -214,17 +217,16 @@ def restore_backup_to(backup_id):
                 }), 400
 
         # Copier le fichier vers la destination
-        import shutil
         print(f"DEBUG: Copying from {backup['backup_path']} to {target_path}")
         shutil.copy2(backup['backup_path'], target_path)
 
-        print(f"DEBUG: Restore successful")
+        print("DEBUG: Restore successful")
         return jsonify({
             'success': True,
             'message': f'Fichier restauré vers {target_path}'
         })
 
-    except Exception as e:
+    except (OSError, KeyError, FileNotFoundError, ValueError) as e:
         print(f"DEBUG: Exception in restore_backup_to: {e}")
         return jsonify({
             'success': False,
@@ -251,7 +253,7 @@ def delete_backup(backup_id):
 
         # Supprimer des métadonnées
         del backup_manager.metadata[backup_id]
-        backup_manager._save_metadata()
+        backup_manager.save_metadata()
 
         # Nettoyer les dossiers vides
         backup_manager.cleanup_empty_folders()
@@ -261,7 +263,7 @@ def delete_backup(backup_id):
             'message': 'Sauvegarde supprimée avec succès'
         })
 
-    except Exception as e:
+    except (OSError, KeyError, FileNotFoundError) as e:
         return jsonify({
             'success': False,
             'error': str(e)
@@ -276,35 +278,6 @@ def health_check():
         'message': 'Python API is working correctly',
         'timestamp': time.time()
     })
-
-
-@app.route('/api/quit', methods=['POST'])
-def quit_application():
-    """Quit the application"""
-    try:
-        # Fermer l'application PyWebView
-        import threading
-
-        def close_app():
-            time.sleep(0.5)  # Petit délai pour laisser la réponse se terminer
-            if 'webview' in globals():
-                webview.destroy_window()
-            else:
-                import sys
-                sys.exit(0)
-
-        # Lancer la fermeture dans un thread séparé
-        threading.Thread(target=close_app, daemon=True).start()
-
-        return jsonify({
-            'success': True,
-            'message': 'Application fermée'
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
 
 @app.route('/api/message')
@@ -454,15 +427,17 @@ def get_folder_dialog():
             if hasattr(os, 'uname'):
                 is_wsl = 'microsoft' in os.uname().release.lower()
             is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
-        except:
+        except (AttributeError, OSError):
             is_wsl = False
 
         if is_wsl:
-            # En WSL, retourner un message indiquant qu'il faut utiliser l'endpoint POST
+            # En WSL, retourner un message indiquant qu'il faut utiliser
+            # l'endpoint POST
             return jsonify({
                 'success': False,
                 'error': 'WSL_MODE',
-                'message': 'En mode WSL, utilisez POST /api/file-dialog/folder avec le chemin en paramètre'
+                'message': ('En mode WSL, utilisez POST /api/file-dialog/folder '
+                           'avec le chemin en paramètre')
             }), 400
 
         folder_path = open_folder_dialog_hybrid()
@@ -499,7 +474,7 @@ def set_folder_path():
             'success': True,
             'path': folder_path
         })
-    except Exception as e:
+    except (ValueError, KeyError) as e:
         print(f"DEBUG: Manual folder path error: {e}")
         return jsonify({
             'success': False,
@@ -554,19 +529,21 @@ def get_save_dialog():
             if hasattr(os, 'uname'):
                 is_wsl = 'microsoft' in os.uname().release.lower()
             is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
-        except:
+        except (AttributeError, OSError):
             is_wsl = False
 
         if is_wsl:
-            # En WSL, retourner une erreur indiquant qu'il faut utiliser l'endpoint POST avec le chemin
+            # En WSL, retourner une erreur indiquant qu'il faut utiliser
+            # l'endpoint POST avec le chemin
             return jsonify({
                 'success': False,
                 'error': 'WSL_MODE',
-                'message': 'En mode WSL, le dialogue de sauvegarde n\'est pas disponible. Utilisez POST /api/file-dialog/save avec le chemin en paramètre'
+                'message': ('En mode WSL, le dialogue de sauvegarde n\'est pas '
+                           'disponible. Utilisez POST /api/file-dialog/save avec '
+                            'le chemin en paramètre')
             }), 400
 
         # En mode normal, utiliser le dialogue natif
-        from src.dialogs.hybrid_dialog import open_save_dialog_hybrid
         file_path = open_save_dialog_hybrid(
             title=title,
             initialfile=initialfile,
@@ -581,7 +558,7 @@ def get_save_dialog():
             'path': file_path
         })
 
-    except Exception as e:
+    except (OSError, ValueError, KeyError) as e:
         print(f"DEBUG: Save dialog error: {e}")
         return jsonify({
             'success': False,
@@ -607,7 +584,7 @@ def set_save_path():
             'success': True,
             'path': file_path
         })
-    except Exception as e:
+    except (ValueError, KeyError) as e:
         print(f"DEBUG: Manual save path error: {e}")
         return jsonify({
             'success': False,
@@ -635,7 +612,7 @@ def main():
             is_wsl = 'microsoft' in os.uname().release.lower()
         # Also check environment variables
         is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
-    except:
+    except (AttributeError, OSError):
         is_wsl = False
 
     # Debug information
@@ -643,7 +620,9 @@ def main():
     print(f"DEBUG: platform = {sys.platform}")
     print(f"DEBUG: frozen = {getattr(sys, 'frozen', False)}")
     if getattr(sys, 'frozen', False):
-        print(f"DEBUG: _MEIPASS = {sys._MEIPASS}")
+        print(
+            f"DEBUG: _MEIPASS = {
+                sys._MEIPASS}")  # pylint: disable=protected-access
         print(f"DEBUG: static_path = {get_static_path()}")
 
     try:
@@ -674,7 +653,7 @@ def main():
             webview.start(debug=False)
         else:
             raise RuntimeError("WSL detected - web server mode only")
-    except (RuntimeError, ImportError, OSError) as e:
+    except (RuntimeError, ImportError, OSError, AttributeError) as e:
         print(f"⚠️  PyWebView not available: {e}")
         print("🌐 Starting in web server mode only...")
         print("📱 Open your browser at: http://127.0.0.1:5000")

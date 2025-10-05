@@ -2,8 +2,8 @@
   let selectedLanguage = '— Sélectionner —';
   let selectedFile = '— Aucun fichier —';
   let code = 'Glissez un fichier .py ici ou utilisez les contrôles ci-dessus';
-  let encoding = 'UTF-8';
-  let availableFiles = 0;
+  const encoding = 'UTF-8';
+  const availableFiles = 0;
 
   const languages = [
     '— Sélectionner —',
