@@ -107,6 +107,7 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+external/
 
 # Generated folder
 01_Temporary/
