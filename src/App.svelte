@@ -60,13 +60,13 @@
       </div>
     </div>
   {:else}
-    <div class="h-screen max-h-screen flex flex-col relative">
+    <div class="h-screen min-h-screen max-h-screen grid grid-rows-[5rem_1fr] relative">
       <Header />
 
-      <div class="flex h-full box-content overflow-scroll">
+      <div class="flex h-[calc(100vh-5rem)] relative">
         <Sidebar />
 
-        <div class="h-full w-full max-h-full overflow-y-scroll">
+        <div class="h-full w-full max-h-full overflow-y-auto">
           <Route path="/" component={Generator} />
           <Route path="/extract" component={Extractor} />
           {#if $appSettings.translatorFeature}

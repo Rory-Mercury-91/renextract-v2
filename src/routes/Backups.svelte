@@ -45,6 +45,7 @@
 
       if (result.success) {
         backups = result.backups || [];
+        console.log(backups);
         filteredBackups = backups;
         updateStatistics();
         updateGameFilter();

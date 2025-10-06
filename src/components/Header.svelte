@@ -19,7 +19,7 @@
 {/if}
 
 <header
-  class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700 gap-4"
+  class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700 gap-4 h-20"
 >
   <!-- Left: App Name + Version -->
   <div class="flex items-center gap-4">

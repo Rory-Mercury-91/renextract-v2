@@ -24,7 +24,7 @@ if not exist "dist\index.html" (
 
 REM Build executable
 echo Building executable...
-python src/build/build_exe.py
+python build_exe.py
 
 echo.
 echo ================================================
