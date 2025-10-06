@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-env browser */
   import Icon from '@iconify/svelte';
   import { WORK_FOLDERS } from '../lib/constants';
   import { appSettings } from '../stores/app';
@@ -6,10 +7,12 @@
   const outputFolder = '';
 
   function selectFolder(folderId: string) {
+    // eslint-disable-next-line no-console
     console.log('Selected folder:', folderId);
   }
 
   function selectOutputFolder() {
+    // eslint-disable-next-line no-console
     console.log('Select output folder');
   }
 </script>

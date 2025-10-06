@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-env browser */
   import RouteHeader from '$components/RouteHeader.svelte';
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
@@ -115,7 +116,7 @@
 
   async function restoreBackup(backup: any) {
     if (
-      !confirm(
+      !window.confirm(
         `Restaurer la sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Type : ${BACKUP_DESCRIPTIONS[backup.type as keyof typeof BACKUP_DESCRIPTIONS] || backup.type}\n\nLe fichier actuel sera remplacé !`
       )
     ) {
@@ -131,11 +132,11 @@
         loadBackups(); // Recharger la liste
       } else {
         statusMessage = '❌ Erreur lors de la restauration';
-        alert(`Erreur : ${result.error}`);
+        window.alert(`Erreur : ${result.error}`);
       }
     } catch (err) {
       statusMessage = '❌ Erreur lors de la restauration';
-      alert(
+      window.alert(
         `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
       );
     }
@@ -180,12 +181,12 @@
       } else {
         statusMessage =
           '❌ Erreur lors de la restauration vers chemin personnalisé';
-        alert(`Erreur : ${restoreResult.error}`);
+        window.alert(`Erreur : ${restoreResult.error}`);
       }
     } catch (err) {
       statusMessage =
         '❌ Erreur lors de la restauration vers chemin personnalisé';
-      alert(
+      window.alert(
         `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
       );
     }
@@ -193,7 +194,7 @@
 
   async function deleteBackup(backup: any) {
     if (
-      !confirm(
+      !window.confirm(
         `Supprimer définitivement cette sauvegarde ?\n\n• Fichier : ${backup.source_filename}\n• Jeu : ${backup.game_name}\n• Taille : ${formatSize(backup.size)}\n\nCette action est irréversible !`
       )
     ) {
@@ -209,11 +210,11 @@
         loadBackups(); // Recharger la liste
       } else {
         statusMessage = '❌ Erreur lors de la suppression';
-        alert(`Erreur : ${result.error}`);
+        window.alert(`Erreur : ${result.error}`);
       }
     } catch (err) {
       statusMessage = '❌ Erreur lors de la suppression';
-      alert(
+      window.alert(
         `Erreur : ${err instanceof Error ? err.message : 'Erreur inconnue'}`
       );
     }

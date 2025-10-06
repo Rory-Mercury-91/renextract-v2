@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-env browser */
   import Icon from '@iconify/svelte';
 
   let selectedLanguage = 'Originale (none)';
@@ -11,13 +12,15 @@
 
   const files: string[] = [];
 
-  function handleLanguageChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
+  function handleLanguageChange(event: unknown) {
+    const target = (event as { target: unknown })
+      .target as globalThis.HTMLSelectElement;
     selectedLanguage = target.value;
   }
 
-  function handleFileChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
+  function handleFileChange(event: unknown) {
+    const target = (event as { target: unknown })
+      .target as globalThis.HTMLSelectElement;
     selectedFile = target.value;
   }
 </script>

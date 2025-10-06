@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-env browser */
   import RouteHeader from '$components/RouteHeader.svelte';
   import SettingsAccess from '$components/SettingsAccess.svelte';
   import SettingsApp from '$components/SettingsApp.svelte';
@@ -74,7 +75,9 @@
     <button
       class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors flex items-center"
       onclick={() =>
-        alert('🧹 Nettoyage des fichiers temporaires, backups et reports...')}
+        window.alert(
+          '🧹 Nettoyage des fichiers temporaires, backups et reports...'
+        )}
     >
       🧹 Nettoyer les fichiers temporaires
     </button>
@@ -84,11 +87,11 @@
       class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center"
       onclick={() => {
         if (
-          confirm(
+          window.confirm(
             "Êtes-vous sûr de vouloir réinitialiser TOUTE l'application ? Ceci remettra tous les paramètres, projets et configurations à leurs valeurs par défaut."
           )
         ) {
-          alert("🔄 Réinitialisation complète de l'application...");
+          window.alert("🔄 Réinitialisation complète de l'application...");
           appSettingsActions.resetSettings();
         }
       }}
@@ -100,7 +103,11 @@
     <button
       class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
       onclick={() => {
-        if (confirm('Réinitialiser seulement les paramètres de cette page ?')) {
+        if (
+          window.confirm(
+            'Réinitialiser seulement les paramètres de cette page ?'
+          )
+        ) {
           appSettingsActions.resetSettings();
         }
       }}

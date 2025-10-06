@@ -1,15 +1,19 @@
 <script lang="ts">
+  /* eslint-env browser */
   import Icon from '@iconify/svelte';
 
   function handleExtract() {
+    // eslint-disable-next-line no-console
     console.info('Extraire clicked');
   }
 
   function handleReconstruct() {
+    // eslint-disable-next-line no-console
     console.info('Reconstruire clicked');
   }
 
   function handleVerify() {
+    // eslint-disable-next-line no-console
     console.info('Revérifier clicked');
   }
 </script>

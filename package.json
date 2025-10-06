@@ -11,8 +11,13 @@
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "fullcheck": "pnpm run format && pnpm run lint && pnpm run check && isort *.py && autopep8 --in-place --aggressive --aggressive *.py && pylint *.py",
+    "fullfix": "pnpm run format:fix && pnpm run lint:fix && pnpm run check && isort *.py && autopep8 --in-place --aggressive --aggressive *.py && pylint *.py",
+    "ttia:clone": "test -d external/TranslationToolsIA || mkdir -p external && git clone https://github.com/Virusf/TranslationToolsIA.git external/TranslationToolsIA",
+    "ttia:update": "test -d external/TranslationToolsIA && git -C external/TranslationToolsIA pull || echo 'TranslationToolsIA non cloné. Lancez: pnpm run ttia:clone'",
+    "ttia:status": "test -d external/TranslationToolsIA && git -C external/TranslationToolsIA rev-parse --short HEAD || echo 'absent'"
   },
   "devDependencies": {
     "@eslint/js": "9.37.0",

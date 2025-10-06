@@ -18,14 +18,18 @@
   <div class="items-center justify-between" class:flex={title !== 'Paramètres'}>
     <div class="p-6">
       <div class="flex items-center gap-3">
-        <Icon {icon} class={cn("w-8 h-8", color)} />
+        <Icon {icon} class={cn('w-8 h-8', color)} />
         <h1
-          class={cn("text-3xl font-bold", "mb-2 flex gap-3 items-center", color)}
+          class={cn(
+            'text-3xl font-bold',
+            'mb-2 flex gap-3 items-center',
+            color
+          )}
         >
           {title}
         </h1>
       </div>
-      <p class={cn("text-sm opacity-65", color)}>
+      <p class={cn('text-sm opacity-65', color)}>
         {description}
       </p>
     </div>

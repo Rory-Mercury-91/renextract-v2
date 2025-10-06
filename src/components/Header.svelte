@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint-env browser */
   import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
@@ -9,7 +10,7 @@
   let showAboutModal = $state(false);
 
   function showHelp() {
-    alert('Aide RenExtract - Fonctionnalités en cours de développement');
+    window.alert('Aide RenExtract - Fonctionnalités en cours de développement');
   }
 </script>
 
