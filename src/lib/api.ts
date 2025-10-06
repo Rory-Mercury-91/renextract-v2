@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Configuration de base d'axios
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: "/api",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

@@ -28,9 +28,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
-    "src/**/*.svelte",
-    "src/components/ContentManager.svelte.bak",
-    "src/components/ContentManager.svelte.b"
+    "src/**/*.svelte"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

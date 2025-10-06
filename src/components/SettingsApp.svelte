@@ -8,7 +8,7 @@
   };
 </script>
 
-<section class="h-full w-fulln space-y-8 p-6 rounded-lg">
+<section class="h-full w-full space-y-8 p-6 rounded-lg">
   <div>
     <h2 class="text-2xl font-bold text-blue-400 mb-4">
       Interface et applications
@@ -25,7 +25,7 @@
           >Langue de l'interface</label
         >
         <select
-          id="language-select "
+          id="language-select"
           bind:value={$appSettings.language}
           class="bg-gray-100 text-black rounded-lg px-2 py-1"
         >

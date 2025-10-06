@@ -98,7 +98,7 @@
       <label class="text-sm" for="inputFolder">Dossier du jeu Ren'Py</label>
       <input
         id="inputFolder"
-        class="px-3 py-2 bg-gray-800 rounded outline-none"
+        class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
         placeholder="/chemin/vers/le/jeu"
         bind:value={inputFolder}
       />
@@ -113,7 +113,7 @@
         <label class="text-sm" for="modelPath">Modèle</label>
         <input
           id="modelPath"
-          class="px-3 py-2 bg-gray-800 rounded outline-none"
+          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
           bind:value={modelPath}
         />
       </div>
@@ -126,7 +126,7 @@
         >
         <input
           id="sourceLang"
-          class="px-3 py-2 bg-gray-800 rounded outline-none"
+          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
           bind:value={sourceLang}
         />
       </div>
@@ -134,7 +134,7 @@
         <label class="text-sm" for="targetLang">Langue cible (NLLB code)</label>
         <input
           id="targetLang"
-          class="px-3 py-2 bg-gray-800 rounded outline-none"
+          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
           bind:value={targetLang}
         />
       </div>
