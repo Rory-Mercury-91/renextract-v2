@@ -4,7 +4,7 @@
   import { Link } from 'svelte5-router';
   import { appSettings } from '../stores/app';
 
-  let isClose = $state(true);
+  let isClose = $state(false);
 
   interface Section {
     link: string;
