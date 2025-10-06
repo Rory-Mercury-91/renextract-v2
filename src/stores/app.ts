@@ -128,7 +128,10 @@ const appSettingsActions = {
   loadSettings: async () => {
     const response = await apiService.getSettings();
     // Attendu: { success: boolean, data: {...} }
-    const payload = response as unknown as { success?: boolean; data?: Partial<AppSettings> };
+    const payload = response as unknown as {
+      success?: boolean;
+      data?: Partial<AppSettings>;
+    };
     if (payload && payload.success && payload.data) {
       const fetched = payload.data;
 
@@ -143,7 +146,7 @@ const appSettingsActions = {
 
   refreshAppSettings: async () => {
     await appSettingsActions.loadSettings();
-  }
+  },
 };
 
 export { appActions, appSettings, appSettingsActions };

@@ -2,6 +2,7 @@
 """
 Main application using pywebview with Flask backend
 """
+import json
 import os
 import shutil
 import subprocess
@@ -14,7 +15,6 @@ from subprocess import CalledProcessError
 import webview
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-import json
 from flask_cors import CORS
 
 from src.backend.backup_manager import BackupManager
@@ -494,9 +494,15 @@ def load_settings_from_disk():
             with open(settings_file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, dict):
-                    # Mise à jour superficielle (shallow merge)
-                    for key, value in data.items():
-                        if key in settings_data and isinstance(settings_data[key], dict) and isinstance(value, dict):
+                    sanitized = sanitize_settings_payload(data)
+                    # Mise à jour superficielle (shallow merge) avec données
+                    # propres
+                    for key, value in sanitized.items():
+                        if key in settings_data and isinstance(
+                                settings_data[key],
+                                dict) and isinstance(
+                                value,
+                                dict):
                             settings_data[key].update(value)
                         else:
                             settings_data[key] = value
@@ -508,10 +514,98 @@ def save_settings_to_disk():
     """Sauvegarde les paramètres courants sur le disque."""
     try:
         settings_file_path.parent.mkdir(parents=True, exist_ok=True)
+        # Écrire un JSON trié pour une diff plus lisible
         with open(settings_file_path, 'w', encoding='utf-8') as f:
-            json.dump(settings_data, f, ensure_ascii=False, indent=2)
+            json.dump(settings_data, f, ensure_ascii=False,
+                      indent=2, sort_keys=True)
     except (OSError, TypeError) as e:
         print(f"DEBUG: Failed to save settings: {e}")
+
+
+def sanitize_settings_payload(payload: dict) -> dict:
+    # pylint: disable=too-many-branches
+    """Nettoie/valide un payload de paramètres et ne retourne que les clés supportées.
+
+    - language: str non vide sinon ignore
+    - theme: 'light' | 'dark' | 'auto'
+    - debugActive: bool
+    - translatorFeature: bool
+    - autoOpenings: sous-clés booleans
+    - externalTools: textEditor/translator str
+    - paths: editor/renpySdk str
+    - folders: temporary/reports/backups/configs str
+    - extraction: placeholderFormat/encoding str
+    """
+    allowed_themes = {'light', 'dark', 'auto'}
+
+    result = {}
+    if not isinstance(payload, dict):
+        return result
+
+    # Simples
+    if isinstance(payload.get('language'),
+                  str) and payload.get('language').strip():
+        result['language'] = payload['language'].strip()
+
+    theme = payload.get('theme')
+    if isinstance(theme, str) and theme in allowed_themes:
+        result['theme'] = theme
+
+    if isinstance(payload.get('debugActive'), bool):
+        result['debugActive'] = payload['debugActive']
+
+    if isinstance(payload.get('translatorFeature'), bool):
+        result['translatorFeature'] = payload['translatorFeature']
+
+    # Objets imbriqués
+    def pick_bools(obj: dict, keys: list[str]) -> dict:
+        return {
+            k: bool(
+                obj[k]) for k in keys if k in obj and isinstance(
+                obj[k],
+                bool)}
+
+    def pick_strs(obj: dict, keys: list[str]) -> dict:
+        picked = {}
+        for k in keys:
+            v = obj.get(k)
+            if isinstance(v, str):
+                picked[k] = v
+        return picked
+
+    auto_openings = payload.get('autoOpenings')
+    if isinstance(auto_openings, dict):
+        picked = pick_bools(
+            auto_openings, ['files', 'folders', 'reports', 'outputField'])
+        if picked:
+            result['autoOpenings'] = picked
+
+    external_tools = payload.get('externalTools')
+    if isinstance(external_tools, dict):
+        picked = pick_strs(external_tools, ['textEditor', 'translator'])
+        if picked:
+            result['externalTools'] = picked
+
+    paths_obj = payload.get('paths')
+    if isinstance(paths_obj, dict):
+        picked = pick_strs(paths_obj, ['editor', 'renpySdk'])
+        if picked:
+            result['paths'] = picked
+
+    folders_obj = payload.get('folders')
+    if isinstance(folders_obj, dict):
+        picked = pick_strs(
+            folders_obj, ['temporary', 'reports', 'backups', 'configs'])
+        if picked:
+            result['folders'] = picked
+
+    extraction_obj = payload.get('extraction')
+    if isinstance(extraction_obj, dict):
+        picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding'])
+        if picked:
+            result['extraction'] = picked
+
+    return result
 
 
 # Charger dès le démarrage
@@ -536,13 +630,19 @@ def update_settings():
             return jsonify(
                 {'success': False, 'message': 'No settings provided'}), 400
 
-        # Update settings (merge superficiel pour objets imbriqués)
-        for key, value in new_settings.items():
-            if key in settings_data:
-                if isinstance(settings_data[key], dict) and isinstance(value, dict):
-                    settings_data[key].update(value)
-                else:
-                    settings_data[key] = value
+        # Filtrer, normaliser et merger proprement
+        clean = sanitize_settings_payload(new_settings)
+        for key, value in clean.items():
+            if key not in settings_data:
+                continue
+            if isinstance(
+                    settings_data[key],
+                    dict) and isinstance(
+                    value,
+                    dict):
+                settings_data[key].update(value)
+            else:
+                settings_data[key] = value
 
         # Sauvegarde sur disque
         save_settings_to_disk()
