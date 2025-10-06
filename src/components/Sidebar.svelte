@@ -4,7 +4,7 @@
   import { Link } from 'svelte5-router';
   import { appSettings } from '../stores/app';
 
-  let isOpen = $state(false);
+  let isClose = $state(true);
 
   interface Section {
     link: string;
@@ -54,27 +54,40 @@
 </script>
 
 <nav
-  class="max-w-64 bg-gray-800 text-white flex flex-col border-r border-gray-700 justify-between py-4"
-  class:lg:w-64={!isOpen}
+  class="bg-gray-800 text-white flex flex-col border-r border-gray-700 justify-between py-4 transition-all duration-500 ease-in-out"
+  class:max-w-64={!isClose}
+  class:w-16={isClose}
+  class:lg:w-64={!isClose}
+  class:lg:w-16={isClose}
 >
-  <div class="flex flex-col gap-1">
+  <div class="flex flex-col gap-1 w-full">
     {#each sections as section}
       {#if section.link !== '/translator' || $appSettings.translatorFeature}
         <Link to={section.link}>
           {#snippet children(active)}
             <div
-              class="w-full flex gap-3 items-center px-6 py-3 text-left hover:bg-gray-700 transition-colors relative {section.color}"
+              class="w-full flex px-4.5 gap-3 items-center justify-start py-3 text-left hover:bg-gray-700 transition-all duration-300 relative {section.color}"
               class:bg-blue-600={active}
               class:hover:bg-blue-700={active}
             >
-              <span class="text-xl">
+              <span
+                class="text-xl flex"
+                class:w-min={!isClose}
+                class:w-full={isClose}
+              >
                 <Icon icon={section.icon} class="w-6 h-6" />
               </span>
-              {#if !isOpen}
-                <span class="flex-1 hidden lg:block font-bold"
-                  >{section.name}</span
-                >
-              {/if}
+              <span 
+                class="flex-1 font-bold overflow-hidden"
+                class:hidden={isClose}
+                class:opacity-0={isClose}
+                class:opacity-100={!isClose}
+                class:max-w-0={isClose}
+                class:max-w-full={!isClose}
+                class:lg:block={!isClose}
+              >
+                {section.name}
+              </span>
             </div>
           {/snippet}
         </Link>
@@ -83,9 +96,11 @@
   </div>
 
   <button
-    class="hidden lg:flex mx-auto items-center justify-center transition-all duration-400 bg-slate-700 hover:bg-slate-600 rounded-full p-1"
-    class:rotate-180={isOpen}
-    onclick={() => (isOpen = !isOpen)}
+    class="hidden lg:flex mx-auto items-center justify-center transition-all duration-500 ease-in-out bg-slate-700 hover:bg-slate-600 rounded-full p-1"
+    class:rotate-180={isClose}
+    class:scale-110={isClose}
+    class:scale-100={!isClose}
+    onclick={() => (isClose = !isClose)}
   >
     <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
   </button>
