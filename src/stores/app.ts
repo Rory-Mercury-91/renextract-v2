@@ -1,4 +1,5 @@
-import { writable } from 'svelte/store';
+import { apiService } from '$lib/api';
+import { get, writable } from 'svelte/store';
 
 interface AppState {
   // currentTheme: Theme;
@@ -87,12 +88,33 @@ const initialSettings: AppSettings = {
 const appSettings = writable<AppSettings>(initialSettings);
 
 const appSettingsActions = {
+  _settingsLoaded: false as boolean,
+  _syncTimer: null as ReturnType<typeof setTimeout> | null,
+  async _syncNow() {
+    if (!this._settingsLoaded) return;
+    try {
+      const current = get(appSettings) as unknown as Record<string, unknown>;
+      await apiService.updateSettings(current);
+    } catch {
+      // Ignorer silencieusement
+    }
+  },
+  _scheduleSync() {
+    if (!this._settingsLoaded) return;
+    if (this._syncTimer) clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(async () => {
+      await appSettingsActions._syncNow();
+    }, 500);
+  },
   setSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     appSettings.update(setting => ({ ...setting, [key]: value }));
+    // Sauvegarde immédiate pour éviter la perte en cas de refresh rapide
+    void appSettingsActions._syncNow();
   },
 
   resetSettings: () => {
     appSettings.set(initialSettings);
+    void appSettingsActions._syncNow();
   },
 
   resetSettingsPaths: () => {
@@ -100,7 +122,38 @@ const appSettingsActions = {
       ...initialSettings,
       paths: { ...initialSettings.paths, editor: '', renpySdk: '' },
     });
+    void appSettingsActions._syncNow();
   },
+
+  loadSettings: async () => {
+    const response = await apiService.getSettings();
+    // Attendu: { success: boolean, data: {...} }
+    const payload = response as unknown as { success?: boolean; data?: Partial<AppSettings> };
+    if (payload && payload.success && payload.data) {
+      const fetched = payload.data;
+
+      const nextSettings = {
+        ...initialSettings,
+        ...fetched,
+      } as AppSettings;
+      appSettings.set(nextSettings);
+      appSettingsActions._settingsLoaded = true;
+    }
+  },
+
+  refreshAppSettings: async () => {
+    await appSettingsActions.loadSettings();
+  }
 };
 
 export { appActions, appSettings, appSettingsActions };
+
+// Démarrer immédiatement le chargement
+void appSettingsActions.loadSettings();
+
+// Synchronisation automatique même pour les modifications directes via bindings
+appSettings.subscribe(() => {
+  if (appSettingsActions._settingsLoaded) {
+    appSettingsActions._scheduleSync();
+  }
+});

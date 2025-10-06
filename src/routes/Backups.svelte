@@ -266,10 +266,12 @@
       disabled={loading}
       title="Recharger la liste des sauvegardes"
     >
-      <Icon
-        icon="hugeicons:refresh"
-        class="w-4 h-4 {loading ? 'animate-spin' : ''}"
-      />
+      {#if loading}
+        <Icon
+          icon="hugeicons:refresh"
+          class="w-4 h-4 {loading ? 'animate-spin' : ''}"
+        />
+      {/if}
       Recharger
     </button>
   </RouteHeader>

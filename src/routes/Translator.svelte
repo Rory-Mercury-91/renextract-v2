@@ -60,32 +60,40 @@
     description={$_('navigation.translator_description')}
     icon="hugeicons:tools"
     color="text-red-300"
-  />
-  <div class="p-4 grid gap-4 max-w-3xl">
-    <div class="text-sm text-gray-300">
-      <span class="font-medium">Status:</span>
-      {#if health}
-        {#if health.success && health.exists}
-          <span class="text-green-400">TranslationToolsIA détecté</span>
-          {#if health.gitHead}
-            <span class="ml-2 text-xs text-gray-400"
-              >(HEAD {health.gitHead})</span
+  >
+    <div class="text-sm text-gray-300 mr-6">
+      <div class="flex justify-end">
+        <button
+          class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2"
+          onclick={checkHealth}
+          title="Rafraîchir TranslationToolsIA"
+        >
+          Recharger
+        </button>
+      </div>
+
+      <div>
+        <span class="font-medium">Status:</span>
+        {#if health}
+          {#if health.success && health.exists}
+            <span class="text-green-400">TranslationToolsIA détecté</span>
+            {#if health.gitHead}
+              <span class="ml-2 text-xs text-gray-400"
+                >(HEAD {health.gitHead})</span
+              >
+            {/if}
+          {:else}
+            <span class="text-red-400"
+              >Non installé. Exécutez "pnpm run ttia:clone"</span
             >
           {/if}
         {:else}
-          <span class="text-red-400"
-            >Non installé. Exécutez "pnpm run ttia:clone"</span
-          >
+          <span class="text-gray-400">Vérification…</span>
         {/if}
-      {:else}
-        <span class="text-gray-400">Vérification…</span>
-      {/if}
-      <button
-        class="ml-3 px-2 py-1 rounded bg-gray-700 hover:bg-gray-600"
-        on:click={checkHealth}>Rafraîchir</button
-      >
+      </div>
     </div>
-
+  </RouteHeader>
+  <div class="p-4 grid gap-4 max-w-3xl">
     <div class="grid gap-2">
       <label class="text-sm" for="inputFolder">Dossier du jeu Ren'Py</label>
       <input
@@ -136,7 +144,7 @@
       <button
         class="px-4 py-2 rounded bg-red-500 hover:bg-red-400 disabled:opacity-50"
         disabled={running || !inputFolder}
-        on:click={runTranslation}
+        onclick={runTranslation}
       >
         {#if running}En cours…{:else}Lancer la traduction{/if}
       </button>

@@ -14,6 +14,7 @@ from subprocess import CalledProcessError
 import webview
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+import json
 from flask_cors import CORS
 
 from src.backend.backup_manager import BackupManager
@@ -448,7 +449,7 @@ settings_data = {
     'language': 'fr',
     'theme': 'dark',
     'debugActive': False,  # false=Level 3, true=Level 4
-    'translateFeature': False,
+    'translatorFeature': False,
     'autoOpenings': {
         'files': True,
         'folders': True,
@@ -481,6 +482,41 @@ settings_data = {
     }
 }
 
+# Fichier de configuration persistant
+settings_file_path = Path(app_base_dir or '.') / \
+    '04_Configs' / 'app_settings.json'
+
+
+def load_settings_from_disk():
+    """Charge les paramètres depuis le disque si disponible."""
+    try:
+        if settings_file_path.exists():
+            with open(settings_file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    # Mise à jour superficielle (shallow merge)
+                    for key, value in data.items():
+                        if key in settings_data and isinstance(settings_data[key], dict) and isinstance(value, dict):
+                            settings_data[key].update(value)
+                        else:
+                            settings_data[key] = value
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"DEBUG: Failed to load settings: {e}")
+
+
+def save_settings_to_disk():
+    """Sauvegarde les paramètres courants sur le disque."""
+    try:
+        settings_file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(settings_file_path, 'w', encoding='utf-8') as f:
+            json.dump(settings_data, f, ensure_ascii=False, indent=2)
+    except (OSError, TypeError) as e:
+        print(f"DEBUG: Failed to save settings: {e}")
+
+
+# Charger dès le démarrage
+load_settings_from_disk()
+
 
 @app.route('/api/settings', methods=['GET'])
 def get_settings():
@@ -500,10 +536,16 @@ def update_settings():
             return jsonify(
                 {'success': False, 'message': 'No settings provided'}), 400
 
-        # Update settings (basic validation)
+        # Update settings (merge superficiel pour objets imbriqués)
         for key, value in new_settings.items():
             if key in settings_data:
-                settings_data[key] = value
+                if isinstance(settings_data[key], dict) and isinstance(value, dict):
+                    settings_data[key].update(value)
+                else:
+                    settings_data[key] = value
+
+        # Sauvegarde sur disque
+        save_settings_to_disk()
 
         return jsonify({
             'success': True,

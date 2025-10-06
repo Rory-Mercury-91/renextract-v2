@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { locale, locales } from 'svelte-i18n';
+  import { locales } from 'svelte-i18n';
   import { appSettings } from '../stores/app';
 
   const language = {
@@ -26,7 +26,7 @@
         >
         <select
           id="language-select "
-          bind:value={$locale}
+          bind:value={$appSettings.language}
           class="bg-gray-100 text-black rounded-lg px-2 py-1"
         >
           {#each $locales as locale}
@@ -45,6 +45,7 @@
         </label>
         <select
           id="theme-select"
+          bind:value={$appSettings.theme}
           class="bg-gray-100 text-black rounded-lg px-2 py-1"
         >
           <option value="auto">Auto</option>
