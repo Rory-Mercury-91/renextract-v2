@@ -10,18 +10,17 @@
     children?: Snippet;
   }
 
-  const { title, description, icon, color, children }: Props = $props()
+  const { title, description, icon, color, children }: Props = $props();
 </script>
 
 <div class="border-b border-gray-700 bg-gray-900">
-  <div
-    class="items-center justify-between"
-    class:flex={title !== 'Paramètres'}
-  >
+  <div class="items-center justify-between" class:flex={title !== 'Paramètres'}>
     <div class="p-6">
       <div class="flex items-center gap-3">
         <Icon {icon} class="w-8 h-8 text-{color}-300" />
-        <h1 class="text-3xl font-bold text-{color}-300 mb-2 flex gap-3 items-center">
+        <h1
+          class="text-3xl font-bold text-{color}-300 mb-2 flex gap-3 items-center"
+        >
           {title}
         </h1>
       </div>
@@ -29,6 +28,6 @@
         {description}
       </p>
     </div>
-      {@render children?.()}
+    {@render children?.()}
   </div>
 </div>

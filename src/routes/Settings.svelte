@@ -37,7 +37,12 @@
 </script>
 
 <section class="min-h-full flex flex-col justify-between text-white">
-  <RouteHeader title={$_('navigation.settings')} description={$_('navigation.settings_description')} icon="hugeicons:settings-01" color="gray">
+  <RouteHeader
+    title={$_('navigation.settings')}
+    description={$_('navigation.settings_description')}
+    icon="hugeicons:settings-01"
+    color="gray"
+  >
     <div class="flex space-x-1 w-full justify-between">
       {#each tabs as tab}
         <button
@@ -62,7 +67,9 @@
   </div>
 
   <!-- Action buttons -->
-  <div class="p-6 border-t border-gray-700 bg-gray-800 flex justify-center items-center space-x-4">
+  <div
+    class="p-6 border-t border-gray-700 bg-gray-800 flex justify-center items-center space-x-4"
+  >
     <!-- Bouton de ménage -->
     <button
       class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors flex items-center"
@@ -93,9 +100,7 @@
     <button
       class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
       onclick={() => {
-        if (
-          confirm('Réinitialiser seulement les paramètres de cette page ?')
-        ) {
+        if (confirm('Réinitialiser seulement les paramètres de cette page ?')) {
           appSettingsActions.resetSettings();
         }
       }}

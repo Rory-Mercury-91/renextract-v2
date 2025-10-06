@@ -6,9 +6,14 @@
   import { _ } from 'svelte-i18n';
 </script>
 
-<section class="flex flex-col">
-  <RouteHeader title={$_('navigation.extract')} description={$_('navigation.extract_description')} icon="hugeicons:injection" color="blue" />
-  
+<section class="flex flex-col text-white">
+  <RouteHeader
+    title={$_('navigation.extract')}
+    description={$_('navigation.extract_description')}
+    icon="hugeicons:injection"
+    color="blue"
+  />
+
   <MainEditor />
   <div class="flex flex-col">
     <ActionButtons />

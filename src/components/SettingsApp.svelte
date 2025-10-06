@@ -54,16 +54,15 @@
       </div>
 
       <label
-          class="flex items-center cursor-pointer p-2 rounded hover:bg-gray-800"
-        >
-          <input
-            type="checkbox"
-            bind:checked={$appSettings.translatorFeature}
-            class="mr-3 w-4 h-4"
-          />
-          <span class=""> Fonctionnalité de traduction par GPU</span>
-        </label>
-
+        class="flex items-center cursor-pointer p-2 rounded hover:bg-gray-800"
+      >
+        <input
+          type="checkbox"
+          bind:checked={$appSettings.translatorFeature}
+          class="mr-3 w-4 h-4"
+        />
+        <span class=""> Fonctionnalité de traduction par GPU</span>
+      </label>
     </div>
   </div>
 

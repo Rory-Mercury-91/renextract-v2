@@ -23,7 +23,7 @@
   <!-- Left: App Name + Version -->
   <div class="flex items-center gap-4">
     <img
-      src="/public/assets/logo.webp"
+      src="/assets/logo.webp"
       alt="Logo RenExtract"
       class="w-12 h-12 object-contain rounded-xl"
     />
@@ -37,7 +37,12 @@
   <!-- Center: Project Bar -->
   <div class="flex items-center gap-2">
     <Icon icon="hugeicons:folder-01" class="w-6 h-6 text-yellow-500" />
-    <input class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg" value={currentProject} placeholder="Aucun projet chargé" readonly />
+    <input
+      class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg"
+      value={currentProject}
+      placeholder="Aucun projet chargé"
+      readonly
+    />
     <button
       class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
     >

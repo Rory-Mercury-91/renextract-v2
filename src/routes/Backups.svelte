@@ -253,14 +253,22 @@
 </script>
 
 <div class="h-full text-white flex flex-col">
-  <RouteHeader title={$_('navigation.backup')} description={$_('navigation.backup_description')} icon="hugeicons:floppy-disk" color="purple">
+  <RouteHeader
+    title={$_('navigation.backup')}
+    description={$_('navigation.backup_description')}
+    icon="hugeicons:floppy-disk"
+    color="purple"
+  >
     <button
       class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2 mr-6"
       onclick={refreshBackups}
       disabled={loading}
       title="Recharger la liste des sauvegardes"
     >
-      <Icon icon="hugeicons:refresh" class="w-4 h-4 {loading ? 'animate-spin' : ''}" />
+      <Icon
+        icon="hugeicons:refresh"
+        class="w-4 h-4 {loading ? 'animate-spin' : ''}"
+      />
       Recharger
     </button>
   </RouteHeader>

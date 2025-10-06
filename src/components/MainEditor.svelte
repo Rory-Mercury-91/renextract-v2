@@ -7,10 +7,7 @@
   const encoding = 'UTF-8';
   const availableFiles = 0;
 
-  const languages = [
-    'Originale (none)',
-    'Français',
-  ];
+  const languages = ['Originale (none)', 'Français'];
 
   const files: string[] = [];
 

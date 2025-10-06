@@ -1,12 +1,16 @@
 <script lang="ts">
   import RouteHeader from '$components/RouteHeader.svelte';
   import { _ } from 'svelte-i18n';
-
 </script>
 
 <section class="min-h-full flex flex-col text-white">
-  <RouteHeader title={$_('navigation.generator')} description={$_('navigation.generator_description')} icon="hugeicons:magic-wand-04" color="yellow" />
-  
+  <RouteHeader
+    title={$_('navigation.generator')}
+    description={$_('navigation.generator_description')}
+    icon="hugeicons:magic-wand-04"
+    color="yellow"
+  />
+
   <div class="p-6">
     <h2 class="text-2xl font-bold mb-4">⚡ Générateur</h2>
     <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
