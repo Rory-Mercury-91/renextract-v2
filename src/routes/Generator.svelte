@@ -8,7 +8,7 @@
     title={$_('navigation.generator')}
     description={$_('navigation.generator_description')}
     icon="hugeicons:magic-wand-04"
-    color="yellow"
+    color="text-yellow-300"
   />
 
   <div class="p-6">

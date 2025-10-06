@@ -257,7 +257,7 @@
     title={$_('navigation.backup')}
     description={$_('navigation.backup_description')}
     icon="hugeicons:floppy-disk"
-    color="purple"
+    color="text-purple-300"
   >
     <button
       class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2 mr-6"

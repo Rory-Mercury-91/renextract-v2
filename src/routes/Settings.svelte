@@ -41,7 +41,7 @@
     title={$_('navigation.settings')}
     description={$_('navigation.settings_description')}
     icon="hugeicons:settings-01"
-    color="gray"
+    color="text-gray-300"
   >
     <div class="flex space-x-1 w-full justify-between">
       {#each tabs as tab}

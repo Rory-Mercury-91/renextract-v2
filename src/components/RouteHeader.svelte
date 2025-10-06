@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cn } from '$lib/utils';
   import Icon from '@iconify/svelte';
   import type { Snippet } from 'svelte';
 
@@ -17,14 +18,14 @@
   <div class="items-center justify-between" class:flex={title !== 'Paramètres'}>
     <div class="p-6">
       <div class="flex items-center gap-3">
-        <Icon {icon} class="w-8 h-8 text-{color}-300" />
+        <Icon {icon} class={cn("w-8 h-8", color)} />
         <h1
-          class="text-3xl font-bold text-{color}-300 mb-2 flex gap-3 items-center"
+          class={cn("text-3xl font-bold", "mb-2 flex gap-3 items-center", color)}
         >
           {title}
         </h1>
       </div>
-      <p class="text-{color}-200 text-sm">
+      <p class={cn("text-sm opacity-65", color)}>
         {description}
       </p>
     </div>

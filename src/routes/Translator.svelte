@@ -8,6 +8,6 @@
     title={$_('navigation.translator')}
     description={$_('navigation.translator_description')}
     icon="hugeicons:tools"
-    color="red"
+    color="text-red-300"
   />
 </section>

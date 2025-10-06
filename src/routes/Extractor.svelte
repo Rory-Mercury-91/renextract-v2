@@ -11,7 +11,7 @@
     title={$_('navigation.extract')}
     description={$_('navigation.extract_description')}
     icon="hugeicons:injection"
-    color="blue"
+    color="text-blue-300"
   />
 
   <MainEditor />
