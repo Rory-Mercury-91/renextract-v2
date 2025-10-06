@@ -261,20 +261,25 @@
     icon="hugeicons:floppy-disk"
     color="text-purple-300"
   >
-    <button
-      class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2 mr-6"
-      onclick={refreshBackups}
-      disabled={loading}
-      title="Recharger la liste des sauvegardes"
-    >
-      {#if loading}
-        <Icon
-          icon="hugeicons:refresh"
-          class="w-4 h-4 {loading ? 'animate-spin' : ''}"
-        />
-      {/if}
-      Recharger
-    </button>
+    <div class="flex flex-col gap-1 items-end mr-6 text-sm text-right">
+      <button
+        class="px-4 py-1.5 flex text-sm justify-center items-center font-bold bg-purple-300 hover:opacity-65 text-slate-800 rounded-lg duration-200 transition-all gap-2"
+        onclick={refreshBackups}
+        disabled={loading}
+        title="Recharger la liste des sauvegardes"
+      >
+        {#if loading}
+          <Icon
+            icon="hugeicons:refresh"
+            class="w-4 h-4 animate-spin"
+          />
+        {/if}
+        Recharger
+      </button>
+      <div class="text-gray-400">
+        <span class="text-green-400">●</span> Dernier scan: {formatLastScanTime()}
+      </div>
+    </div>
   </RouteHeader>
 
   <!-- Content -->
@@ -285,9 +290,6 @@
         <h2 class="text-lg font-semibold text-blue-400">
           📊 Statistiques des sauvegardes
         </h2>
-        <div class="text-sm text-gray-400">
-          <span class="text-green-400">●</span> Dernier scan: {formatLastScanTime()}
-        </div>
       </div>
       <div class="grid grid-cols-3 gap-6">
         <div>

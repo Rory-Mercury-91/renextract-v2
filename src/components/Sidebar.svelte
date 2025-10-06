@@ -78,13 +78,13 @@
                 <Icon icon={section.icon} class="w-6 h-6" />
               </span>
               <span 
-                class="flex-1 font-bold overflow-hidden"
-                class:hidden={isClose}
+                class="flex-1 hidden font-bold overflow-hidden"
                 class:opacity-0={isClose}
                 class:opacity-100={!isClose}
                 class:max-w-0={isClose}
                 class:max-w-full={!isClose}
                 class:lg:block={!isClose}
+                title={section.name}
               >
                 {section.name}
               </span>

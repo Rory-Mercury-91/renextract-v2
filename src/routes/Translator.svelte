@@ -1,27 +1,33 @@
 <script lang="ts">
   import RouteHeader from '$components/RouteHeader.svelte';
+  import Icon from '@iconify/svelte';
   import axios from 'axios';
   import { _ } from 'svelte-i18n';
 
-  let inputFolder = '';
-  let recursive = true;
-  let modelPath = 'virusf/nllb-renpy-rory-v4';
-  let sourceLang = 'auto';
-  let targetLang = 'fra_Latn';
-  let running = false;
-  let logs = '';
+  let inputFolder = $state('');
+  let recursive = $state(true);
+  let modelPath = $state('virusf/nllb-renpy-rory-v4');
+  let sourceLang = $state('auto');
+  let targetLang = $state('fra_Latn');
+  let running = $state(false);
+  let logs = $state('');
   let health: {
     success: boolean;
     exists: boolean;
     gitHead?: string | null;
-  } | null = null;
+  } | null = $state(null);
+
+  let loading = $state(true)
 
   async function checkHealth() {
+    loading = true;
     try {
       const res = await axios.get('/api/translator/health');
       health = res.data;
     } catch (e) {
       health = { success: false, exists: false, gitHead: null } as any;
+    } finally {
+      loading = false
     }
   }
 
@@ -61,19 +67,23 @@
     icon="hugeicons:tools"
     color="text-red-300"
   >
-    <div class="text-sm text-gray-300 mr-6">
-      <div class="flex justify-end">
-        <button
-          class="px-4 py-2 flex justify-center items-center font-bold bg-purple-400 hover:bg-purple-300 text-slate-800 rounded-lg transition-colors gap-2"
-          onclick={checkHealth}
-          title="Rafraîchir TranslationToolsIA"
-        >
-          Recharger
-        </button>
-      </div>
-
+    <div class="flex flex-col gap-1 items-end mr-6 text-sm text-right">
+      <button
+        class="px-4 py-1.5 flex text-sm justify-center items-center font-bold bg-red-300 hover:opacity-65 text-slate-800 rounded-lg duration-200 transition-all gap-2"
+        onclick={checkHealth}
+        title="Rafraîchir TranslationToolsIA"
+      >
+        {#if loading}
+          <Icon
+            icon="hugeicons:refresh"
+            class="w-4 h-4 animate-spin"
+          />
+        {/if}
+        Recharger
+      </button>
+      
       <div>
-        <span class="font-medium">Status:</span>
+        <span class="font-bold">Status:</span>
         {#if health}
           {#if health.success && health.exists}
             <span class="text-green-400">TranslationToolsIA détecté</span>

@@ -882,9 +882,9 @@ def main():
             window_config = {
                 'title': 'PyWebView + Svelte Application',
                 'url': 'http://127.0.0.1:5000',
-                'width': 1200,
-                'height': 800,
-                'min_size': (800, 600),
+                'width': 1300,
+                'height': 1150,
+                'min_size': (700, 500),
                 'resizable': True,
                 'fullscreen': False,
                 'on_top': False,
