@@ -1,11 +1,11 @@
 <script lang="ts">
   /* eslint-env browser */
+  import { showBrowse } from '$lib/utils';
   import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
+  import { editorPath } from '../stores/app';
   import AboutModal from './AboutModal.svelte';
-
-  const currentProject = $state('');
 
   let showAboutModal = $state(false);
 
@@ -40,12 +40,20 @@
     <Icon icon="hugeicons:folder-01" class="w-6 h-6 text-yellow-500" />
     <input
       class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg"
-      value={currentProject}
-      placeholder="Aucun projet chargé"
-      readonly
+      value={$editorPath}
+      oninput={(e) => {
+        $editorPath = e.currentTarget.value
+      }}
+      placeholder={$editorPath ||"Aucun projet chargé"}
     />
     <button
       class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
+      onclick={() => showBrowse(
+        "📁 Sélectionner l'emplacement du jeu Ren'Py",
+        'C:\\',
+        'project-path',
+        $editorPath || ''
+      )}
     >
       {$_('app.browse')}
     </button>

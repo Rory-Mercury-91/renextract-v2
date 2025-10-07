@@ -729,6 +729,25 @@ def set_folder_path():
 def get_file_dialog():
     """Open Windows file selection dialog."""
     try:
+        # Détecter WSL
+        is_wsl = False
+        try:
+            if hasattr(os, 'uname'):
+                is_wsl = 'microsoft' in os.uname().release.lower()
+            is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+        except (AttributeError, OSError):
+            is_wsl = False
+
+        if is_wsl:
+            # En WSL, retourner un message indiquant qu'il faut utiliser
+            # l'endpoint POST
+            return jsonify({
+                'success': False,
+                'error': 'WSL_MODE',
+                'message': ("En mode WSL, utilisez POST /api/file-dialog/file "
+                           'avec le chemin en paramètre')
+            }), 400
+
         file_path = open_file_dialog_hybrid()
 
         print(f"DEBUG: File dialog returned: '{file_path}'")  # Debug log
@@ -739,6 +758,32 @@ def get_file_dialog():
         })
     except (OSError, subprocess.SubprocessError) as e:
         print(f"DEBUG: File dialog error: {e}")  # Debug log
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/file-dialog/file', methods=['POST'])
+def set_file_path():
+    """Set file path manually (for WSL mode)."""
+    try:
+        data = request.get_json()
+        if not data or 'path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin requis'
+            }), 400
+
+        file_path = data['path']
+        print(f"DEBUG: Manual file path set: '{file_path}'")
+
+        return jsonify({
+            'success': True,
+            'path': file_path
+        })
+    except (ValueError, KeyError) as e:
+        print(f"DEBUG: Manual file path error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

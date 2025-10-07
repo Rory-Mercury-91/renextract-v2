@@ -160,3 +160,5 @@ appSettings.subscribe(() => {
     appSettingsActions._scheduleSync();
   }
 });
+
+export const editorPath = writable<string>('');

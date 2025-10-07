@@ -3,8 +3,8 @@
   import Icon from '@iconify/svelte';
   import axios from 'axios';
   import { _ } from 'svelte-i18n';
+  import { editorPath } from '../stores/app';
 
-  let inputFolder = $state('');
   let recursive = $state(true);
   let modelPath = $state('virusf/nllb-renpy-rory-v4');
   let sourceLang = $state('auto');
@@ -32,12 +32,12 @@
   }
 
   async function runTranslation() {
-    if (!inputFolder) return;
+    if ($editorPath === '') return;
     running = true;
     logs = '';
     try {
       const res = await axios.post('/api/translator/run', {
-        inputFolder,
+        inputFolder: `${$editorPath}/game/tl/french/`,
         recursive,
         modelPath,
         sourceLang,
@@ -103,20 +103,11 @@
       </div>
     </div>
   </RouteHeader>
+  
   <div class="p-4 grid gap-4 max-w-3xl">
-    <div class="grid gap-2">
-      <label class="text-sm" for="inputFolder">Dossier du jeu Ren'Py</label>
-      <input
-        id="inputFolder"
-        class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
-        placeholder="/chemin/vers/le/jeu"
-        bind:value={inputFolder}
-      />
-    </div>
-
     <div class="grid gap-2 md:grid-cols-2">
       <div class="flex items-center gap-2">
-        <input id="rec" type="checkbox" bind:checked={recursive} />
+        <input id="rec" type="checkbox" class="w-6 h-6" bind:checked={recursive} />
         <label for="rec">Inclure les sous-dossiers</label>
       </div>
       <div class="grid gap-2">
@@ -153,8 +144,11 @@
     <div>
       <button
         class="px-4 py-2 rounded bg-red-500 hover:bg-red-400 disabled:opacity-50"
-        disabled={running || !inputFolder}
-        onclick={runTranslation}
+        disabled={running || $editorPath === ''}
+        onclick={() => {
+          runTranslation()
+          console.log($editorPath)
+        }}
       >
         {#if running}En cours…{:else}Lancer la traduction{/if}
       </button>
