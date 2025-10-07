@@ -37,7 +37,7 @@
     logs = '';
     try {
       const res = await axios.post('/api/translator/run', {
-        inputFolder: `${$editorPath}/game/tl/french/`,
+        inputFolder: `/01_Temporary/`, // TODO: à définir
         recursive,
         modelPath,
         sourceLang,

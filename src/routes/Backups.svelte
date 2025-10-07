@@ -9,25 +9,25 @@
 
   // États
   let backups: any[] = [];
-  let filteredBackups: any[] = [];
-  let loading = true;
-  let error: string | null = null;
-  let statusMessage = 'Chargement...';
-  let lastScanTime: Date | null = null;
+  let filteredBackups: any[] = $state([]);
+  let loading = $state(true);
+  let error: string | null = $state(null);
+  let statusMessage = $state('Chargement...');
+  let lastScanTime: Date | null = $state(null);
 
   // Filtres
-  let selectedGame = 'Tous';
-  let selectedType = 'Tous';
-  let games: string[] = ['Tous'];
+  let selectedGame = $state('Tous');
+  let selectedType = $state('Tous');
+  let games: string[] = $state(['Tous']);
 
   // Statistiques
-  let totalBackups = 0;
-  let totalGames = 0;
-  let totalSize = 0;
+  let totalBackups = $state(0);
+  let totalGames = $state(0);
+  let totalSize = $state(0);
 
   // Tri
-  let sortColumn: string | null = null;
-  let sortDirection: 'asc' | 'desc' = 'asc';
+  let sortColumn: string | null = $state(null);
+  let sortDirection: 'asc' | 'desc' = $state('asc');
 
   // Backup sélectionné
   const selectedBackup: any = null;

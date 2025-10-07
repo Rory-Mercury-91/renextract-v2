@@ -19,10 +19,10 @@
 {/if}
 
 <header
-  class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700 gap-4 h-20"
+  class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700 gap-4 h-20 text-nowrap"
 >
   <!-- Left: App Name + Version -->
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-4 min-w-40">
     <img
       src="/assets/logo.webp"
       alt="Logo RenExtract"
@@ -36,10 +36,11 @@
   </div>
 
   <!-- Center: Project Bar -->
-  <div class="flex items-center gap-2">
-    <Icon icon="hugeicons:folder-01" class="w-6 h-6 text-yellow-500" />
+  <div class="flex items-center gap-2 w-full justify-center">
+    <Icon icon="hugeicons:folder-01" class="w-6 h-6 min-w-6 text-yellow-500" />
     <input
-      class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg"
+      class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg w-full max-w-64"
+      style="direction: rtl;"
       value={$editorPath}
       oninput={e => {
         $editorPath = e.currentTarget.value;
