@@ -269,10 +269,7 @@
         title="Recharger la liste des sauvegardes"
       >
         {#if loading}
-          <Icon
-            icon="hugeicons:refresh"
-            class="w-4 h-4 animate-spin"
-          />
+          <Icon icon="hugeicons:refresh" class="w-4 h-4 animate-spin" />
         {/if}
         Recharger
       </button>

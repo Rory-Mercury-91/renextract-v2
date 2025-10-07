@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { showBrowse } from '$lib/utils';
   import Icon from '@iconify/svelte';
-/* eslint-env browser */
+  /* eslint-env browser */
+  import { apiService } from '$lib/api';
   import { appSettings } from '../stores/app';
 </script>
 
@@ -27,6 +27,7 @@
                 bind:value={$appSettings.paths.renpySdk}
                 placeholder="Ex: C:\Ren'Py\ren'py-8.0.3"
                 class="w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm"
+                readonly
               />
               <div class="flex flex-col gap-1">
                 <button
@@ -36,19 +37,33 @@
                       "💡 Le SDK Ren'Py doit contenir le fichier renpy.exe. Vous pouvez télécharger la dernière version depuis le site officiel.\n\nLe dossier SDK doit contenir :\n• renpy.exe\n• renpy.py\n• Les scripts RenPy"
                     )}
                 >
-                  <Icon icon="hugeicons:help-square" class="w-5 h-5 text-red-500" />
+                  <Icon
+                    icon="hugeicons:help-square"
+                    class="w-5 h-5 text-red-500"
+                  />
                 </button>
                 <button
                   class="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed rounded text-sm transition-colors flex items-center gap-1 justify-center"
                   onclick={() =>
-                    showBrowse(
-                      "📁 Sélectionner le SDK Ren'Py",
-                      'C:\\RenPy\\renpy-8.0.3',
-                      'renpy-sdk-path',
-                      $appSettings.paths?.renpySdk || ''
+                    apiService.openDialog(
+                      {
+                        path: $appSettings.paths.renpySdk,
+                        dialog_type: 'folder',
+                        title: "Sélectionner le dossier SDK Ren'Py",
+                        initialdir: 'C:\\',
+                        must_exist: true,
+                      },
+                      {
+                        setPath: (path: string) => {
+                          $appSettings.paths.renpySdk = path;
+                        },
+                      }
                     )}
                 >
-                  <Icon icon="hugeicons:folder-01" class="w-5 h-5 text-yellow-500" />
+                  <Icon
+                    icon="hugeicons:folder-01"
+                    class="w-5 h-5 text-yellow-500"
+                  />
                 </button>
               </div>
             </div>
@@ -79,6 +94,7 @@
               bind:value={$appSettings.paths.editor}
               placeholder="Ex: C:\Program Files\Notepad++\notepad++.exe"
               class="w-full p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 placeholder-gray-500 shadow-sm text-sm"
+              readonly
             />
             <div class="flex flex-col gap-1">
               <button
@@ -88,19 +104,37 @@
                     "💡 Le SDK Ren'Py doit contenir le fichier renpy.exe. Vous pouvez télécharger la dernière version depuis le site officiel.\n\nLe dossier SDK doit contenir :\n• renpy.exe\n• renpy.py\n• Les scripts RenPy"
                   )}
               >
-                <Icon icon="hugeicons:help-square" class="w-5 h-5 text-red-500" />
+                <Icon
+                  icon="hugeicons:help-square"
+                  class="w-5 h-5 text-red-500"
+                />
               </button>
               <button
                 class="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed rounded text-sm transition-colors flex items-center gap-1 justify-center"
                 onclick={() =>
-                  showBrowse(
-                    "📁 Sélectionner l'éditeur",
-                    'C:\\Program Files\\Notepad++\\notepad++.exe',
-                    'editor-path',
-                    $appSettings.paths?.editor || ''
+                  apiService.openDialog(
+                    {
+                      path: $appSettings.paths.editor,
+                      dialog_type: 'file',
+                      title: "Sélectionner l'exécutable",
+                      initialdir: 'C:\\Program Files',
+                      filetypes: [
+                        ['Exécutables', '*.exe'],
+                        ['Tous les fichiers', '*.*'],
+                      ],
+                      must_exist: true,
+                    },
+                    {
+                      setPath: (path: string) => {
+                        $appSettings.paths.editor = path;
+                      },
+                    }
                   )}
               >
-                <Icon icon="hugeicons:folder-01" class="w-5 h-5 text-yellow-500" />
+                <Icon
+                  icon="hugeicons:folder-01"
+                  class="w-5 h-5 text-yellow-500"
+                />
               </button>
             </div>
           </div>

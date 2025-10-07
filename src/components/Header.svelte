@@ -1,6 +1,6 @@
 <script lang="ts">
   /* eslint-env browser */
-  import { showBrowse } from '$lib/utils';
+  import { apiService } from '$lib/api';
   import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
@@ -41,19 +41,28 @@
     <input
       class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg"
       value={$editorPath}
-      oninput={(e) => {
-        $editorPath = e.currentTarget.value
+      oninput={e => {
+        $editorPath = e.currentTarget.value;
       }}
-      placeholder={$editorPath ||"Aucun projet chargé"}
+      placeholder={$editorPath || 'Aucun projet chargé'}
     />
     <button
       class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
-      onclick={() => showBrowse(
-        "📁 Sélectionner l'emplacement du jeu Ren'Py",
-        'C:\\',
-        'project-path',
-        $editorPath || ''
-      )}
+      onclick={() =>
+        apiService.openDialog(
+          {
+            path: $editorPath,
+            dialog_type: 'folder',
+            title: 'Sélectionner le dossier du jeu',
+            initialdir: 'C:\\',
+            must_exist: true,
+          },
+          {
+            setPath: (path: string) => {
+              $editorPath = path;
+            },
+          }
+        )}
     >
       {$_('app.browse')}
     </button>

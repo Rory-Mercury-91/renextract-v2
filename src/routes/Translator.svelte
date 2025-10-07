@@ -17,7 +17,7 @@
     gitHead?: string | null;
   } | null = $state(null);
 
-  let loading = $state(true)
+  let loading = $state(true);
 
   async function checkHealth() {
     loading = true;
@@ -27,7 +27,7 @@
     } catch (e) {
       health = { success: false, exists: false, gitHead: null } as any;
     } finally {
-      loading = false
+      loading = false;
     }
   }
 
@@ -74,14 +74,11 @@
         title="Rafraîchir TranslationToolsIA"
       >
         {#if loading}
-          <Icon
-            icon="hugeicons:refresh"
-            class="w-4 h-4 animate-spin"
-          />
+          <Icon icon="hugeicons:refresh" class="w-4 h-4 animate-spin" />
         {/if}
         Recharger
       </button>
-      
+
       <div>
         <span class="font-bold">Status:</span>
         {#if health}
@@ -103,11 +100,16 @@
       </div>
     </div>
   </RouteHeader>
-  
+
   <div class="p-4 grid gap-4 max-w-3xl">
     <div class="grid gap-2 md:grid-cols-2">
       <div class="flex items-center gap-2">
-        <input id="rec" type="checkbox" class="w-6 h-6" bind:checked={recursive} />
+        <input
+          id="rec"
+          type="checkbox"
+          class="w-6 h-6"
+          bind:checked={recursive}
+        />
         <label for="rec">Inclure les sous-dossiers</label>
       </div>
       <div class="grid gap-2">
@@ -145,10 +147,7 @@
       <button
         class="px-4 py-2 rounded bg-red-500 hover:bg-red-400 disabled:opacity-50"
         disabled={running || $editorPath === ''}
-        onclick={() => {
-          runTranslation()
-          console.log($editorPath)
-        }}
+        onclick={runTranslation}
       >
         {#if running}En cours…{:else}Lancer la traduction{/if}
       </button>

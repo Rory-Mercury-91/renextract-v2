@@ -60,7 +60,9 @@
       </div>
     </div>
   {:else}
-    <div class="h-screen min-h-screen max-h-screen grid grid-rows-[5rem_1fr] relative">
+    <div
+      class="h-screen min-h-screen max-h-screen grid grid-rows-[5rem_1fr] relative"
+    >
       <Header />
 
       <div class="flex h-[calc(100vh-5rem)] relative">

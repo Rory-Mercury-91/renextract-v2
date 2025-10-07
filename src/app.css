@@ -6,36 +6,36 @@
   body {
     @apply bg-gray-800;
   }
-  
+
   /* Scrollbar personnalisée */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  
+
   ::-webkit-scrollbar-track {
     background: #1e293b;
     border-radius: 4px;
   }
-  
+
   ::-webkit-scrollbar-thumb {
     background: #475569;
     border-radius: 4px;
     transition: background 0.2s ease;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
   }
-  
+
   ::-webkit-scrollbar-thumb:active {
     background: #94a3b8;
   }
-  
+
   ::-webkit-scrollbar-corner {
     background: #1e293b;
   }
-  
+
   /* Pour Firefox */
   * {
     scrollbar-width: thin;

@@ -9,8 +9,11 @@ import subprocess
 import sys
 import threading
 import time
+import tkinter as tk
 from pathlib import Path
 from subprocess import CalledProcessError
+from tkinter import filedialog
+from typing import Callable, List, Optional, Tuple
 
 import webview
 from dotenv import load_dotenv
@@ -18,9 +21,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from src.backend.backup_manager import BackupManager
-from src.dialogs.file_dialog import (open_file_dialog_hybrid,
-                                     open_folder_dialog_hybrid,
-                                     open_save_dialog_hybrid)
 
 # Load environment variables
 load_dotenv()
@@ -98,9 +98,35 @@ api_data = {
     'items': []
 }
 
+
+# Helpers communs
+def is_wsl_environment() -> bool:
+    """Détecte si l'application tourne sous WSL."""
+    try:
+        if hasattr(os, 'uname'):
+            if 'microsoft' in os.uname().release.lower():
+                return True
+        if 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ:
+            return True
+    except (AttributeError, OSError):
+        return False
+    return False
+
+
+def wsl_mode_response(endpoint_hint: str):
+    """Réponse standardisée pour indiquer le mode WSL et l'endpoint à utiliser en POST."""
+    return jsonify({
+        'success': False,
+        'error': 'WSL_MODE',
+        'message': (
+            f"En mode WSL, utilisez POST {endpoint_hint} avec le chemin en paramètre"
+        )
+    }), 400
+
 # Remplacer les lignes 41-49 dans app.py par :
 
 # Importer le nouveau gestionnaire de backup
+
 
 # Initialiser le gestionnaire
 backup_manager = BackupManager()
@@ -660,136 +686,6 @@ def update_settings():
         }), 500
 
 
-@app.route('/api/file-dialog/folder', methods=['GET'])
-def get_folder_dialog():
-    """Open Windows folder selection dialog."""
-    try:
-        # Détecter WSL
-        is_wsl = False
-        try:
-            if hasattr(os, 'uname'):
-                is_wsl = 'microsoft' in os.uname().release.lower()
-            is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
-        except (AttributeError, OSError):
-            is_wsl = False
-
-        if is_wsl:
-            # En WSL, retourner un message indiquant qu'il faut utiliser
-            # l'endpoint POST
-            return jsonify({
-                'success': False,
-                'error': 'WSL_MODE',
-                'message': ('En mode WSL, utilisez POST /api/file-dialog/folder '
-                           'avec le chemin en paramètre')
-            }), 400
-
-        folder_path = open_folder_dialog_hybrid()
-
-        print(f"DEBUG: Folder dialog returned: '{folder_path}'")  # Debug log
-
-        return jsonify({
-            'success': True,
-            'path': folder_path
-        })
-    except (OSError, subprocess.SubprocessError) as e:
-        print(f"DEBUG: Folder dialog error: {e}")  # Debug log
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/file-dialog/folder', methods=['POST'])
-def set_folder_path():
-    """Set folder path manually (for WSL mode)."""
-    try:
-        data = request.get_json()
-        if not data or 'path' not in data:
-            return jsonify({
-                'success': False,
-                'error': 'Chemin requis'
-            }), 400
-
-        folder_path = data['path']
-        print(f"DEBUG: Manual folder path set: '{folder_path}'")
-
-        return jsonify({
-            'success': True,
-            'path': folder_path
-        })
-    except (ValueError, KeyError) as e:
-        print(f"DEBUG: Manual folder path error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/file-dialog/file', methods=['GET'])
-def get_file_dialog():
-    """Open Windows file selection dialog."""
-    try:
-        # Détecter WSL
-        is_wsl = False
-        try:
-            if hasattr(os, 'uname'):
-                is_wsl = 'microsoft' in os.uname().release.lower()
-            is_wsl = is_wsl or 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
-        except (AttributeError, OSError):
-            is_wsl = False
-
-        if is_wsl:
-            # En WSL, retourner un message indiquant qu'il faut utiliser
-            # l'endpoint POST
-            return jsonify({
-                'success': False,
-                'error': 'WSL_MODE',
-                'message': ("En mode WSL, utilisez POST /api/file-dialog/file "
-                           'avec le chemin en paramètre')
-            }), 400
-
-        file_path = open_file_dialog_hybrid()
-
-        print(f"DEBUG: File dialog returned: '{file_path}'")  # Debug log
-
-        return jsonify({
-            'success': True,
-            'path': file_path
-        })
-    except (OSError, subprocess.SubprocessError) as e:
-        print(f"DEBUG: File dialog error: {e}")  # Debug log
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/api/file-dialog/file', methods=['POST'])
-def set_file_path():
-    """Set file path manually (for WSL mode)."""
-    try:
-        data = request.get_json()
-        if not data or 'path' not in data:
-            return jsonify({
-                'success': False,
-                'error': 'Chemin requis'
-            }), 400
-
-        file_path = data['path']
-        print(f"DEBUG: Manual file path set: '{file_path}'")
-
-        return jsonify({
-            'success': True,
-            'path': file_path
-        })
-    except (ValueError, KeyError) as e:
-        print(f"DEBUG: Manual file path error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
 @app.route('/api/file-dialog/save', methods=['POST'])
 def get_save_dialog():
     """Open Windows save file dialog (asksaveasfilename equivalent)."""
@@ -832,7 +728,8 @@ def get_save_dialog():
             }), 400
 
         # En mode normal, utiliser le dialogue natif
-        file_path = open_save_dialog_hybrid(
+        file_path = open_dialog_hybrid(
+            dialog_type='save',
             title=title,
             initialfile=initialfile,
             defaultextension=defaultextension,
@@ -878,6 +775,116 @@ def set_save_path():
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route('/api/file-dialog/open', methods=['POST'])
+def open_dialog_unified():
+    """Endpoint unifié pour ouvrir un fichier ou un dossier.
+
+    Body JSON attendu:
+    {
+      "type": "file" | "folder",
+      "path"?: string  # utilisé en WSL quand le dialogue natif n'est pas disponible
+    }
+    """
+    try:
+        data = request.get_json() or {}
+        # Accepter 'type' et 'dialog_type' (alias)
+        dialog_type = data.get('type') or data.get('dialog_type')
+        manual_path = data.get('path')
+        title = data.get('title')
+        initialdir = data.get('initialdir')
+        filetypes = data.get('filetypes')
+        initialfile = data.get('initialfile')
+        defaultextension = data.get('defaultextension')
+        must_exist = data.get('must_exist')
+        validate = data.get('validate')
+
+        if dialog_type not in {'file', 'folder', 'save'}:
+            return jsonify({
+                'success': False,
+                'error': 'TYPE_INVALID',
+                'message': "Le champ 'type'/'dialog_type' doit valoir 'file', 'folder' ou 'save'"
+            }), 400
+
+        # WSL: accepter un path fourni, sinon demander au client de le fournir
+        if is_wsl_environment():
+            if isinstance(manual_path, str) and manual_path.strip():
+                return jsonify({'success': True, 'path': manual_path})
+            return wsl_mode_response('/api/file-dialog/open')
+
+        # Mode normal: ouvrir le dialogue natif selon le type
+        path = open_dialog_hybrid(
+            dialog_type=dialog_type,
+            title=title,
+            initialdir=initialdir,
+            filetypes=filetypes,
+            initialfile=initialfile,
+            defaultextension=defaultextension,
+            must_exist=must_exist,
+            validate=validate,
+        )
+
+        return jsonify({'success': True, 'path': path})
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def open_dialog_hybrid(  # pylint: disable=too-many-arguments
+    dialog_type: str,
+    *,
+    title: Optional[str] = None,
+    initialdir: Optional[str] = None,
+    filetypes: Optional[List[Tuple[str, str]]] = None,
+    initialfile: Optional[str] = None,
+    defaultextension: Optional[str] = None,
+    must_exist: bool = True,
+    validate: Optional[Callable[[str], bool]] = None,
+) -> str:
+    """Ouvre un dialogue (fichier ou dossier) avec tkinter, sinon fallback web.
+
+    - dialog_type: 'file' ou 'folder'
+    - title: titre de la fenêtre
+    - initialdir: répertoire initial
+    - filetypes: liste de filtres (uniquement pour 'file')
+    - must_exist: contraint la sélection à des chemins existants
+    - validate: fonction de validation supplémentaire; si False, retourne ""
+    """
+    try:
+        root = tk.Tk()
+        root.withdraw()  # Cacher la fenêtre principale
+
+        path: str
+        if dialog_type == 'folder':
+            path = filedialog.askdirectory(
+                title=title,
+                initialdir=initialdir,
+                mustexist=must_exist,
+            ) or ""
+        elif dialog_type == 'file':
+            path = filedialog.askopenfilename(
+                title=title,
+                initialdir=initialdir,
+                filetypes=filetypes,
+            ) or ""
+        else:  # 'save'
+            path = filedialog.asksaveasfilename(
+                title=title,
+                initialfile=initialfile,
+                defaultextension=defaultextension,
+                filetypes=filetypes,
+            ) or ""
+
+        root.destroy()
+
+        if not path:
+            return ""
+        if validate is not None and not validate(path):
+            return ""
+        return path
+    except (tk.TclError, OSError) as e:
+        print(f"Tkinter dialog failed: {e}")
+        return ""
 
 
 @app.route('/')

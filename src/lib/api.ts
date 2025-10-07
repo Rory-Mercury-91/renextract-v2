@@ -38,6 +38,60 @@ export type SettingsData = Record<string, unknown>;
 
 // Service API
 export const apiService = {
+  async openDialog(
+    params: {
+      path?: string;
+      dialog_type: 'file' | 'folder' | 'save';
+      title?: string;
+      initialdir?: string;
+      filetypes?: [string, string][];
+      initialfile?: string;
+      defaultextension?: string;
+      must_exist?: boolean;
+      validate?: (path: string) => boolean;
+    },
+    options?: { setPath?: (path: string) => void }
+  ): Promise<{success: boolean, path?: string, error?: string}> {
+    try {
+      const response = await api.post('/file-dialog/open', params, { timeout: 60000 });
+      const result = {
+        success: Boolean(response.data.success),
+        path: response.data.path as string | undefined
+      } as { success: boolean, path?: string };
+      if (result.success && result.path && options?.setPath) {
+        options.setPath(result.path);
+      }
+      return result;
+    } catch (error) {
+      // Si le backend renvoie 400 avec WSL_MODE, gérer le fallback utilisateur
+      const anyErr = error as unknown as { response?: { data?: { error?: string } } };
+      const isWslMode = anyErr?.response?.data?.error === 'WSL_MODE';
+      if (isWslMode && !params.path) {
+        const promptText = params.dialog_type === 'folder'
+          ? "En mode WSL, le dialogue natif n'est pas disponible.\n\nVeuillez saisir le chemin complet du dossier :\nExemple: C:\\Users\\Public\\Documents"
+          : "En mode WSL, le dialogue natif n'est pas disponible.\n\nVeuillez saisir le chemin complet du fichier :\nExemple: C:\\Program Files\\Software\\file.exe";
+        const userPath = window.prompt(promptText);
+        if (!userPath) {
+          return { success: false, error: 'Aucun chemin saisi' };
+        }
+        const postResp = await api.post('/file-dialog/open', { ...params, path: userPath });
+        const result = {
+          success: Boolean(postResp.data.success),
+          path: postResp.data.path as string | undefined
+        } as { success: boolean, path?: string };
+        if (result.success && result.path && options?.setPath) {
+          options.setPath(result.path);
+        }
+        return result;
+      }
+      // eslint-disable-next-line no-console
+      console.error('Open Dialog Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
   async healthCheck(): Promise<HealthResponse> {
     const response = await api.get('/health');
     return response.data as HealthResponse;
@@ -51,42 +105,6 @@ export const apiService = {
   async getSettings(): Promise<SettingsData> {
     const response = await api.get('/settings');
     return response.data as SettingsData;
-  },
-
-  async openFolderDialog(): Promise<{success: boolean, path?: string, error?: string}> {
-    try {
-      // Utiliser un timeout plus long pour les dialogues (60 secondes)
-      const response = await api.get('/file-dialog/folder', { timeout: 60000 });
-      return {
-        success: Boolean(response.data.success),
-        path: response.data.path as string | undefined
-      };
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Folder Dialog Error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  },
-
-  async openFileDialog(): Promise<{success: boolean, path?: string, error?: string}> {
-    try {
-      // Utiliser un timeout plus long pour les dialogues (60 secondes)
-      const response = await api.get('/file-dialog/file', { timeout: 60000 });
-      return {
-        success: Boolean(response.data.success),
-        path: response.data.path as string | undefined
-      };
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('File Dialog Error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
   },
 
   async openSaveDialog(params: {

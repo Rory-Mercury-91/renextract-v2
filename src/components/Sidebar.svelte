@@ -77,7 +77,7 @@
               >
                 <Icon icon={section.icon} class="w-6 h-6" />
               </span>
-              <span 
+              <span
                 class="flex-1 hidden font-bold overflow-hidden"
                 class:opacity-0={isClose}
                 class:opacity-100={!isClose}
