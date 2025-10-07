@@ -2,10 +2,13 @@
 """
 Build script to create an executable of the PyWebView + Svelte application
 """
-import sys
-import subprocess
+import json
+import platform
 import shutil
+import subprocess
+import sys
 from pathlib import Path
+
 
 def check_dependencies():
     """Check that all dependencies are installed"""
@@ -29,6 +32,7 @@ def check_dependencies():
     print("OK: Built frontend found")
     return True
 
+
 def clean_build():
     """Clean old builds"""
     print("Cleaning old builds...")
@@ -45,6 +49,7 @@ def clean_build():
         if exe_path.exists():
             exe_path.unlink()
             print(f"OK: Old executable removed: {exe_path}")
+
 
 def build_executable():
     """Build executable with PyInstaller"""
@@ -82,29 +87,28 @@ def build_executable():
             return False
 
         print("OK: Executable built successfully")
-        
+
         # Rename executable with version and OS
         rename_executable()
-        
+
         return True
 
     except (subprocess.SubprocessError, OSError) as e:
         print(f"ERROR: Exception during build: {e}")
         return False
 
+
 def rename_executable():
     """Rename executable with version and OS"""
-    import json
-    import platform
-    
+
     # Get version from package.json
     try:
-        with open('package.json', 'r') as f:
+        with open('package.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
             version = data.get('version', '1.0.0')
-    except:
+    except (OSError, json.JSONDecodeError, KeyError):
         version = '1.0.0'
-    
+
     # Get OS name
     system = platform.system().lower()
     if system == 'windows':
@@ -123,15 +127,16 @@ def rename_executable():
         os_name = 'unknown'
         old_name = 'app-temp'
         new_name = f'app-{os_name}-v{version}'
-    
+
     old_path = Path(f"dist/{old_name}")
     new_path = Path(f"dist/{new_name}")
-    
+
     if old_path.exists():
         old_path.rename(new_path)
         print(f"OK: Renamed executable to {new_name}")
     else:
         print(f"WARNING: Executable {old_name} not found for renaming")
+
 
 def verify_build():
     """Verify that executable was created correctly"""
@@ -162,6 +167,7 @@ def verify_build():
     print(f"Size: {size_mb:.1f} MB")
     return True
 
+
 def clean_external_files():
     """Clean external files after onefile build"""
     print("Cleaning external files...")
@@ -182,6 +188,7 @@ def clean_external_files():
                 print(f"OK: Folder removed: {file_path}")
 
     print("OK: External files cleaned")
+
 
 def main():
     """Main function"""
@@ -226,6 +233,7 @@ def main():
     print("All files are integrated into the executable!")
     print("You can distribute only this file.")
     print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

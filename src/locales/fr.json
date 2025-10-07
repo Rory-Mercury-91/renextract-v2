@@ -1,0 +1,80 @@
+{
+  "app": {
+    "title": "RenExtract v2.0 - WebView Interface",
+    "branding": "RenExtract",
+    "version": "v2.0.0 WebView",
+    "no_project_loaded": "Aucun projet chargé",
+    "browse": "Parcourir",
+    "help": "Aide",
+    "about": "À propos",
+    "theme": "Thème",
+    "language": "Langue",
+    "loading": "Chargement de l'application...",
+    "connection_error": "Erreur de connexion",
+    "retry": "Réessayer",
+    "not_found": "Page non trouvée"
+  },
+  "navigation": {
+    "generator": "Générateur",
+    "generator_description": "Générez des fichiers TL à partir de vos fichiers RPA/RPYC",
+    "extract": "Extracteur",
+    "extract_description": "Extrayez les dialogues de vos jeux",
+    "translator": "Traducteur",
+    "translator_description": "Traduisez vos fichiers TL à partir de vos fichiers RPA/RPYC",
+    "tools": "Outils",
+    "tools_description": "Outils pour aider à gérer vos traductions",
+    "backup": "Sauvegarde",
+    "backup_description": "Gérez, restaurez et organisez toutes vos sauvegardes de fichiers RenExtract",
+    "settings": "Paramètres",
+    "settings_description": "Configurez les paramètres de l'application"
+  },
+  "themes": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "auto": "Auto"
+  },
+  "actions": {
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "ok": "OK",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "theme": {
+    "title": "Paramètres d'apparence"
+  },
+  "themeCustomizer": {
+    "title": "Personnalisation complète des thèmes",
+    "description": "Modifiez chaque couleur de l'interface selon vos préférences"
+  },
+  "language": {
+    "title": "Langue de l'interface",
+    "current": "Langue actuelle"
+  },
+  "debugMode": {
+    "title": "Mode debug complet",
+    "description": "Active les logs détaillés et les outils de développement"
+  },
+  "autoOpenings": {
+    "title": "Ouvertures automatiques",
+    "files": "Ouverture automatique des fichiers",
+    "folders": "Ouverture automatique des dossiers",
+    "reports": "Ouverture automatique du rapport",
+    "outputField": "Affichage du champ de chemin de sortie"
+  },
+  "externalTools": {
+    "title": "Outils externes",
+    "textEditor": "Éditeur externe"
+  },
+  "buttons": {
+    "save": "Sauvegarder",
+    "reset": "Réinitialiser",
+    "resetSettings": "Réinitialiser les paramètres"
+  },
+  "sections": {
+    "appearance": "Apparence et notifications",
+    "editor": "Éditeur de code"
+  }
+}

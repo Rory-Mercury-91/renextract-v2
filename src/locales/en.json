@@ -1,0 +1,80 @@
+{
+  "app": {
+    "title": "RenExtract v2.0 - WebView Interface",
+    "branding": "RenExtract",
+    "version": "v2.0.0 WebView",
+    "no_project_loaded": "No project loaded",
+    "browse": "Browse",
+    "help": "Help",
+    "about": "About",
+    "theme": "Theme",
+    "language": "Language",
+    "loading": "Loading application...",
+    "connection_error": "Connection error",
+    "retry": "Retry",
+    "not_found": "Page not found"
+  },
+  "navigation": {
+    "generator": "Generator",
+    "generator_description": "Generate TL files from your RPA/RPYC files",
+    "extract": "Extract",
+    "extract_description": "Extract dialogues from your games",
+    "translator": "Translator",
+    "translator_description": "Translate your TL files from your RPA/RPYC files",
+    "tools": "Tools",
+    "tools_description": "Tools to help you manage your translations",
+    "backup": "Backup",
+    "backup_description": "Manage, restore and organize all your RenExtract backup files",
+    "settings": "Settings",
+    "settings_description": "Configure the application settings"
+  },
+  "themes": {
+    "dark": "Dark",
+    "light": "Light",
+    "auto": "Auto"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "reset": "Reset",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "theme": {
+    "title": "Appearance settings"
+  },
+  "themeCustomizer": {
+    "title": "Complete theme customization",
+    "description": "Modify each interface color according to your preferences"
+  },
+  "language": {
+    "title": "Interface language",
+    "current": "Current language"
+  },
+  "debugMode": {
+    "title": "Complete debug mode",
+    "description": "Enables detailed logs and development tools"
+  },
+  "autoOpenings": {
+    "title": "Automatic openings",
+    "files": "Automatic file opening",
+    "folders": "Automatic folder opening",
+    "reports": "Automatic report opening",
+    "outputField": "Output path field display"
+  },
+  "externalTools": {
+    "title": "External tools",
+    "textEditor": "External editor"
+  },
+  "buttons": {
+    "save": "Save",
+    "reset": "Reset",
+    "resetSettings": "Reset settings"
+  },
+  "sections": {
+    "appearance": "Appearance and notifications",
+    "editor": "Code editor"
+  }
+}
