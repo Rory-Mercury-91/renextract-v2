@@ -6,6 +6,7 @@
   import packageJson from '../../package.json' assert { type: 'json' };
   import { editorPath } from '../stores/app';
   import AboutModal from './AboutModal.svelte';
+  import UpdateManager from './UpdateManager.svelte';
 
   let showAboutModal = $state(false);
 
@@ -40,7 +41,7 @@
     <Icon icon="hugeicons:folder-01" class="w-6 h-6 min-w-6 text-yellow-500" />
     <input
       class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg w-full max-w-64"
-      style="direction: rtl;"
+      style:direction="rtl"
       value={$editorPath}
       oninput={e => {
         $editorPath = e.currentTarget.value;
@@ -71,6 +72,9 @@
 
   <!-- Right: Controls -->
   <div class="flex items-center gap-4">
+    <!-- Gestionnaire de mise à jour -->
+    <UpdateManager showSettings={true} autoCheck={true} />
+
     <button
       class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
       onclick={showHelp}

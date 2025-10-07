@@ -12,6 +12,7 @@ A modern template for creating desktop applications with Python (backend) and Sv
 - **Development mode** with hot-reload and external connections
 - **Automated linting and formatting** (ESLint 9 + Prettier)
 - **Flexible configuration** via environment variables
+- **🆕 Automatic updates** via GitHub releases
 
 ## 🛠️ Technologies Used
 
@@ -66,7 +67,21 @@ pnpm install
 npm install
 ```
 
-### 3. Launch the application
+### 3. Configure automatic updates (optional)
+
+Pour activer les mises à jour automatiques via GitHub :
+
+```bash
+# Copier le fichier de configuration d'exemple
+cp env.example .env
+
+# Éditer le fichier .env avec vos informations GitHub
+# Remplacez 'votre-username' et 'renextract-v2' par vos vraies informations
+```
+
+Consultez `UPDATE_CONFIG.md` pour plus de détails sur la configuration des mises à jour.
+
+### 4. Launch the application
 
 #### Production mode (recommended)
 
@@ -82,7 +97,7 @@ python dev.py
 
 The Vite server starts automatically with the `--host` option to allow external connections. If `localhost:3000` doesn't work, use the IP displayed by Vite (e.g., `http://172.31.247.210:3000/`).
 
-### 4. Development Scripts
+### 5. Development Scripts
 
 #### Linting and Formatting
 
@@ -197,6 +212,43 @@ WINDOW_HEIGHT=800
 - **GET** `/api/items` - Get items list
 - **POST** `/api/items` - Add new item
 - **DELETE** `/api/items/{id}` - Delete item
+
+### Updates
+
+- **GET** `/api/updates/check` - Check for available updates
+- **POST** `/api/updates/download` - Download update
+- **POST** `/api/updates/install` - Install update
+- **GET** `/api/updates/config` - Get update configuration
+- **POST** `/api/updates/config` - Update configuration
+- **GET** `/api/updates/auto-check` - Check if auto-update should run
+
+## 🔄 Automatic Updates
+
+L'application inclut un système de mise à jour automatique via GitHub :
+
+### Configuration
+
+1. **Variables d'environnement** : Créez un fichier `.env` avec vos informations GitHub
+2. **Interface utilisateur** : Configurez les mises à jour via l'interface
+3. **GitHub Actions** : Configurez votre workflow pour créer des releases
+
+### Fonctionnalités
+
+- ✅ Vérification automatique des mises à jour
+- ✅ Téléchargement sécurisé depuis GitHub
+- ✅ Installation avec sauvegarde de l'ancienne version
+- ✅ Interface utilisateur intuitive
+- ✅ Configuration flexible
+- ✅ Support multi-plateforme (Windows, Linux, macOS)
+
+### Test du système
+
+```bash
+# Tester le système de mise à jour
+python test_update_system.py
+```
+
+Consultez `UPDATE_CONFIG.md` pour la configuration détaillée.
 
 ## 🎨 Customization
 

@@ -21,6 +21,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from src.backend.backup_manager import BackupManager
+from src.backend.update_manager import UpdateManager
+from src.backend.config import AppConfig
 
 # Load environment variables
 load_dotenv()
@@ -128,8 +130,26 @@ def wsl_mode_response(endpoint_hint: str):
 # Importer le nouveau gestionnaire de backup
 
 
-# Initialiser le gestionnaire
+# Initialiser les gestionnaires
 backup_manager = BackupManager()
+
+# Initialiser la configuration
+AppConfig.ensure_directories()
+
+# Valider la configuration
+config_errors = AppConfig.validate_config()
+if config_errors:
+    print("⚠️  Erreurs de configuration détectées:")
+    for error in config_errors:
+        print(f"   - {error}")
+    print("   Veuillez configurer les variables d'environnement ou modifier src/backend/config.py")
+
+# Initialiser le gestionnaire de mise à jour
+update_manager = UpdateManager(
+    AppConfig.GITHUB_REPO_OWNER,
+    AppConfig.GITHUB_REPO_NAME,
+    AppConfig.APP_VERSION
+)
 
 
 @app.route('/api/backups', methods=['GET'])
@@ -885,6 +905,129 @@ def open_dialog_hybrid(  # pylint: disable=too-many-arguments
     except (tk.TclError, OSError) as e:
         print(f"Tkinter dialog failed: {e}")
         return ""
+
+
+# Update management endpoints
+@app.route('/api/updates/check', methods=['GET'])
+def check_for_updates():
+    """Vérifie s'il y a des mises à jour disponibles"""
+    try:
+        result = update_manager.check_for_updates()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors de la vérification: {str(e)}'
+        }), 500
+
+
+@app.route('/api/updates/download', methods=['POST'])
+def download_update():
+    """Télécharge la mise à jour disponible"""
+    try:
+        data = request.get_json()
+        if not data or 'download_url' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'URL de téléchargement requise'
+            }), 400
+
+        download_url = data['download_url']
+
+        # Fonction de callback pour le progrès (optionnel)
+        def progress_callback(progress, downloaded, total):
+            # Ici on pourrait envoyer des événements WebSocket ou stocker le progrès
+            print(
+                f"Download progress: {progress:.1f}% ({downloaded}/{total} bytes)")
+
+        result = update_manager.download_update(
+            download_url, progress_callback)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors du téléchargement: {str(e)}'
+        }), 500
+
+
+@app.route('/api/updates/install', methods=['POST'])
+def install_update():
+    """Installe la mise à jour téléchargée"""
+    try:
+        data = request.get_json()
+        if not data or 'extract_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin d\'extraction requis'
+            }), 400
+
+        extract_path = data['extract_path']
+        result = update_manager.install_update(extract_path)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors de l\'installation: {str(e)}'
+        }), 500
+
+
+@app.route('/api/updates/config', methods=['GET'])
+def get_update_config():
+    """Récupère la configuration des mises à jour"""
+    try:
+        config = update_manager.get_config()
+        return jsonify({
+            'success': True,
+            'config': config
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors de la récupération de la config: {str(e)}'
+        }), 500
+
+
+@app.route('/api/updates/config', methods=['POST'])
+def update_update_config():
+    """Met à jour la configuration des mises à jour"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Configuration requise'
+            }), 400
+
+        update_manager.set_config(data)
+        return jsonify({
+            'success': True,
+            'message': 'Configuration mise à jour avec succès',
+            'config': update_manager.get_config()
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors de la mise à jour de la config: {str(e)}'
+        }), 500
+
+
+@app.route('/api/updates/auto-check', methods=['GET'])
+def should_auto_check():
+    """Vérifie si on doit faire une vérification automatique"""
+    try:
+        should_check = update_manager.should_check_for_updates()
+        return jsonify({
+            'success': True,
+            'should_check': should_check
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erreur lors de la vérification auto: {str(e)}'
+        }), 500
 
 
 @app.route('/')
