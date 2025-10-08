@@ -678,7 +678,50 @@ class TextExtractor:
             files_created['positions_file'] = positions_file
             logger.info(f"Fichier positions créé: {positions_file}")
             
-            # Fichier 2: Dialogues principaux
+            # Fichier 2: Mapping invisible (TXT) - Pour reconstruction
+            invisible_mapping_file = os.path.join(structure['reference_dir'], f"{file_base}_invisible_mapping.txt")
+            with open(invisible_mapping_file, 'w', encoding='utf-8') as f:
+                f.write("# Mapping des codes invisibles pour reconstruction\n")
+                f.write("# Format: placeholder => original_code\n\n")
+                
+                # Codes/variables
+                if self.mapping:
+                    f.write("# === CODES ET VARIABLES ===\n")
+                    for original, placeholder in self.mapping.items():
+                        f.write(f"{placeholder} => {original}\n")
+                    f.write("\n")
+                
+                # Astérisques
+                if self.asterix_mapping:
+                    f.write("# === ASTÉRISQUES ===\n")
+                    for original, placeholder in self.asterix_mapping.items():
+                        f.write(f"{placeholder} => {original}\n")
+                    f.write("\n")
+                
+                # Tildes
+                if self.tilde_mapping:
+                    f.write("# === TILDES ===\n")
+                    for original, placeholder in self.tilde_mapping.items():
+                        f.write(f"{placeholder} => {original}\n")
+                    f.write("\n")
+                
+                # Vides
+                if self.empty_mapping:
+                    f.write("# === TEXTES VIDES ===\n")
+                    for placeholder, original in self.empty_mapping.items():
+                        f.write(f"{placeholder} => \"\"\n")
+            
+            logger.info(f"Fichier mapping invisible créé: {invisible_mapping_file}")
+            
+            # Fichier 3: Fichier avec placeholders (RPY) - Pour reconstruction
+            with_placeholders_file = os.path.join(structure['reference_dir'], f"{file_base}_with_placeholders.rpy")
+            with open(with_placeholders_file, 'w', encoding='utf-8') as f:
+                for line in self.file_content:
+                    f.write(line)
+            
+            logger.info(f"Fichier with_placeholders créé: {with_placeholders_file}")
+            
+            # Fichier 4: Dialogues principaux
             dialogue_file = os.path.join(structure['translate_dir'], f"{file_base}_dialogue.txt")
             with open(dialogue_file, 'w', encoding='utf-8') as f:
                 for text in self.extracted_texts:
@@ -689,7 +732,7 @@ class TextExtractor:
             files_created['dialogue_file'] = dialogue_file
             logger.info(f"Fichier dialogue créé: {dialogue_file} ({len(self.extracted_texts)} lignes)")
             
-            # Fichier 3: Doublons (si détectés)
+            # Fichier 5: Doublons (si détectés)
             if self.detect_duplicates and self.duplicate_manager.duplicate_texts_for_translation:
                 doublons_file = os.path.join(structure['translate_dir'], f"{file_base}_doublons.txt")
                 with open(doublons_file, 'w', encoding='utf-8') as f:
@@ -701,7 +744,7 @@ class TextExtractor:
                 files_created['doublons_file'] = doublons_file
                 logger.info(f"Fichier doublons créé: {doublons_file} ({len(self.duplicate_manager.duplicate_texts_for_translation)} lignes)")
             
-            # Fichier 4: Astérisques et tildes (si détectés)
+            # Fichier 6: Astérisques et tildes (si détectés)
             combined_special_texts = self.asterix_texts + self.tilde_texts
             if combined_special_texts:
                 asterix_file = os.path.join(structure['translate_dir'], f"{file_base}_asterix.txt")

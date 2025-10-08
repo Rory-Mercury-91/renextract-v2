@@ -25,6 +25,11 @@ from src.backend.update_manager import UpdateManager
 from src.backend.config import AppConfig
 from src.backend.project import project_manager
 from src.backend.extraction import extract_texts_from_file
+from src.backend.reconstruction import (
+    reconstruct_from_translations,
+    validate_translation_files,
+    fix_unescaped_quotes_in_txt
+)
 
 # Load environment variables
 load_dotenv()
@@ -576,6 +581,9 @@ settings_data = {
         'placeholderFormat': 'PLACEHOLDER_{n}',
         'encoding': 'UTF-8'
     },
+    'reconstruction': {
+        'saveMode': 'new_file'
+    },
     'colors': {
         'extractButton': '#3B82F6',
         'reconstructButton': '#10B981',
@@ -711,6 +719,14 @@ def sanitize_settings_payload(payload: dict) -> dict:
         picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding'])
         if picked:
             result['extraction'] = picked
+
+    reconstruction_obj = payload.get('reconstruction')
+    if isinstance(reconstruction_obj, dict):
+        picked_reconstruction = {}
+        if 'saveMode' in reconstruction_obj and reconstruction_obj['saveMode'] in ['overwrite', 'new_file']:
+            picked_reconstruction['saveMode'] = reconstruction_obj['saveMode']
+        if picked_reconstruction:
+            result['reconstruction'] = picked_reconstruction
 
     # lastProject object
     last_project_obj = payload.get('lastProject')
@@ -1579,6 +1595,115 @@ def open_extraction_folder():
                 'success': False,
                 'error': f'Impossible d\'ouvrir le dossier: {str(e)}'
             }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ==================== RECONSTRUCTION ENDPOINTS ====================
+
+@app.route('/api/reconstruction/validate', methods=['POST'])
+def validate_reconstruction_files():
+    """Valide les fichiers de traduction avant reconstruction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        filepath = data.get('filepath', '')
+        extracted_count = data.get('extracted_count', 0)
+        asterix_count = data.get('asterix_count', 0)
+        tilde_count = data.get('tilde_count', 0)
+
+        if not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de fichier requis'
+            }), 400
+
+        # Valider les fichiers
+        result = validate_translation_files(filepath, extracted_count, asterix_count, tilde_count)
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/reconstruction/fix-quotes', methods=['POST'])
+def fix_quotes_in_file():
+    """Corrige les guillemets non-échappés dans un fichier"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        filepath = data.get('filepath', '')
+        if not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de fichier requis'
+            }), 400
+
+        if not os.path.exists(filepath):
+            return jsonify({
+                'success': False,
+                'error': 'Fichier non trouvé'
+            }), 404
+
+        # Corriger les guillemets
+        corrections = fix_unescaped_quotes_in_txt(filepath)
+
+        return jsonify({
+            'success': True,
+            'corrections': corrections,
+            'message': f'{corrections} correction(s) appliquée(s)'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/reconstruction/reconstruct', methods=['POST'])
+def reconstruct_file():
+    """Reconstruit un fichier traduit"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        file_content = data.get('file_content', [])
+        filepath = data.get('filepath', '')
+        save_mode = data.get('save_mode', 'new_file')
+
+        if not file_content or not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Contenu de fichier et chemin requis'
+            }), 400
+
+        # Lancer la reconstruction
+        result = reconstruct_from_translations(file_content, filepath, save_mode)
+
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({

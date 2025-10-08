@@ -52,6 +52,9 @@ interface AppSettings {
     placeholderFormat: string;
     encoding: string;
   };
+  reconstruction: {
+    saveMode: 'overwrite' | 'new_file';
+  };
   lastProject: {
     path: string;
     language: string;
@@ -87,6 +90,9 @@ const initialSettings: AppSettings = {
   extraction: {
     placeholderFormat: 'PLACEHOLDER_{n}',
     encoding: 'UTF-8',
+  },
+  reconstruction: {
+    saveMode: 'new_file',
   },
   lastProject: {
     path: '',

@@ -1,14 +1,32 @@
 <script lang="ts">
   /* eslint-env browser */
+  import { apiService } from '$lib/api';
   import Icon from '@iconify/svelte';
   import { WORK_FOLDERS } from '../lib/constants';
   import { appSettings } from '../stores/app';
 
   const outputFolder = '';
 
-  function selectFolder(folderId: string) {
-    // eslint-disable-next-line no-console
-    console.log('Selected folder:', folderId);
+  async function selectFolder(folderId: string) {
+    try {
+      // Trouver le dossier correspondant
+      const folder = WORK_FOLDERS.find(f => f.id === folderId);
+      if (!folder) {
+        console.error('Dossier non trouvé:', folderId);
+        return;
+      }
+
+      // Ouvrir le dossier via l'API
+      const response = await apiService.openExtractionFolder(folder.name);
+      
+      if (response.success) {
+        console.log('✅ Dossier ouvert:', folder.name);
+      } else {
+        console.error('❌ Erreur ouverture dossier:', response.error);
+      }
+    } catch (error) {
+      console.error('❌ Erreur exceptionnelle:', error);
+    }
   }
 
   function selectOutputFolder() {

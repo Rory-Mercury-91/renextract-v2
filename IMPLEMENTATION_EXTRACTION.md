@@ -1,7 +1,7 @@
-# 📦 Implémentation Complète du Système d'Extraction
+# 📦 Implémentation Complète - Extraction & Reconstruction
 
-> **Documentation de l'implémentation du système d'extraction des textes Ren'Py**  
-> Basé sur le flux `FLUX_02_EXTRACTION.md`
+> **Documentation de l'implémentation des systèmes d'extraction et de reconstruction**  
+> Basé sur `FLUX_02_EXTRACTION.md` et `FLUX_03_RECONSTRUCTION.md`
 
 ---
 
@@ -9,16 +9,17 @@
 
 1. [Vue d'ensemble](#vue-densemble)
 2. [Architecture](#architecture)
-3. [Fonctionnalités Implémentées](#fonctionnalités-implémentées)
-4. [Intégrations](#intégrations)
-5. [Guide de Test](#guide-de-test)
-6. [Corrections Appliquées](#corrections-appliquées)
+3. [Système d'Extraction](#système-dextraction)
+4. [Système de Reconstruction](#système-de-reconstruction)
+5. [Intégrations](#intégrations)
+6. [Guide de Test](#guide-de-test)
+7. [Corrections Appliquées](#corrections-appliquées)
 
 ---
 
 ## 🎯 Vue d'ensemble
 
-Le système d'extraction est **100% opérationnel** et respecte fidèlement le flux documenté. Il permet d'extraire les textes des fichiers Ren'Py avec protection des codes, gestion des doublons, et génération de fichiers de traduction.
+Les systèmes d'**extraction** et de **reconstruction** sont **100% opérationnels** et respectent fidèlement les flux documentés. Ils permettent le workflow complet de traduction : extraction des textes → traduction → reconstruction du fichier traduit.
 
 ### ✅ Fichiers Générés
 ```
@@ -46,9 +47,11 @@ Le système d'extraction est **100% opérationnel** et respecte fidèlement le f
 
 ## 🏗️ Architecture
 
-### 📦 Backend (`src/backend/extraction.py`)
+### 📦 Backend
 
-#### **Classes Principales**
+#### **Extraction** (`src/backend/extraction.py`)
+
+**Classes Principales**
 ```python
 class PlaceholderGenerator:
     """Génération de placeholders de protection"""
@@ -66,6 +69,27 @@ class TextExtractor:
     - _save_extraction_files()            # Sauvegarde
 ```
 
+#### **Reconstruction** (`src/backend/reconstruction.py`)
+
+**Classes Principales**
+```python
+class FileReconstructor:
+    """Classe principale de reconstruction"""
+    - load_file_content()               # Charge fichier + métadonnées
+    - _load_data_for_reconstruction()   # Charge JSON + traductions
+    - _load_translation_files()         # Charge .txt multi-fichiers
+    - reconstruct_file()                # Reconstruction principale
+    - _rebuild_content()                # Reconstruit lignes traduites
+    - _replace_all_placeholders()       # Restaure codes/astérisques/tildes
+    - _add_reconstruction_marker()      # Ajoute marqueur fin de fichier
+```
+
+**Fonctions Utilitaires**
+```python
+validate_translation_files()          # Validation avant reconstruction
+fix_unescaped_quotes_in_txt()        # Correction guillemets automatique
+```
+
 ### 🌐 API REST (`app.py`)
 
 #### **Endpoints d'Extraction**
@@ -76,39 +100,60 @@ class TextExtractor:
 - `GET /api/extraction/get-settings` - Paramètres
 - `POST /api/extraction/set-settings` - Configuration
 
+#### **Endpoints de Reconstruction**
+- `POST /api/reconstruction/validate` - Validation fichiers traduction
+- `POST /api/reconstruction/fix-quotes` - Correction guillemets
+- `POST /api/reconstruction/reconstruct` - Reconstruction principale
+
 #### **Endpoint Backup**
 - `POST /api/backups/create` - Créer sauvegarde
 
 ### 🎨 Frontend
 
-#### **Store Réactif** (`src/stores/extraction.ts`)
+#### **Stores Réactifs**
+
+**Extraction** (`src/stores/extraction.ts`)
 ```typescript
-// État de l'extraction
 extractionStore: {
   isExtracting: boolean
   extractionProgress: string
   lastResult: ExtractionResult | null
-  lastError: string | null
   settings: ExtractionSettings
 }
 
-// Actions
 extractionActions.extractTexts()
 extractionActions.openExtractionFiles()
 extractionActions.openOutputFolder()
 ```
 
+**Reconstruction** (`src/stores/reconstruction.ts`)
+```typescript
+reconstructionStore: {
+  isReconstructing: boolean
+  reconstructionProgress: string
+  lastResult: ReconstructionResult | null
+  lastValidation: ValidationResult | null
+}
+
+reconstructionActions.validateFiles()
+reconstructionActions.reconstructFile()
+reconstructionActions.openReconstructedFile()
+```
+
 #### **Composant UI** (`src/components/ActionButtons.svelte`)
-- Bouton "Extraire" connecté
-- Indicateurs de progression
-- Résultats visuels
-- Gestion d'erreurs
+- Bouton "Extraire" connecté avec indicateurs
+- Bouton "Reconstruire" connecté avec indicateurs
+- Progression en temps réel
+- Résultats visuels (vert extraction, émeraude reconstruction)
+- Gestion d'erreurs complète
 
 ---
 
-## ⚙️ Fonctionnalités Implémentées
+## 🔧 Système d'Extraction
 
-### 1️⃣ **Protection des Codes Ren'Py**
+### ⚙️ Fonctionnalités Implémentées
+
+#### 1️⃣ **Protection des Codes Ren'Py**
 ```python
 # Protège les codes pour qu'ils ne soient pas traduits
 Patterns protégés:
@@ -407,17 +452,20 @@ temp_dir = "01_Temporary"    # ✅
 
 ### **✨ Nouveaux Fichiers**
 - `src/backend/extraction.py` - Backend extraction complet
+- `src/backend/reconstruction.py` - Backend reconstruction complet
 - `src/stores/extraction.ts` - Store réactif extraction
+- `src/stores/reconstruction.ts` - Store réactif reconstruction
 - `IMPLEMENTATION_EXTRACTION.md` - Cette documentation
 
 ### **🔄 Fichiers Modifiés**
 
 #### **Backend**
-- `app.py` - 7 nouveaux endpoints (6 extraction + 1 backup)
+- `app.py` - 10 nouveaux endpoints (6 extraction + 3 reconstruction + 1 backup)
 
 #### **Frontend**
-- `src/lib/api.ts` - 7 nouvelles fonctions API
-- `src/components/ActionButtons.svelte` - Bouton connecté + UI
+- `src/lib/api.ts` - 10 nouvelles fonctions API
+- `src/components/ActionButtons.svelte` - Boutons Extraire + Reconstruire connectés
+- `src/components/WorkFolders.svelte` - Ouverture dossiers de travail
 - `src/stores/project.ts` - Synchronisation avec extraction
 
 #### **Configuration**
@@ -428,7 +476,7 @@ temp_dir = "01_Temporary"    # ✅
 
 ## 🎉 Récapitulatif Final
 
-### ✅ **Conformité au Flux**
+### ✅ **Extraction - Conformité au Flux**
 - ✅ **ÉTAPE 1** : Validation initiale
 - ✅ **ÉTAPE 2** : Sauvegarde de sécurité
 - ✅ **ÉTAPE 3** : Initialisation extracteur
@@ -437,36 +485,168 @@ temp_dir = "01_Temporary"    # ✅
 - ✅ **ÉTAPE 6** : Sauvegarde fichiers
 - ✅ **POST** : Ouverture automatique
 
-### ✅ **Fonctionnalités**
+### ✅ **Reconstruction - Conformité au Flux**
+- ✅ **ÉTAPE 1** : Validation initiale
+- ✅ **ÉTAPE 2** : Correction guillemets automatique
+- ✅ **ÉTAPE 3** : Validation extraction effectuée
+- ✅ **ÉTAPE 5** : Validation fichiers traduction
+- ✅ **ÉTAPE 7** : Reconstruction proprement dite
+- ✅ **ÉTAPE 8** : Remplacement placeholders
+- ✅ **ÉTAPE 9** : Marqueur reconstruction + sauvegarde
+
+### ✅ **Fonctionnalités Complètes**
 - ✅ Protection complète des codes Ren'Py
 - ✅ Gestion des doublons
 - ✅ Backup automatique avant extraction
 - ✅ Ouverture automatique configurable
 - ✅ Génération fichiers de traduction
 - ✅ Métadonnées pour reconstruction
+- ✅ Validation fichiers avant reconstruction
+- ✅ Correction guillemets automatique
+- ✅ Reconstruction ligne par ligne
+- ✅ Restauration des placeholders (ordre critique)
 - ✅ Support multiplateforme
-- ✅ Dossier correct (01_Temporary)
+- ✅ Dossiers corrects (01_Temporary)
 
 ### ✅ **Intégrations**
 - ✅ Système de backup
 - ✅ Paramètres utilisateur
 - ✅ Projet global (header)
 - ✅ Architecture de l'application
+- ✅ Ouverture dossiers de travail
+
+---
+
+---
+
+## 🔨 Système de Reconstruction
+
+### 📦 Backend (`src/backend/reconstruction.py`)
+
+#### **Classe FileReconstructor**
+```python
+class FileReconstructor:
+    - load_file_content()               # Charge fichier + métadonnées
+    - _load_data_for_reconstruction()   # Charge JSON + traductions
+    - _load_translation_files()         # Charge .txt multi-fichiers
+    - reconstruct_file()                # Reconstruction principale
+    - _rebuild_content()                # Reconstruit lignes traduites
+    - _replace_all_placeholders()       # Restaure codes/astérisques/tildes
+    - _add_reconstruction_marker()      # Ajoute marqueur fin de fichier
+```
+
+#### **Fonctions Utilitaires**
+```python
+validate_translation_files()          # Validation avant reconstruction
+fix_unescaped_quotes_in_txt()        # Correction guillemets automatique
+```
+
+### 🌐 API REST (`app.py`)
+
+#### **Endpoints de Reconstruction**
+- `POST /api/reconstruction/validate` - Validation fichiers traduction
+- `POST /api/reconstruction/fix-quotes` - Correction guillemets
+- `POST /api/reconstruction/reconstruct` - Reconstruction principale
+
+### 🎨 Frontend
+
+#### **Store Réactif** (`src/stores/reconstruction.ts`)
+```typescript
+// État de la reconstruction
+reconstructionStore: {
+  isReconstructing: boolean
+  reconstructionProgress: string
+  lastResult: ReconstructionResult | null
+  lastValidation: ValidationResult | null
+}
+
+// Actions
+reconstructionActions.validateFiles()
+reconstructionActions.fixQuotesInFiles()
+reconstructionActions.reconstructFile()
+reconstructionActions.openReconstructedFile()
+```
+
+### 🔄 Flux de Reconstruction
+
+```
+1. Validation initiale (fichier chargé + extraction effectuée)
+2. Correction automatique des guillemets non-échappés
+3. Validation des fichiers de traduction (compteurs)
+4. Chargement des métadonnées (_positions.json)
+5. Chargement des traductions (_dialogue.txt, _asterix.txt, etc.)
+6. Reconstruction ligne par ligne avec traductions
+7. Remplacement des placeholders (codes → astérisques → tildes → vides)
+8. Ajout marqueur de reconstruction
+9. Sauvegarde du fichier traduit
+```
+
+### ✅ Fonctionnalités Reconstruction
+
+#### **1. Correction Automatique des Guillemets**
+```python
+# Corrige " en \" dans les fichiers de traduction
+fix_unescaped_quotes_in_txt(filepath)
+```
+
+#### **2. Validation des Fichiers**
+```python
+# Vérifie cohérence des compteurs
+validate_translation_files(
+  filepath,
+  extracted_count,  # Dialogues attendus
+  asterix_count,    # Astérisques attendus
+  tilde_count       # Tildes attendus
+)
+```
+
+#### **3. Reconstruction Ligne par Ligne**
+```python
+# Pour chaque ligne avec traduction:
+nouvelle_ligne = prefixe + traduction + suffixe + suffixe_ligne
+```
+
+#### **4. Remplacement des Placeholders**
+```python
+# Ordre CRITIQUE (ne pas modifier):
+1. Codes/variables:   RENPY_CODE_001 → [player_name]
+2. Astérisques:       RENPY_ASTERISK_001 → * "traduction"
+3. Tildes:            RENPY_TILDE_001 → ~ "traduction"
+4. Vides:             RENPY_EMPTY_001 → ""
+```
+
+#### **5. Marqueur de Reconstruction**
+```python
+# Ajouté automatiquement à la fin du fichier
+# Fichier reconstruit après traduction par RenExtract le 2025-01-08 14:30:45
+```
+
+### 📁 Fichiers Générés
+
+#### **Mode 'new_file'** (par défaut)
+```
+game/tl/french/
+└── script_translated.rpy    # Nouveau fichier créé
+```
+
+#### **Mode 'overwrite'**
+```
+game/tl/french/
+└── script.rpy               # Fichier original écrasé (backup auto créé)
+```
 
 ---
 
 ## 🔜 Prochaines Étapes
 
-Le système d'extraction est **100% opérationnel** et prêt pour :
+Les systèmes d'**extraction** et de **reconstruction** sont **100% opérationnels** !
 
-1. **FLUX_03 : Reconstruction** 🔨
-   - Reconstruire les fichiers traduits
-   - Restaurer les codes protégés
-   - Valider la cohérence
+**Prochaine implémentation** :
 
-2. **FLUX_04 : Vérification** 🔍
-   - Vérifier la cohérence des traductions
-   - Détecter les erreurs de syntaxe
-   - Générer des rapports
+**FLUX_04 : Vérification** 🔍
+- Vérifier la cohérence des traductions
+- Détecter les textes non traduits
+- Détecter les erreurs de syntaxe
+- Générer des rapports HTML
 
-**Le système d'extraction est complet et fonctionnel !** 🚀
+**Les systèmes d'extraction et reconstruction sont complets et fonctionnels !** 🚀

@@ -689,5 +689,115 @@ export const apiService = {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  },
+
+  // ==================== RECONSTRUCTION ====================
+
+  async validateReconstructionFiles(
+    filepath: string,
+    extractedCount: number,
+    asterixCount: number = 0,
+    tildeCount: number = 0
+  ): Promise<{
+    success: boolean;
+    validation?: {
+      overall_valid: boolean;
+      files_validated: Record<string, any>;
+      summary: {
+        total_expected: number;
+        total_found: number;
+        errors: string[];
+      };
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/validate', {
+        filepath: filepath,
+        extracted_count: extractedCount,
+        asterix_count: asterixCount,
+        tilde_count: tildeCount
+      });
+      return response.data as {
+        success: boolean;
+        validation?: {
+          overall_valid: boolean;
+          files_validated: Record<string, any>;
+          summary: {
+            total_expected: number;
+            total_found: number;
+            errors: string[];
+          };
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Reconstruction Files Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async fixUnescapedQuotes(filepath: string): Promise<{
+    success: boolean;
+    corrections?: number;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/fix-quotes', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        corrections?: number;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Fix Unescaped Quotes Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async reconstructFile(
+    fileContent: string[],
+    filepath: string,
+    saveMode: 'overwrite' | 'new_file' = 'new_file'
+  ): Promise<{
+    success: boolean;
+    save_path?: string;
+    save_mode?: string;
+    reconstruction_time?: number;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/reconstruct', {
+        file_content: fileContent,
+        filepath: filepath,
+        save_mode: saveMode
+      });
+      return response.data as {
+        success: boolean;
+        save_path?: string;
+        save_mode?: string;
+        reconstruction_time?: number;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Reconstruct File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 };
