@@ -741,7 +741,7 @@ export const apiService = {
     }
   },
 
-  async fixUnescapedQuotes(filepath: string): Promise<{
+  async fixTranslationErrors(filepath: string): Promise<{
     success: boolean;
     corrections?: number;
     message?: string;
@@ -759,7 +759,7 @@ export const apiService = {
       };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Fix Unescaped Quotes Error:', error);
+      console.error('Fix Translation Errors Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -794,6 +794,81 @@ export const apiService = {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Reconstruct File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  // ==================== COHÉRENCE ====================
+  
+  async checkCoherence(
+    targetPath: string,
+    returnDetails: boolean = true,
+    selectionInfo?: any
+  ): Promise<{ success: boolean; result?: any; error?: string; }> {
+    try {
+      const response = await api.post('/coherence/check', {
+        target_path: targetPath,
+        return_details: returnDetails,
+        selection_info: selectionInfo
+      });
+      return response.data as { success: boolean; result?: any; error?: string; };
+    } catch (error) {
+      console.error('Check Coherence Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getCoherenceOptions(): Promise<{ success: boolean; options?: any; error?: string; }> {
+    try {
+      const response = await api.get('/coherence/options');
+      return response.data as { success: boolean; options?: any; error?: string; };
+    } catch (error) {
+      console.error('Get Coherence Options Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async setCoherenceOptions(options: any): Promise<{ success: boolean; message?: string; error?: string; }> {
+    try {
+      const response = await api.post('/coherence/options', { options });
+      return response.data as { success: boolean; message?: string; error?: string; };
+    } catch (error) {
+      console.error('Set Coherence Options Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openCoherenceReport(reportPath: string): Promise<{ success: boolean; message?: string; error?: string; }> {
+    try {
+      const response = await api.post('/coherence/open-report', { report_path: reportPath });
+      return response.data as { success: boolean; message?: string; error?: string; };
+    } catch (error) {
+      console.error('Open Coherence Report Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openCoherenceFolder(): Promise<{ success: boolean; message?: string; error?: string; }> {
+    try {
+      const response = await api.post('/coherence/open-folder');
+      return response.data as { success: boolean; message?: string; error?: string; };
+    } catch (error) {
+      console.error('Open Coherence Folder Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

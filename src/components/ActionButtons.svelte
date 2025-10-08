@@ -1,5 +1,6 @@
 <script lang="ts">
   /* eslint-env browser */
+  import { checkProgress, coherenceActions, isChecking, lastCoherenceError, lastCoherenceResult } from '$stores/coherence';
   import { extractionActions, extractionProgress, isExtracting, lastExtractionError, lastExtractionResult } from '$stores/extraction';
   import { projectStore } from '$stores/project';
   import { isReconstructing, lastReconstructionError, lastReconstructionResult, reconstructionActions, reconstructionProgress } from '$stores/reconstruction';
@@ -22,10 +23,16 @@
   $: lastReconstructionRes = $lastReconstructionResult;
   $: lastReconstructionErr = $lastReconstructionError;
   
-  // Les boutons sont actifs seulement si un fichier est chargé et qu'on n'est pas en train d'extraire/reconstruire
-  $: canExtract = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing;
-  $: canReconstruct = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing && !!lastExtractionRes;
-  $: canVerify = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing;
+  // État réactif depuis le store cohérence
+  $: checking = $isChecking;
+  $: coherenceProgressText = $checkProgress;
+  $: lastCoherenceRes = $lastCoherenceResult;
+  $: lastCoherenceErr = $lastCoherenceError;
+  
+  // Les boutons sont actifs seulement si un fichier est chargé et qu'on n'est pas en train d'extraire/reconstruire/vérifier
+  $: canExtract = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing && !checking;
+  $: canReconstruct = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing && !checking && !!lastExtractionRes;
+  $: canVerify = !!currentFile && fileContent.length > 0 && !isLoading && !extracting && !reconstructing && !checking;
 
   async function handleExtract() {
     if (!canExtract || !currentFile) return;
@@ -72,10 +79,29 @@
     }
   }
 
-  function handleVerify() {
-    if (!canVerify) return;
-    console.info('Revérifier clicked', { file: currentFile, lines: fileContent.length });
-    // TODO: Implémenter la logique de vérification
+  async function handleVerify() {
+    if (!canVerify || !currentFile) return;
+    
+    try {
+      console.info('🔍 Lancement de la vérification rapide', { 
+        file: currentFile, 
+        lines: fileContent.length 
+      });
+
+      // Utiliser le fichier reconstruit si disponible, sinon le fichier original
+      const fileToCheck = lastReconstructionRes?.save_path || currentFile;
+      
+      // Lancer la vérification rapide
+      const success = await coherenceActions.quickCheckFile(fileToCheck);
+      
+      if (success) {
+        console.log('✅ Vérification rapide terminée avec succès');
+      } else {
+        console.error('❌ Échec de la vérification rapide');
+      }
+    } catch (error) {
+      console.error('❌ Erreur exceptionnelle lors de la vérification:', error);
+    }
   }
 
   function openOutputFolder() {
@@ -117,6 +143,21 @@
         <div class="flex-1">
           <p class="text-purple-800 font-medium">Reconstruction en cours...</p>
           <p class="text-purple-600 text-sm">{reconstructionProgressText}</p>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Indicateur de progression de vérification -->
+  {#if checking}
+    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+      <div class="flex items-center gap-3">
+        <div class="animate-spin">
+          <Icon icon="hugeicons:loading-01" class="w-6 h-6 text-orange-600" />
+        </div>
+        <div class="flex-1">
+          <p class="text-orange-800 font-medium">Vérification en cours...</p>
+          <p class="text-orange-600 text-sm">{coherenceProgressText}</p>
         </div>
       </div>
     </div>
@@ -196,6 +237,61 @@
         <div>
           <p class="text-red-800 font-medium">Erreur de reconstruction</p>
           <p class="text-red-600 text-sm">{lastReconstructionErr}</p>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Résultat de la dernière vérification -->
+  {#if lastCoherenceRes && !checking}
+    <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          {#if lastCoherenceRes.stats.total_issues === 0}
+            <Icon icon="hugeicons:checkmark-circle-02" class="w-6 h-6 text-teal-600" />
+            <div>
+              <p class="text-teal-800 font-medium">Vérification terminée</p>
+              <p class="text-teal-600 text-sm">
+                ✅ Aucun problème détecté
+                {#if lastCoherenceRes.stats.files_analyzed > 0}
+                  • {lastCoherenceRes.stats.files_analyzed} fichier(s) analysé(s)
+                {/if}
+              </p>
+            </div>
+          {:else}
+            <Icon icon="hugeicons:warning-triangle" class="w-6 h-6 text-orange-600" />
+            <div>
+              <p class="text-orange-800 font-medium">Problèmes détectés</p>
+              <p class="text-orange-600 text-sm">
+                ⚠️ {lastCoherenceRes.stats.total_issues} erreur(s) sur {Object.values(lastCoherenceRes.stats.issues_by_type).filter(count => count > 0).length} type(s)
+                {#if lastCoherenceRes.stats.files_analyzed > 0}
+                  • {lastCoherenceRes.stats.files_analyzed} fichier(s) analysé(s)
+                {/if}
+              </p>
+            </div>
+          {/if}
+        </div>
+        {#if lastCoherenceRes.stats.total_issues > 0}
+          <button
+            onclick={() => coherenceActions.openDetailedReport()}
+            class="text-orange-600 hover:text-orange-800 transition-colors"
+            title="Ouvrir le rapport détaillé"
+          >
+            <Icon icon="hugeicons:file-document" class="w-5 h-5" />
+          </button>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- Erreur de la dernière vérification -->
+  {#if lastCoherenceErr && !checking}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div class="flex items-center gap-3">
+        <Icon icon="hugeicons:close-circle" class="w-6 h-6 text-red-600" />
+        <div>
+          <p class="text-red-800 font-medium">Erreur de vérification</p>
+          <p class="text-red-600 text-sm">{lastCoherenceErr}</p>
         </div>
       </div>
     </div>

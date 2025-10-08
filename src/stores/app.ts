@@ -51,9 +51,35 @@ interface AppSettings {
   extraction: {
     placeholderFormat: string;
     encoding: string;
+    detectDuplicates: boolean;
+    projectProgressTracking: boolean;
+    lineLimit: number;
+    defaultSaveMode: 'overwrite' | 'new_file';
+    patterns: {
+      code: string;
+      asterisk: string;
+      tilde: string;
+    };
   };
   reconstruction: {
     saveMode: 'overwrite' | 'new_file';
+  };
+  coherence: {
+    checkVariables: boolean;
+    checkTags: boolean;
+    checkUntranslated: boolean;
+    checkEscapeSequences: boolean;
+    checkPercentages: boolean;
+    checkQuotations: boolean;
+    checkParentheses: boolean;
+    checkSyntax: boolean;
+    checkDeeplEllipsis: boolean;
+    checkIsolatedPercent: boolean;
+    checkFrenchQuotes: boolean;
+    checkDoubleDashEllipsis: boolean;
+    checkSpecialCodes: boolean;
+    checkLineStructure: boolean;
+    customExclusions: string[];
   };
   lastProject: {
     path: string;
@@ -90,9 +116,35 @@ const initialSettings: AppSettings = {
   extraction: {
     placeholderFormat: 'PLACEHOLDER_{n}',
     encoding: 'UTF-8',
+    detectDuplicates: true,
+    projectProgressTracking: false,
+    lineLimit: 1000,
+    defaultSaveMode: 'new_file',
+    patterns: {
+      code: 'RENPY_CODE_001',
+      asterisk: 'RENPY_ASTERISK_001',
+      tilde: 'RENPY_TILDE_001',
+    },
   },
   reconstruction: {
     saveMode: 'new_file',
+  },
+  coherence: {
+    checkVariables: true,
+    checkTags: true,
+    checkUntranslated: true,
+    checkEscapeSequences: true,
+    checkPercentages: true,
+    checkQuotations: true,
+    checkParentheses: true,
+    checkSyntax: true,
+    checkDeeplEllipsis: true,
+    checkIsolatedPercent: true,
+    checkFrenchQuotes: true,
+    checkDoubleDashEllipsis: true,
+    checkSpecialCodes: false,
+    checkLineStructure: true,
+    customExclusions: ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...'],
   },
   lastProject: {
     path: '',

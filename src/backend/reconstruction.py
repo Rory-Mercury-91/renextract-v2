@@ -45,9 +45,15 @@ def extract_game_name(project_path: str) -> str:
         return "jeu_inconnu"
 
 
-def fix_unescaped_quotes_in_txt(filepath: str) -> int:
+def fix_translation_errors_in_txt(filepath: str) -> int:
     """
-    Corrige les guillemets non-échappés dans un fichier de traduction
+    Corrige automatiquement les erreurs courantes dans un fichier de traduction:
+    1. Ellipses DeepL ([...], […]) → ...
+    2. Guillemets français (« ») → \"
+    3. Chevrons doubles (<< >>) → \" (sauf code Ren'Py <<<>>>)
+    4. Pourcentages isolés (%) → %%
+    5. Guillemets non-échappés → \"
+    
     Retourne le nombre de corrections effectuées
     """
     try:
@@ -59,13 +65,66 @@ def fix_unescaped_quotes_in_txt(filepath: str) -> int:
         
         with open(filepath, 'r', encoding='utf-8') as f:
             for line in f:
-                # Détecter guillemets non-échappés (pas précédés de \)
-                # Pattern: chercher " qui n'est pas précédé de \ ou en début/fin de ligne
                 original_line = line
-                
-                # Remplacer " par \" sauf si déjà échappé ou en début/fin
                 fixed_line = line
-                if '"' in line:
+                
+                # CORRECTION 1: Ellipses DeepL → ...
+                # Patterns: [...], [..], [.....], […], [……]
+                if '[' in fixed_line and ']' in fixed_line:
+                    # Détecter et remplacer les ellipses DeepL
+                    import re
+                    deepl_patterns = [
+                        (r'\[\.{2,}\]', '...'),   # [...], [..], [....]
+                        (r'\[…+\]', '...'),       # […], [……]
+                    ]
+                    
+                    for pattern, replacement in deepl_patterns:
+                        matches = re.findall(pattern, fixed_line)
+                        if matches:
+                            fixed_line = re.sub(pattern, replacement, fixed_line)
+                            corrections += len(matches)
+                
+                # CORRECTION 2: Guillemets français → \"
+                # Patterns: «bonjour» → \"bonjour\"
+                if '«' in fixed_line or '»' in fixed_line:
+                    import re
+                    # Remplacer guillemets français par guillemets ASCII échappés
+                    fixed_line = fixed_line.replace('«', '\\"')
+                    fixed_line = fixed_line.replace('»', '\\"')
+                    corrections += original_line.count('«') + original_line.count('»')
+                
+                # CORRECTION 3: Chevrons doubles << >> → \" (sauf code Ren'Py)
+                # Pattern: << ou >> mais PAS <<< ou >>>
+                if '<<' in fixed_line or '>>' in fixed_line:
+                    import re
+                    # Vérifier que ce n'est pas du code Ren'Py (<<<, >>>)
+                    if not ('<<<' in fixed_line or '>>>' in fixed_line):
+                        # Compter avant remplacement
+                        chevrons_count = len(re.findall(r'(?<![<>])<<(?![<>])', fixed_line))
+                        chevrons_count += len(re.findall(r'(?<![<>])>>(?![<>])', fixed_line))
+                        
+                        # Remplacer << par \" (mais pas <<<)
+                        fixed_line = re.sub(r'(?<![<>])<<(?![<>])', '\\"', fixed_line)
+                        # Remplacer >> par \" (mais pas >>>)
+                        fixed_line = re.sub(r'(?<![<>])>>(?![<>])', '\\"', fixed_line)
+                        
+                        corrections += chevrons_count
+                
+                # CORRECTION 4: Pourcentages isolés % → %%
+                # Pattern: % isolé (pas suivi de %% ou de variables %s, %d, %f, etc.)
+                if '%' in fixed_line:
+                    import re
+                    # Pattern pour % isolé (pas dans %% ou %variable ou %(name)s)
+                    pattern = r'(?<!%)%(?!%|[sdfioxXeEgGcr]|\([^)]+\))'
+                    
+                    matches = re.findall(pattern, fixed_line)
+                    if matches:
+                        # Remplacer % isolé par %%
+                        fixed_line = re.sub(pattern, '%%', fixed_line)
+                        corrections += len(matches)
+                
+                # CORRECTION 5: Guillemets non-échappés
+                if '"' in fixed_line:
                     # Vérifier si guillemets non-échappés au milieu de la ligne
                     parts = fixed_line.split('"')
                     new_parts = []
@@ -93,7 +152,7 @@ def fix_unescaped_quotes_in_txt(filepath: str) -> int:
         return corrections
         
     except Exception as e:
-        logger.error(f"Erreur correction guillemets: {e}")
+        logger.error(f"Erreur correction automatique: {e}")
         return 0
 
 

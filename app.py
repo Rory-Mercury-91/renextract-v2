@@ -29,7 +29,12 @@ from src.backend.extraction import extract_texts_from_file
 from src.backend.reconstruction import (
     reconstruct_from_translations,
     validate_translation_files,
-    fix_unescaped_quotes_in_txt
+    fix_translation_errors_in_txt
+)
+from src.backend.coherence import (
+    check_coherence_unified,
+    set_coherence_options,
+    get_coherence_options
 )
 
 # Load environment variables
@@ -391,10 +396,36 @@ settings_data = {
     },
     'extraction': {
         'placeholderFormat': 'PLACEHOLDER_{n}',
-        'encoding': 'UTF-8'
+        'encoding': 'UTF-8',
+        'detectDuplicates': True,
+        'projectProgressTracking': False,
+        'lineLimit': 1000,
+        'defaultSaveMode': 'new_file',
+        'patterns': {
+            'code': 'RENPY_CODE_001',
+            'asterisk': 'RENPY_ASTERISK_001',
+            'tilde': 'RENPY_TILDE_001'
+        }
     },
     'reconstruction': {
         'saveMode': 'new_file'
+    },
+    'coherence': {
+        'checkVariables': True,
+        'checkTags': True,
+        'checkUntranslated': True,
+        'checkEscapeSequences': True,
+        'checkPercentages': True,
+        'checkQuotations': True,
+        'checkParentheses': True,
+        'checkSyntax': True,
+        'checkDeeplEllipsis': True,
+        'checkIsolatedPercent': True,
+        'checkFrenchQuotes': True,
+        'checkDoubleDashEllipsis': True,
+        'checkSpecialCodes': False,
+        'checkLineStructure': True,
+        'customExclusions': ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...']
     },
     'colors': {
         'extractButton': '#3B82F6',
@@ -528,7 +559,20 @@ def sanitize_settings_payload(payload: dict) -> dict:
 
     extraction_obj = payload.get('extraction')
     if isinstance(extraction_obj, dict):
-        picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding'])
+        picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding', 'defaultSaveMode'])
+        # Ajouter les booleans
+        if isinstance(extraction_obj.get('detectDuplicates'), bool):
+            picked['detectDuplicates'] = extraction_obj['detectDuplicates']
+        if isinstance(extraction_obj.get('projectProgressTracking'), bool):
+            picked['projectProgressTracking'] = extraction_obj['projectProgressTracking']
+        # Ajouter lineLimit
+        if isinstance(extraction_obj.get('lineLimit'), int):
+            picked['lineLimit'] = extraction_obj['lineLimit']
+        # Ajouter les patterns
+        if isinstance(extraction_obj.get('patterns'), dict):
+            patterns = pick_strs(extraction_obj['patterns'], ['code', 'asterisk', 'tilde'])
+            if patterns:
+                picked['patterns'] = patterns
         if picked:
             result['extraction'] = picked
 
@@ -539,6 +583,22 @@ def sanitize_settings_payload(payload: dict) -> dict:
             picked_reconstruction['saveMode'] = reconstruction_obj['saveMode']
         if picked_reconstruction:
             result['reconstruction'] = picked_reconstruction
+
+    # coherence object
+    coherence_obj = payload.get('coherence')
+    if isinstance(coherence_obj, dict):
+        picked_coherence = pick_bools(coherence_obj, [
+            'checkVariables', 'checkTags', 'checkUntranslated', 'checkEscapeSequences',
+            'checkPercentages', 'checkQuotations', 'checkParentheses', 'checkSyntax',
+            'checkDeeplEllipsis', 'checkIsolatedPercent', 'checkFrenchQuotes',
+            'checkDoubleDashEllipsis', 'checkSpecialCodes', 'checkLineStructure'
+        ])
+        # Ajouter customExclusions
+        if isinstance(coherence_obj.get('customExclusions'), list):
+            exclusions = [str(x) for x in coherence_obj['customExclusions'] if isinstance(x, str)]
+            picked_coherence['customExclusions'] = exclusions
+        if picked_coherence:
+            result['coherence'] = picked_coherence
 
     # lastProject object
     last_project_obj = payload.get('lastProject')
@@ -1478,7 +1538,7 @@ def fix_quotes_in_file():
             }), 404
 
         # Corriger les guillemets
-        corrections = fix_unescaped_quotes_in_txt(filepath)
+        corrections = fix_translation_errors_in_txt(filepath)
 
         return jsonify({
             'success': True,
@@ -1519,6 +1579,132 @@ def reconstruct_file():
             file_content, filepath, save_mode)
 
         return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ==================== COHÉRENCE ====================
+
+@app.route('/api/coherence/check', methods=['POST'])
+def check_coherence():
+    """Vérifie la cohérence d'un fichier ou dossier"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        target_path = data.get('target_path', '')
+        return_details = data.get('return_details', True)
+        selection_info = data.get('selection_info')
+
+        if not target_path:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin cible requis'
+            }), 400
+
+        # Lancer la vérification
+        result = check_coherence_unified(target_path, return_details, selection_info)
+        return jsonify({'success': True, 'result': result})
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/coherence/options', methods=['GET'])
+def get_coherence_options_api():
+    """Récupère les options de vérification de cohérence"""
+    try:
+        options = get_coherence_options()
+        return jsonify({'success': True, 'options': options})
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/coherence/options', methods=['POST'])
+def set_coherence_options_api():
+    """Configure les options de vérification de cohérence"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        options = data.get('options', {})
+        set_coherence_options(options)
+        return jsonify({'success': True, 'message': 'Options mises à jour'})
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/coherence/open-report', methods=['POST'])
+def open_coherence_report():
+    """Ouvre un rapport de cohérence"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        report_path = data.get('report_path', '')
+
+        if not report_path or not os.path.exists(report_path):
+            return jsonify({
+                'success': False,
+                'error': 'Rapport introuvable'
+            }), 400
+
+        # Ouvrir le rapport dans le navigateur par défaut
+        import webbrowser
+        webbrowser.open(f'file://{os.path.abspath(report_path)}')
+
+        return jsonify({'success': True, 'message': 'Rapport ouvert'})
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/coherence/open-folder', methods=['POST'])
+def open_coherence_folder():
+    """Ouvre le dossier des rapports"""
+    try:
+        reports_folder = "02_Reports"
+
+        if not os.path.exists(reports_folder):
+            os.makedirs(reports_folder)
+
+        # Ouvrir le dossier dans l'explorateur
+        import subprocess
+        import platform
+
+        if platform.system() == "Windows":
+            subprocess.run(["explorer", os.path.abspath(reports_folder)])
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.run(["open", os.path.abspath(reports_folder)])
+        else:  # Linux
+            subprocess.run(["xdg-open", os.path.abspath(reports_folder)])
+
+        return jsonify({'success': True, 'message': 'Dossier ouvert'})
 
     except Exception as e:
         return jsonify({

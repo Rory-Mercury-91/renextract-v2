@@ -387,10 +387,10 @@ class TextExtractor:
             patterns = [
                 # Variables entre crochets [player_name], [color=#ff0000]
                 (r'\[[^\]]+\]', 'bracket_variables'),
-                # Variables de formatage %s, %d, %(name)s
-                (r'%(?:\([^)]+\))?[sdifcxo]', 'format_variables'),
-                # Échappements \n, \t, \r, \\, \"
-                (r'\\[ntr\\"]', 'escapes'),
+                # Variables de formatage %s, %d, %f, %(name)s, etc.
+                (r'%(?:\([^)]+\))?[sdfioxXeEgGcr]', 'format_variables'),
+                # Échappements \n, \t, \r, \"
+                (r'\\[ntr"]', 'escapes'),
                 # Balises HTML <b>, <i>, <color=#xxx>
                 (r'<[^>]+>', 'html_tags'),
                 # Balises accolades {color=#xxx}, {size=24}

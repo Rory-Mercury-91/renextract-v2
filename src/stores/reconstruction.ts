@@ -4,6 +4,7 @@
 import { apiService } from '$lib/api';
 import { derived, get, writable } from 'svelte/store';
 import { appSettings } from './app';
+import { coherenceActions } from './coherence';
 import { extractionStore } from './extraction';
 
 // Interfaces pour la reconstruction
@@ -119,9 +120,10 @@ export const reconstructionActions = {
   },
   
   /**
-   * Corrige les guillemets non-échappés dans les fichiers de traduction
+   * Corrige automatiquement les erreurs courantes dans les fichiers de traduction
+   * (ellipses DeepL, guillemets français, chevrons, pourcentages, guillemets non-échappés)
    */
-  async fixQuotesInFiles(filepath: string): Promise<number> {
+  async fixTranslationErrorsInFiles(filepath: string): Promise<number> {
     try {
       const file_base = filepath.split('/').pop()?.replace('.rpy', '') || '';
       const game_name = filepath.split('/').slice(-3, -2)[0] || '';
@@ -137,7 +139,7 @@ export const reconstructionActions = {
       let totalCorrections = 0;
       
       for (const file of files_to_check) {
-        const response = await apiService.fixUnescapedQuotes(file);
+        const response = await apiService.fixTranslationErrors(file);
         if (response.success && response.corrections) {
           totalCorrections += response.corrections;
         }
@@ -178,13 +180,13 @@ export const reconstructionActions = {
         lastError: null
       }));
       
-      // ÉTAPE 1: Corriger les guillemets automatiquement
+      // ÉTAPE 1: Corriger automatiquement les erreurs courantes (5 types)
       reconstructionStore.update(state => ({
         ...state,
-        reconstructionProgress: 'Correction automatique des guillemets...'
+        reconstructionProgress: 'Correction automatique des erreurs courantes...'
       }));
       
-      await this.fixQuotesInFiles(filepath);
+      await this.fixTranslationErrorsInFiles(filepath);
       
       // ÉTAPE 2: Valider les fichiers
       reconstructionStore.update(state => ({
@@ -234,6 +236,10 @@ export const reconstructionActions = {
         if (settings.autoOpenings.files) {
           await this.openReconstructedFile();
         }
+        
+        // Lancer automatiquement la vérification de cohérence après reconstruction
+        console.log('🔍 Lancement de la vérification de cohérence automatique...');
+        await coherenceActions.quickCheckFile(response.save_path!);
         
         return true;
       } else {
