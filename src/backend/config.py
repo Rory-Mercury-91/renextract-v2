@@ -15,7 +15,7 @@ class AppConfig:
     GITHUB_REPO_NAME = os.getenv('GITHUB_REPO_NAME', 'renextract-v2')
 
     # Version de l'application (doit correspondre à package.json)
-    APP_VERSION = os.getenv('APP_VERSION', '0.9.0')
+    APP_VERSION = os.getenv('APP_VERSION', '2.0.0')
 
     # Configuration des mises à jour
     UPDATE_CHECK_INTERVAL_HOURS = int(
