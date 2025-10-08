@@ -233,5 +233,233 @@ export const apiService = {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  },
+
+  // ==================== PROJECT MANAGEMENT ====================
+
+  async validateProject(projectPath: string): Promise<{
+    success: boolean;
+    validation?: { valid: boolean; message: string };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/validate', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        validation?: { valid: boolean; message: string };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Project Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async findProjectRoot(subdirPath: string, maxLevels = 10): Promise<{
+    success: boolean;
+    root_path?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/find-root', {
+        subdir_path: subdirPath,
+        max_levels: maxLevels
+      });
+      return response.data as {
+        success: boolean;
+        root_path?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Find Project Root Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async scanProjectLanguages(projectPath: string): Promise<{
+    success: boolean;
+    languages: Array<{ name: string; file_count: number; path: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/languages', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        languages: Array<{ name: string; file_count: number; path: string }>;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Scan Project Languages Error:', error);
+      return {
+        success: false,
+        languages: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async scanLanguageFiles(
+    projectPath: string,
+    language: string,
+    exclusions: string[] = []
+  ): Promise<{
+    success: boolean;
+    files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/files', {
+        project_path: projectPath,
+        language,
+        exclusions
+      });
+      return response.data as {
+        success: boolean;
+        files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Scan Language Files Error:', error);
+      return {
+        success: false,
+        files: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async loadFileContent(filepath: string): Promise<{
+    success: boolean;
+    content?: string[];
+    line_count?: number;
+    filepath?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/load-file', { filepath });
+      return response.data as {
+        success: boolean;
+        content?: string[];
+        line_count?: number;
+        filepath?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Load File Content Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getProjectSummary(projectPath: string): Promise<{
+    success: boolean;
+    summary?: {
+      project_name: string;
+      rpa_count: number;
+      rpy_count: number;
+      languages: Array<{ name: string; file_count: number; path: string }>;
+      summary: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/summary', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        summary?: {
+          project_name: string;
+          rpa_count: number;
+          rpy_count: number;
+          languages: Array<{ name: string; file_count: number; path: string }>;
+          summary: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Project Summary Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async setCurrentProject(projectPath: string, mode: 'project' | 'single_file' = 'project'): Promise<{
+    success: boolean;
+    project_path?: string;
+    mode?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/set-current', {
+        project_path: projectPath,
+        mode
+      });
+      return response.data as {
+        success: boolean;
+        project_path?: string;
+        mode?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Set Current Project Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getProjectState(): Promise<{
+    success: boolean;
+    state?: {
+      mode: string;
+      project_path: string | null;
+      language: string | null;
+      current_file: string | null;
+      file_content: string[];
+      available_languages: Array<{ name: string; file_count: number; path: string }>;
+      available_files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.get('/project/state');
+      return response.data as {
+        success: boolean;
+        state?: {
+          mode: string;
+          project_path: string | null;
+          language: string | null;
+          current_file: string | null;
+          file_content: string[];
+          available_languages: Array<{ name: string; file_count: number; path: string }>;
+          available_files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Project State Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 };

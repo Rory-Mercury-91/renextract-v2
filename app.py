@@ -23,6 +23,7 @@ from flask_cors import CORS
 from src.backend.backup_manager import BackupManager
 from src.backend.update_manager import UpdateManager
 from src.backend.config import AppConfig
+from src.backend.project import project_manager
 
 # Load environment variables
 load_dotenv()
@@ -525,6 +526,11 @@ settings_data = {
         'reconstructButton': '#10B981',
         'verifyButton': '#F59E0B',
         'accents': '#6366F1'
+    },
+    'lastProject': {
+        'path': '',
+        'language': '',
+        'mode': 'project'
     }
 }
 
@@ -650,6 +656,13 @@ def sanitize_settings_payload(payload: dict) -> dict:
         picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding'])
         if picked:
             result['extraction'] = picked
+
+    # lastProject object
+    last_project_obj = payload.get('lastProject')
+    if isinstance(last_project_obj, dict):
+        picked = pick_strs(last_project_obj, ['path', 'language', 'mode'])
+        if picked:
+            result['lastProject'] = picked
 
     return result
 
@@ -1027,6 +1040,223 @@ def should_auto_check():
         return jsonify({
             'success': False,
             'error': f'Erreur lors de la vérification auto: {str(e)}'
+        }), 500
+
+
+# ==================== PROJECT MANAGEMENT ENDPOINTS ====================
+
+@app.route('/api/project/validate', methods=['POST'])
+def validate_project():
+    """Valide un chemin de projet Ren'Py"""
+    try:
+        data = request.get_json()
+        if not data or 'project_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de projet requis'
+            }), 400
+
+        project_path = data['project_path']
+        result = project_manager.validate_project(project_path)
+
+        return jsonify({
+            'success': True,
+            'validation': result
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/find-root', methods=['POST'])
+def find_project_root():
+    """Trouve la racine d'un projet à partir d'un sous-dossier"""
+    try:
+        data = request.get_json()
+        if not data or 'subdir_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de sous-dossier requis'
+            }), 400
+
+        subdir_path = data['subdir_path']
+        max_levels = data.get('max_levels', 10)
+        
+        root_path = project_manager.find_project_root(subdir_path, max_levels)
+
+        if root_path:
+            return jsonify({
+                'success': True,
+                'root_path': root_path
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Racine du projet introuvable'
+            })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/languages', methods=['POST'])
+def scan_project_languages():
+    """Scanne les langues disponibles dans un projet"""
+    try:
+        data = request.get_json()
+        if not data or 'project_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de projet requis'
+            }), 400
+
+        project_path = data['project_path']
+        languages = project_manager.scan_languages(project_path)
+
+        # Mettre à jour l'état interne
+        project_manager.available_languages = languages
+
+        return jsonify({
+            'success': True,
+            'languages': languages
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/files', methods=['POST'])
+def scan_language_files():
+    """Scanne les fichiers d'une langue spécifique"""
+    try:
+        data = request.get_json()
+        if not data or 'project_path' not in data or 'language' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de projet et langue requis'
+            }), 400
+
+        project_path = data['project_path']
+        language = data['language']
+        exclusions = data.get('exclusions', [])
+
+        files = project_manager.scan_language_files(
+            project_path, language, exclusions
+        )
+
+        # Mettre à jour l'état interne
+        project_manager.available_files = files
+        project_manager.current_language = language
+
+        return jsonify({
+            'success': True,
+            'files': files
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/load-file', methods=['POST'])
+def load_file_content():
+    """Charge le contenu d'un fichier"""
+    try:
+        data = request.get_json()
+        if not data or 'filepath' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de fichier requis'
+            }), 400
+
+        filepath = data['filepath']
+        result = project_manager.load_file_content(filepath)
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/summary', methods=['POST'])
+def get_project_summary():
+    """Obtient un résumé du projet"""
+    try:
+        data = request.get_json()
+        if not data or 'project_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de projet requis'
+            }), 400
+
+        project_path = data['project_path']
+        summary = project_manager.get_project_summary(project_path)
+
+        return jsonify({
+            'success': True,
+            'summary': summary
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/set-current', methods=['POST'])
+def set_current_project():
+    """Définit le projet actuel"""
+    try:
+        data = request.get_json()
+        if not data or 'project_path' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de projet requis'
+            }), 400
+
+        project_path = data['project_path']
+        mode = data.get('mode', 'project')
+
+        result = project_manager.set_current_project(project_path, mode)
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/project/state', methods=['GET'])
+def get_project_state():
+    """Obtient l'état actuel du gestionnaire de projet"""
+    try:
+        state = project_manager.get_state()
+        return jsonify({
+            'success': True,
+            'state': state
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 

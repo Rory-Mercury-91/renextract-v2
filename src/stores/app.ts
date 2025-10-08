@@ -52,6 +52,11 @@ interface AppSettings {
     placeholderFormat: string;
     encoding: string;
   };
+  lastProject: {
+    path: string;
+    language: string;
+    mode: 'project' | 'single_file';
+  };
 }
 
 const initialSettings: AppSettings = {
@@ -82,6 +87,11 @@ const initialSettings: AppSettings = {
   extraction: {
     placeholderFormat: 'PLACEHOLDER_{n}',
     encoding: 'UTF-8',
+  },
+  lastProject: {
+    path: '',
+    language: '',
+    mode: 'project',
   },
 };
 
