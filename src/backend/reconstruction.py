@@ -258,6 +258,9 @@ class FileReconstructor:
                 # Charger les métadonnées
                 self.asterix_metadata = data.get('asterix_metadata', {})
                 self.tilde_metadata = data.get('tilde_metadata', {})
+                
+                # NOUVEAU : Charger la liste ordonnée des doublons originaux
+                self.duplicate_originals_ordered = data.get('duplicate_originals_ordered', [])
             
             # Charger les fichiers de traduction
             self._load_translation_files(translate_folder, file_base)
@@ -288,6 +291,9 @@ class FileReconstructor:
                 raw_duplicates = self._load_multi_files(doublons_files)
                 self.duplicate_translations = [line.rstrip('\n\r') for line in raw_duplicates]
             
+            # Créer un mapping texte_original -> traduction pour gérer les doublons
+            self._build_translation_mapping()
+            
             # Fichier astérisques/tildes combiné
             asterix_files = self._find_translation_files(translate_folder, f'{file_base}_asterix.txt')
             if asterix_files:
@@ -306,6 +312,51 @@ class FileReconstructor:
         except Exception as e:
             logger.error(f"Erreur chargement fichiers traduction: {e}")
             raise
+    
+    def _build_translation_mapping(self):
+        """Mappe les traductions en utilisant la liste ordonnée des doublons sauvegardée"""
+        try:
+            self.translation_map = {}
+            
+            # Utiliser la liste ordonnée des doublons si disponible (nouvelle version)
+            if hasattr(self, 'duplicate_originals_ordered') and self.duplicate_originals_ordered:
+                logger.info(f"Utilisation de duplicate_originals_ordered sauvegardée")
+                duplicate_originals = self.duplicate_originals_ordered
+                
+                # Calculer les uniques
+                content_counts = OrderedDict()
+                for content in self.all_contents_linear:
+                    content_counts[content] = content_counts.get(content, 0) + 1
+                unique_originals = [c for c, count in content_counts.items() if count == 1]
+            else:
+                # Fallback: ancienne méthode (peut être incorrecte si le fichier doublons a été modifié)
+                logger.warning(f"duplicate_originals_ordered non trouvée, utilisation de la méthode de calcul (peut être incorrecte)")
+                content_counts = OrderedDict()
+                for content in self.all_contents_linear:
+                    content_counts[content] = content_counts.get(content, 0) + 1
+                
+                duplicate_originals = [c for c, count in content_counts.items() if count > 1]
+                unique_originals = [c for c, count in content_counts.items() if count == 1]
+
+            # Mapper les doublons
+            for i, original in enumerate(duplicate_originals):
+                if i < len(self.duplicate_translations):
+                    self.translation_map[original] = self.duplicate_translations[i]
+            
+            # Mapper les uniques
+            for i, original in enumerate(unique_originals):
+                if i < len(self.translations):
+                    self.translation_map[original] = self.translations[i]
+            
+            logger.info(f"Mapping de traduction créé: {len(self.translation_map)} entrées")
+            logger.info(f"  - Doublons: {len(duplicate_originals)}")
+            logger.info(f"  - Uniques: {len(unique_originals)}")
+            
+        except Exception as e:
+            logger.error(f"Erreur construction mapping traduction: {e}")
+            import traceback
+            traceback.print_exc()
+            self.translation_map = {}
     
     def _find_translation_files(self, folder: str, base_filename: str) -> List[str]:
         """Trouve tous les fichiers de traduction (avec support multi-fichiers)"""
@@ -427,39 +478,58 @@ class FileReconstructor:
                 line = content[position_idx]
                 
                 # Vérifier si c'est une ligne de dialogue (contient des guillemets)
-                if '"' in line and line.strip().startswith('"'):
-                    # Construire la nouvelle ligne avec les traductions
-                    new_line_parts = []
-                    
-                    # Récupérer l'indentation
-                    indent_match = re.match(r'^(\s*)', line)
-                    indent = indent_match.group(1) if indent_match else ''
-                    
-                    # Construire le contenu traduit
-                    translated_content = ""
-                    for content_idx in content_indices:
-                        if content_idx < len(self.translations):
-                            translation = self.translations[content_idx]
+                if '"' in line:
+                    # Construire le contenu traduit avec préfixes/suffixes
+                    translated_parts = []
+                    for i, content_idx in enumerate(content_indices):
+                        # Utiliser le mapping pour obtenir la traduction
+                        # au lieu d'un index direct dans self.translations
+                        original_text = self.all_contents_linear[content_idx] if content_idx < len(self.all_contents_linear) else None
+                        
+                        if original_text and original_text in self.translation_map:
+                            translation = self.translation_map[original_text]
                             # Récupérer les préfixes et suffixes pour ce contenu
                             if position_idx < len(self.content_prefixes):
                                 prefixes = self.content_prefixes[position_idx]
                                 suffixes = self.content_suffixes[position_idx]
                                 
-                                prefix = prefixes[0] if prefixes else ''
-                                suffix = suffixes[0] if suffixes else ''
+                                prefix = prefixes[i] if i < len(prefixes) else ''
+                                suffix = suffixes[i] if i < len(suffixes) else ''
                                 
-                                translated_content += prefix + translation + suffix
+                                translated_parts.append(prefix + translation + suffix)
                             else:
-                                translated_content += translation
+                                translated_parts.append(translation)
+                        else:
+                            # Fallback si pas de traduction trouvée
+                            logger.warning(f"Pas de traduction pour l'index {content_idx}: {original_text[:50] if original_text else 'None'}...")
+                            if original_text:
+                                translated_parts.append(original_text)
                     
-                    # Ajouter le suffixe de ligne
-                    line_suffix = ""
+                    # Remplacer les textes entre guillemets dans la ligne originale
+                    # Utiliser un pattern pour trouver et remplacer chaque texte entre guillemets
+                    new_line = line
+                    pattern = r'"([^"]*)"'
+                    matches = list(re.finditer(pattern, line))
+                    
+                    # Remplacer de droite à gauche pour éviter les décalages d'index
+                    for i in range(len(matches) - 1, -1, -1):
+                        if i < len(translated_parts):
+                            match = matches[i]
+                            start, end = match.span(1)  # span(1) pour le contenu entre guillemets
+                            new_line = new_line[:start] + translated_parts[i] + new_line[end:]
+                    
+                    # Ajouter le suffixe de ligne si présent
                     if position_idx < len(self.suffixes):
                         line_suffix = self.suffixes[position_idx]
+                        if line_suffix and not new_line.rstrip('\n').endswith(line_suffix.rstrip()):
+                            # Ajouter le suffixe seulement s'il n'est pas déjà présent
+                            if new_line.endswith('\n'):
+                                new_line = new_line.rstrip('\n') + line_suffix + '\n'
+                            else:
+                                new_line += line_suffix
                     
-                    # Construire la nouvelle ligne
-                    new_line = indent + '"' + translated_content + '"' + line_suffix
-                    if not new_line.endswith('\n'):
+                    # S'assurer que la ligne se termine par un retour à la ligne si l'original en avait un
+                    if line.endswith('\n') and not new_line.endswith('\n'):
                         new_line += '\n'
                     
                     content[position_idx] = new_line
@@ -480,19 +550,58 @@ class FileReconstructor:
             for original, placeholder in self.mapping.items():
                 content_str = content_str.replace(placeholder, original)
             
-            # 2. Remplacer les astérisques
-            for i, (placeholder, metadata) in enumerate(self.asterix_mapping.items()):
-                if i < len(self.asterix_translations):
-                    translation = self.asterix_translations[i]
-                    # Reconstruire avec le bon format d'astérisques
-                    content_str = content_str.replace(placeholder, f'* "{translation}"')
+            # 2. Remplacer les astérisques avec métadonnées - ORDRE INVERSE (du plus grand au plus petit)
+            # Trier par pass_level décroissant pour restaurer dans l'ordre inverse de l'extraction
+            asterix_items = []
+            for placeholder in self.asterix_mapping.keys():
+                if placeholder in self.asterix_metadata:
+                    meta = self.asterix_metadata[placeholder]
+                    placeholder_index = list(self.asterix_mapping.keys()).index(placeholder)
+                    asterix_items.append((placeholder, meta, placeholder_index))
             
-            # 3. Remplacer les tildes
-            for i, (placeholder, metadata) in enumerate(self.tilde_mapping.items()):
-                if i < len(self.tilde_translations):
-                    translation = self.tilde_translations[i]
-                    # Reconstruire avec le bon format de tildes
-                    content_str = content_str.replace(placeholder, f'~ "{translation}"')
+            # Trier par niveau décroissant (les plus grands d'abord)
+            asterix_items.sort(key=lambda x: x[1].get('pass_level', 1), reverse=True)
+            
+            for placeholder, meta, placeholder_index in asterix_items:
+                if placeholder_index < len(self.asterix_translations):
+                    translation = self.asterix_translations[placeholder_index].rstrip('\n')
+                    
+                    # Reconstruire avec le bon nombre d'astérisques
+                    prefix = '*' * meta['prefix_count']
+                    suffix = '*' * meta['suffix_count']
+                    reconstructed = f"{prefix}{translation}{suffix}"
+                    
+                    content_str = content_str.replace(placeholder, reconstructed)
+                    logger.debug(f"Astérisque restauré (niveau {meta.get('pass_level', 1)}): {placeholder} -> {reconstructed}")
+            
+            # 3. Remplacer les tildes avec métadonnées - ORDRE INVERSE (du plus grand au plus petit)
+            # Trier par pass_level décroissant, avec les orphelins en dernier
+            tilde_items = []
+            for placeholder in self.tilde_mapping.keys():
+                if placeholder in self.tilde_metadata:
+                    meta = self.tilde_metadata[placeholder]
+                    placeholder_index = list(self.tilde_mapping.keys()).index(placeholder)
+                    tilde_items.append((placeholder, meta, placeholder_index))
+            
+            # Trier par niveau décroissant (les plus grands d'abord, orphelins à la fin)
+            tilde_items.sort(key=lambda x: x[1].get('pass_level', 1), reverse=True)
+            
+            for placeholder, meta, placeholder_index in tilde_items:
+                if placeholder_index < len(self.tilde_translations):
+                    translation = self.tilde_translations[placeholder_index].rstrip('\n')
+                    
+                    # Vérifier si c'est un orphelin ou un groupe structuré
+                    if meta.get('orphan', False):
+                        # Pour les orphelins, on remet juste les tildes (pas de contenu encadré)
+                        reconstructed = meta['full_text']
+                    else:
+                        # Reconstruire avec le bon nombre de tildes
+                        prefix = '~' * meta['prefix_count']
+                        suffix = '~' * meta['suffix_count']
+                        reconstructed = f"{prefix}{translation}{suffix}"
+                    
+                    content_str = content_str.replace(placeholder, reconstructed)
+                    logger.debug(f"Tilde restauré (niveau {meta.get('pass_level', 1)}): {placeholder} -> {reconstructed}")
             
             # 4. Remplacer les textes vides
             for placeholder in self.empty_mapping.keys():

@@ -3,6 +3,7 @@
 
 import { apiService } from '$lib/api';
 import { derived, get, writable } from 'svelte/store';
+import { appSettings } from './app';
 
 // Interfaces pour la cohérence
 export interface CoherenceIssue {
@@ -188,6 +189,13 @@ export const coherenceActions = {
           console.log(`⚠️ ${totalIssues} erreur(s) détectée(s) sur ${distinctTypes} type(s)`);
         }
         
+        // Ouverture automatique du rapport si activée
+        const settings = get(appSettings);
+        if (settings.autoOpenings.reports && response.result.rapport_path) {
+          console.log('📄 Ouverture automatique du rapport de cohérence...');
+          await apiService.openCoherenceReport(response.result.rapport_path);
+        }
+        
         return true;
       } else {
         // Erreur
@@ -269,6 +277,13 @@ export const coherenceActions = {
         } else {
           const distinctTypes = Object.values(stats.issues_by_type).filter(count => count > 0).length;
           console.log(`⚠️ Analyse terminée - ${filesAnalyzed} fichier(s), ${totalIssues} problème(s), ${distinctTypes} type(s)`);
+        }
+        
+        // Ouverture automatique du rapport si activée
+        const settings = get(appSettings);
+        if (settings.autoOpenings.reports && response.result.rapport_path) {
+          console.log('📄 Ouverture automatique du rapport de cohérence...');
+          await apiService.openCoherenceReport(response.result.rapport_path);
         }
         
         return true;

@@ -8,7 +8,10 @@ import subprocess
 import sys
 import threading
 import time
+import tkinter as tk
 from pathlib import Path
+from subprocess import CalledProcessError
+from tkinter import filedialog
 from typing import Callable, List, Optional, Tuple
 
 import webview
@@ -371,13 +374,13 @@ def translator_run():
 # Settings endpoints - Structure mise à jour
 settings_data = {
     'language': 'fr',
-    'theme': 'dark',
+    'theme': 'auto',
     'debugActive': False,  # false=Level 3, true=Level 4
     'translatorFeature': False,
     'autoOpenings': {
         'files': True,
         'folders': True,
-        'reports': False,
+        'reports': True,
         'outputField': False
     },
     'externalTools': {
@@ -426,12 +429,6 @@ settings_data = {
         'checkSpecialCodes': False,
         'checkLineStructure': True,
         'customExclusions': ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...']
-    },
-    'colors': {
-        'extractButton': '#3B82F6',
-        'reconstructButton': '#10B981',
-        'verifyButton': '#F59E0B',
-        'accents': '#6366F1'
     },
     'lastProject': {
         'path': '',
@@ -751,6 +748,26 @@ def set_save_path():
             'success': False,
             'error': str(e)
         }), 500
+
+
+def is_wsl_environment():
+    """Détecte si on est en environnement WSL"""
+    try:
+        if hasattr(os, 'uname'):
+            if 'microsoft' in os.uname().release.lower():
+                return True
+        return 'WSL_DISTRO_NAME' in os.environ or 'WSLENV' in os.environ
+    except (AttributeError, OSError):
+        return False
+
+
+def wsl_mode_response(endpoint):
+    """Retourne une réponse pour le mode WSL"""
+    return jsonify({
+        'success': False,
+        'error': 'WSL_MODE',
+        'message': f'En mode WSL, le dialogue natif n\'est pas disponible. Veuillez fournir le chemin dans le body JSON.'
+    }), 400
 
 
 @app.route('/api/file-dialog/open', methods=['POST'])
@@ -1771,7 +1788,7 @@ def main():
 
             # Create and start window
             webview.create_window(**window_config)
-            webview.start(debug=False)
+            webview.start(debug=True)
         else:
             raise RuntimeError("WSL detected - web server mode only")
     except (RuntimeError, ImportError, OSError, AttributeError) as e:

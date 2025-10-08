@@ -96,7 +96,7 @@ const initialSettings: AppSettings = {
   autoOpenings: {
     files: true,
     folders: true,
-    reports: false,
+    reports: true,
     outputField: false,
   },
   externalTools: {

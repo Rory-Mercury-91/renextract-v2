@@ -12,13 +12,13 @@ settings_bp = Blueprint('settings', __name__)
 # Structure de données par défaut pour les paramètres
 settings_data = {
     'language': 'fr',
-    'theme': 'dark',
+    'theme': 'auto',
     'debugActive': False,  # false=Level 3, true=Level 4
     'translatorFeature': False,
     'autoOpenings': {
         'files': True,
         'folders': True,
-        'reports': False,
+        'reports': True,
         'outputField': False
     },
     'externalTools': {
@@ -37,7 +37,41 @@ settings_data = {
     },
     'extraction': {
         'placeholderFormat': 'PLACEHOLDER_{n}',
-        'encoding': 'UTF-8'
+        'encoding': 'UTF-8',
+        'detectDuplicates': True,
+        'projectProgressTracking': False,
+        'lineLimit': 1000,
+        'defaultSaveMode': 'new_file',
+        'patterns': {
+            'code': 'RENPY_CODE_001',
+            'asterisk': 'RENPY_ASTERISK_001',
+            'tilde': 'RENPY_TILDE_001'
+        }
+    },
+    'reconstruction': {
+        'saveMode': 'new_file'
+    },
+    'coherence': {
+        'checkVariables': True,
+        'checkTags': True,
+        'checkUntranslated': True,
+        'checkEscapeSequences': True,
+        'checkPercentages': True,
+        'checkQuotations': True,
+        'checkParentheses': True,
+        'checkSyntax': True,
+        'checkDeeplEllipsis': True,
+        'checkIsolatedPercent': True,
+        'checkFrenchQuotes': True,
+        'checkDoubleDashEllipsis': True,
+        'checkSpecialCodes': False,
+        'checkLineStructure': True,
+        'customExclusions': ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...']
+    },
+    'lastProject': {
+        'path': '',
+        'language': '',
+        'mode': 'project'
     }
 }
 
@@ -100,7 +134,10 @@ def sanitize_settings_payload(payload: dict) -> dict:
     - externalTools: textEditor/translator str
     - paths: editor/renpySdk str
     - folders: temporary/reports/backups/configs str
-    - extraction: placeholderFormat/encoding str
+    - extraction: placeholderFormat/encoding/defaultSaveMode str, detectDuplicates/projectProgressTracking bool, lineLimit int, patterns dict
+    - reconstruction: saveMode str
+    - coherence: diverses options bool + customExclusions list
+    - lastProject: path/language/mode str
     """
     allowed_themes = {'light', 'dark', 'auto'}
 
@@ -167,9 +204,53 @@ def sanitize_settings_payload(payload: dict) -> dict:
 
     extraction_obj = payload.get('extraction')
     if isinstance(extraction_obj, dict):
-        picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding'])
+        picked = pick_strs(extraction_obj, ['placeholderFormat', 'encoding', 'defaultSaveMode'])
+        # Ajouter les booleans
+        if isinstance(extraction_obj.get('detectDuplicates'), bool):
+            picked['detectDuplicates'] = extraction_obj['detectDuplicates']
+        if isinstance(extraction_obj.get('projectProgressTracking'), bool):
+            picked['projectProgressTracking'] = extraction_obj['projectProgressTracking']
+        # Ajouter lineLimit
+        if isinstance(extraction_obj.get('lineLimit'), int):
+            picked['lineLimit'] = extraction_obj['lineLimit']
+        # Ajouter les patterns
+        if isinstance(extraction_obj.get('patterns'), dict):
+            patterns = pick_strs(extraction_obj['patterns'], ['code', 'asterisk', 'tilde'])
+            if patterns:
+                picked['patterns'] = patterns
         if picked:
             result['extraction'] = picked
+
+    reconstruction_obj = payload.get('reconstruction')
+    if isinstance(reconstruction_obj, dict):
+        picked_reconstruction = {}
+        if 'saveMode' in reconstruction_obj and reconstruction_obj['saveMode'] in ['overwrite', 'new_file']:
+            picked_reconstruction['saveMode'] = reconstruction_obj['saveMode']
+        if picked_reconstruction:
+            result['reconstruction'] = picked_reconstruction
+
+    # coherence object
+    coherence_obj = payload.get('coherence')
+    if isinstance(coherence_obj, dict):
+        picked_coherence = pick_bools(coherence_obj, [
+            'checkVariables', 'checkTags', 'checkUntranslated', 'checkEscapeSequences',
+            'checkPercentages', 'checkQuotations', 'checkParentheses', 'checkSyntax',
+            'checkDeeplEllipsis', 'checkIsolatedPercent', 'checkFrenchQuotes',
+            'checkDoubleDashEllipsis', 'checkSpecialCodes', 'checkLineStructure'
+        ])
+        # Ajouter customExclusions
+        if isinstance(coherence_obj.get('customExclusions'), list):
+            exclusions = [str(x) for x in coherence_obj['customExclusions'] if isinstance(x, str)]
+            picked_coherence['customExclusions'] = exclusions
+        if picked_coherence:
+            result['coherence'] = picked_coherence
+
+    # lastProject object
+    last_project_obj = payload.get('lastProject')
+    if isinstance(last_project_obj, dict):
+        picked = pick_strs(last_project_obj, ['path', 'language', 'mode'])
+        if picked:
+            result['lastProject'] = picked
 
     return result
 
