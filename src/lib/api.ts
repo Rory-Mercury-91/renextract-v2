@@ -233,5 +233,571 @@ export const apiService = {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  },
+
+  // ==================== PROJECT MANAGEMENT ====================
+
+  async validateProject(projectPath: string): Promise<{
+    success: boolean;
+    validation?: { valid: boolean; message: string };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/validate', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        validation?: { valid: boolean; message: string };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Project Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async findProjectRoot(subdirPath: string, maxLevels = 10): Promise<{
+    success: boolean;
+    root_path?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/find-root', {
+        subdir_path: subdirPath,
+        max_levels: maxLevels
+      });
+      return response.data as {
+        success: boolean;
+        root_path?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Find Project Root Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async scanProjectLanguages(projectPath: string): Promise<{
+    success: boolean;
+    languages: Array<{ name: string; file_count: number; path: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/languages', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        languages: Array<{ name: string; file_count: number; path: string }>;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Scan Project Languages Error:', error);
+      return {
+        success: false,
+        languages: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async scanLanguageFiles(
+    projectPath: string,
+    language: string,
+    exclusions: string[] = []
+  ): Promise<{
+    success: boolean;
+    files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/files', {
+        project_path: projectPath,
+        language,
+        exclusions
+      });
+      return response.data as {
+        success: boolean;
+        files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Scan Language Files Error:', error);
+      return {
+        success: false,
+        files: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async loadFileContent(filepath: string): Promise<{
+    success: boolean;
+    content?: string[];
+    line_count?: number;
+    filepath?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/load-file', { filepath });
+      return response.data as {
+        success: boolean;
+        content?: string[];
+        line_count?: number;
+        filepath?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Load File Content Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getProjectSummary(projectPath: string): Promise<{
+    success: boolean;
+    summary?: {
+      project_name: string;
+      rpa_count: number;
+      rpy_count: number;
+      languages: Array<{ name: string; file_count: number; path: string }>;
+      summary: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/summary', { project_path: projectPath });
+      return response.data as {
+        success: boolean;
+        summary?: {
+          project_name: string;
+          rpa_count: number;
+          rpy_count: number;
+          languages: Array<{ name: string; file_count: number; path: string }>;
+          summary: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Project Summary Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async setCurrentProject(projectPath: string, mode: 'project' | 'single_file' = 'project'): Promise<{
+    success: boolean;
+    project_path?: string;
+    mode?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/project/set-current', {
+        project_path: projectPath,
+        mode
+      });
+      return response.data as {
+        success: boolean;
+        project_path?: string;
+        mode?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Set Current Project Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getProjectState(): Promise<{
+    success: boolean;
+    state?: {
+      mode: string;
+      project_path: string | null;
+      language: string | null;
+      current_file: string | null;
+      file_content: string[];
+      available_languages: Array<{ name: string; file_count: number; path: string }>;
+      available_files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.get('/project/state');
+      return response.data as {
+        success: boolean;
+        state?: {
+          mode: string;
+          project_path: string | null;
+          language: string | null;
+          current_file: string | null;
+          file_content: string[];
+          available_languages: Array<{ name: string; file_count: number; path: string }>;
+          available_files: Array<{ name: string; path: string; size: number; relative_path: string }>;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Project State Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  // ==================== BACKUPS ====================
+
+  async createBackup(sourcePath: string, backupType: string = 'security', description: string = ''): Promise<{
+    success: boolean;
+    backup_id?: string;
+    backup_path?: string;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/backups/create', {
+        source_path: sourcePath,
+        backup_type: backupType,
+        description: description
+      });
+      return response.data as {
+        success: boolean;
+        backup_id?: string;
+        backup_path?: string;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Create Backup Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  // ==================== EXTRACTION ====================
+
+  async extractTexts(fileContent: string[], filepath: string, detectDuplicates: boolean = true): Promise<{
+    success: boolean;
+    result?: {
+      dialogue_file: string;
+      doublons_file?: string;
+      asterix_file?: string;
+      positions_file: string;
+      output_folder: string;
+      extracted_count: number;
+      asterix_count: number;
+      tilde_count: number;
+      empty_count: number;
+      duplicate_count: number;
+    };
+    extraction_time?: number;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/extract', {
+        file_content: fileContent,
+        filepath: filepath,
+        detect_duplicates: detectDuplicates
+      });
+      return response.data as {
+        success: boolean;
+        result?: {
+          dialogue_file: string;
+          doublons_file?: string;
+          asterix_file?: string;
+          positions_file: string;
+          output_folder: string;
+          extracted_count: number;
+          asterix_count: number;
+          tilde_count: number;
+          empty_count: number;
+          duplicate_count: number;
+        };
+        extraction_time?: number;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Extract Texts Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async validateExtractionFile(filepath: string): Promise<{
+    success: boolean;
+    validation?: {
+      valid: boolean;
+      message: string;
+      size?: number;
+      filename?: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/validate-file', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        validation?: {
+          valid: boolean;
+          message: string;
+          size?: number;
+          filename?: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Extraction File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getExtractionSettings(): Promise<{
+    success: boolean;
+    settings?: {
+      detect_duplicates: boolean;
+      code_prefix: string;
+      asterisk_prefix: string;
+      tilde_prefix: string;
+      empty_prefix: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.get('/extraction/get-settings');
+      return response.data as {
+        success: boolean;
+        settings?: {
+          detect_duplicates: boolean;
+          code_prefix: string;
+          asterisk_prefix: string;
+          tilde_prefix: string;
+          empty_prefix: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Extraction Settings Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async setExtractionSettings(settings: {
+    detect_duplicates?: boolean;
+    code_prefix?: string;
+    asterisk_prefix?: string;
+    tilde_prefix?: string;
+    empty_prefix?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/set-settings', settings);
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Set Extraction Settings Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openExtractionFile(filepath: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/open-file', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Open Extraction File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openExtractionFolder(folderpath: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/open-folder', {
+        folderpath: folderpath
+      });
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Open Extraction Folder Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  // ==================== RECONSTRUCTION ====================
+
+  async validateReconstructionFiles(
+    filepath: string,
+    extractedCount: number,
+    asterixCount: number = 0,
+    tildeCount: number = 0
+  ): Promise<{
+    success: boolean;
+    validation?: {
+      overall_valid: boolean;
+      files_validated: Record<string, any>;
+      summary: {
+        total_expected: number;
+        total_found: number;
+        errors: string[];
+      };
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/validate', {
+        filepath: filepath,
+        extracted_count: extractedCount,
+        asterix_count: asterixCount,
+        tilde_count: tildeCount
+      });
+      return response.data as {
+        success: boolean;
+        validation?: {
+          overall_valid: boolean;
+          files_validated: Record<string, any>;
+          summary: {
+            total_expected: number;
+            total_found: number;
+            errors: string[];
+          };
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Reconstruction Files Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async fixUnescapedQuotes(filepath: string): Promise<{
+    success: boolean;
+    corrections?: number;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/fix-quotes', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        corrections?: number;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Fix Unescaped Quotes Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async reconstructFile(
+    fileContent: string[],
+    filepath: string,
+    saveMode: 'overwrite' | 'new_file' = 'new_file'
+  ): Promise<{
+    success: boolean;
+    save_path?: string;
+    save_mode?: string;
+    reconstruction_time?: number;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/reconstruction/reconstruct', {
+        file_content: fileContent,
+        filepath: filepath,
+        save_mode: saveMode
+      });
+      return response.data as {
+        success: boolean;
+        save_path?: string;
+        save_mode?: string;
+        reconstruction_time?: number;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Reconstruct File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 };
