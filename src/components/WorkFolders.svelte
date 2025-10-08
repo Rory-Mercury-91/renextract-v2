@@ -35,36 +35,36 @@
   }
 </script>
 
-<div class="my-2 flex flex-col gap-2 bg-gray-800 px-4">
-  <h3 class="text-lg font-semibold text-blue-400">Dossiers de travail</h3>
+<div class="my-2 flex flex-col gap-2 bg-gray-100 px-4 dark:bg-gray-800">
+  <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400">Dossiers de travail</h3>
 
   <div class="grid grid-cols-4 gap-4">
     {#each WORK_FOLDERS as { name, icon, color, id, description }}
       <button
         onclick={() => selectFolder(id)}
-        class="flex items-center gap-3 rounded-lg bg-gray-700 p-3 text-left transition-colors hover:bg-gray-600"
+        class="flex items-center gap-3 rounded-lg bg-gray-200 p-3 text-left transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
         title={description}
       >
         <div
-          class="h-6 w-6 {color} flex items-center justify-center rounded-lg text-white"
+          class="flex h-6 w-6 items-center justify-center rounded-lg text-white {color}"
         >
           <Icon {icon} class="h-4 w-4" />
         </div>
-        <div class="font-medium text-white">{name}</div>
+        <div class="font-medium text-gray-900 dark:text-white">{name}</div>
       </button>
     {/each}
   </div>
 
   {#if $appSettings.autoOpenings.outputField}
     <div>
-      <h3 class="mb-2 font-semibold text-blue-400">Dossier de sortie</h3>
+      <h3 class="mb-2 font-semibold text-blue-600 dark:text-blue-400">Dossier de sortie</h3>
       <div class="flex items-center gap-3">
         <button
           onclick={selectOutputFolder}
-          class="flex flex-1 items-center justify-between rounded-lg bg-gray-700 px-3 py-2 transition-colors hover:bg-gray-600"
+          class="flex flex-1 items-center justify-between rounded-lg bg-gray-200 px-3 py-2 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
         >
-          <span class="text-gray-300">{outputFolder || 'Non défini'}</span>
-          <span class="text-blue-400">🏠</span>
+          <span class="text-gray-700 dark:text-gray-300">{outputFolder || 'Non défini'}</span>
+          <span class="text-blue-600 dark:text-blue-400">🏠</span>
         </button>
       </div>
     </div>

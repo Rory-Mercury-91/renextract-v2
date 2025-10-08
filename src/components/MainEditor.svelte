@@ -51,23 +51,23 @@
   }
 </script>
 
-<div class="flex min-h-[35rem] flex-1 flex-col bg-gray-900 text-white">
+<div class="flex min-h-[35rem] flex-1 flex-col bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white">
   <!-- Header with controls -->
-  <div class="bg-gray-800 p-4 border-b border-gray-700">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-blue-400">
+  <div class="border-b border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-blue-600 dark:text-blue-400">
         Éditeur principal
         {#if isLoading}
-          <span class="text-xs text-yellow-400 ml-2">Chargement...</span>
+          <span class="ml-2 text-xs text-yellow-600 dark:text-yellow-400">Chargement...</span>
         {/if}
       </h2>
       <div class="flex items-center gap-4 text-sm">
         {#if currentFile}
-          <span class="text-green-400">✓ Fichier chargé ({fileContent.length} lignes)</span>
+          <span class="text-green-600 dark:text-green-400">✓ Fichier chargé ({fileContent.length} lignes)</span>
         {:else if projectPath}
-          <span class="text-yellow-400">Projet chargé - Sélectionnez un fichier</span>
+          <span class="text-yellow-600 dark:text-yellow-400">Projet chargé - Sélectionnez un fichier</span>
         {:else}
-          <span class="text-gray-400">Aucun fichier chargé</span>
+          <span class="text-gray-500 dark:text-gray-400">Aucun fichier chargé</span>
         {/if}
         <span>{encoding}</span>
       </div>
@@ -75,8 +75,8 @@
 
     <div class="flex items-center gap-4">
       <!-- Mode indicator -->
-      <div class="flex items-center gap-2 px-3 py-1 bg-gray-700 rounded">
-        <span class="text-xs text-gray-400">
+      <div class="flex items-center gap-2 rounded bg-gray-200 px-3 py-1 dark:bg-gray-700">
+        <span class="text-xs text-gray-600 dark:text-gray-400">
           {mode === 'project' ? '🎮 Projet du header' : '📄 Fichier unique'}
         </span>
       </div>
@@ -90,7 +90,7 @@
             value={selectedLanguage || ''}
             on:change={handleLanguageChange}
             disabled={!projectPath || availableLanguages.length === 0 || isLoading}
-            class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             <option value="">— Sélectionner une langue —</option>
             {#each availableLanguages as lang}
@@ -107,7 +107,7 @@
             value={selectedFileDisplay}
             on:change={handleFileChange}
             disabled={!selectedLanguage || availableFiles.length === 0 || isLoading}
-            class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]"
+            class="min-w-[200px] rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             <option value="— Aucun fichier —">— Aucun fichier —</option>
             {#each availableFiles as file}
@@ -122,16 +122,16 @@
         <button
           on:click={handleSaveFile}
           disabled={!currentFile || isLoading}
-          class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="rounded bg-gray-200 px-3 py-1 text-sm transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
           title="Sauvegarder le fichier"
         >
-          <Icon icon="hugeicons:floppy-disk" class="w-5 h-5 text-green-500" />
+          <Icon icon="hugeicons:floppy-disk" class="h-5 w-5 text-green-600 dark:text-green-500" />
         </button>
       </div>
 
       <!-- Files count -->
       {#if mode === 'project'}
-        <div class="ml-auto text-sm text-gray-400">
+        <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">
           {availableFiles.length} fichier(s) disponible(s)
         </div>
       {/if}
@@ -140,11 +140,11 @@
 
   <!-- Code editor area -->
   <div class="relative flex-1">
-    <div class="absolute inset-0 bg-gray-900">
+    <div class="absolute inset-0 bg-white dark:bg-gray-900">
       <div class="flex h-full">
         <!-- Line numbers -->
         <div
-          class="min-w-[60px] border-r border-gray-700 bg-gray-800 px-3 py-4 font-mono text-sm text-gray-500"
+          class="min-w-[60px] border-r border-gray-300 bg-gray-100 px-3 py-4 font-mono text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800"
         >
           <div class="text-right">1</div>
         </div>
@@ -153,7 +153,7 @@
         <div class="flex-1 p-4">
           <textarea
             bind:value={code}
-            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-300 outline-none"
+            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-700 outline-none dark:text-gray-300"
             placeholder="Glissez un fichier .py ici ou utilisez les contrôles ci-dessus"
           ></textarea>
         </div>
@@ -163,7 +163,7 @@
 
   <!-- Status bar -->
   <div
-    class="flex items-center justify-between border-t border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-400"
+    class="flex items-center justify-between border-t border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
   >
     <span>Ligne 1, Colonne 1</span>
     <span>1 lignes, 0 caractères</span>

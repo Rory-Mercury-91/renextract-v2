@@ -60,7 +60,7 @@
   checkHealth();
 </script>
 
-<section class="flex min-h-full flex-col text-white">
+<section class="flex min-h-full flex-col text-gray-900 dark:text-white">
   <RouteHeader
     title={$_('navigation.translator')}
     description={$_('navigation.translator_description')}
@@ -83,19 +83,19 @@
         <span class="font-bold">Status:</span>
         {#if health}
           {#if health.success && health.exists}
-            <span class="text-green-400">TranslationToolsIA détecté</span>
+            <span class="text-green-600 dark:text-green-400">TranslationToolsIA détecté</span>
             {#if health.gitHead}
-              <span class="ml-2 text-xs text-gray-400"
+              <span class="ml-2 text-xs text-gray-500 dark:text-gray-400"
                 >(HEAD {health.gitHead})</span
               >
             {/if}
           {:else}
-            <span class="text-red-400"
+            <span class="text-red-600 dark:text-red-400"
               >Non installé. Exécutez "pnpm run ttia:clone"</span
             >
           {/if}
         {:else}
-          <span class="text-gray-400">Vérification…</span>
+          <span class="text-gray-500 dark:text-gray-400">Vérification…</span>
         {/if}
       </div>
     </div>
@@ -116,7 +116,7 @@
         <label class="text-sm" for="modelPath">Modèle</label>
         <input
           id="modelPath"
-          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-gray-900 outline-none dark:bg-gray-700 dark:text-white"
           bind:value={modelPath}
         />
       </div>
@@ -129,7 +129,7 @@
         >
         <input
           id="sourceLang"
-          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-gray-900 outline-none dark:bg-gray-700 dark:text-white"
           bind:value={sourceLang}
         />
       </div>
@@ -137,7 +137,7 @@
         <label class="text-sm" for="targetLang">Langue cible (NLLB code)</label>
         <input
           id="targetLang"
-          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-gray-900 outline-none dark:bg-gray-700 dark:text-white"
           bind:value={targetLang}
         />
       </div>
@@ -145,7 +145,7 @@
 
     <div>
       <button
-        class="rounded bg-red-500 px-4 py-2 hover:bg-red-400 disabled:opacity-50"
+        class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-400 disabled:opacity-50"
         disabled={running || $editorPath === ''}
         onclick={runTranslation}
       >
@@ -157,7 +157,7 @@
       <label class="text-sm" for="logs">Logs</label>
       <textarea
         id="logs"
-        class="min-h-60 rounded bg-gray-900 px-3 py-2 font-mono text-xs outline-none"
+        class="min-h-60 rounded bg-gray-100 px-3 py-2 font-mono text-xs text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
         readonly>{logs}</textarea
       >
     </div>
