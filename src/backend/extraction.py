@@ -488,79 +488,89 @@ class TextExtractor:
     
     def _extract_all_asterisk_groups(self, line: str) -> List[Dict[str, Any]]:
         """
-        Extrait TOUS les groupes d'astérisques de la ligne AVANT tout remplacement.
+        Extrait TOUS les groupes d'astérisques de la ligne.
         
-        Stratégie :
-        1. Parcourir la ligne et trouver TOUS les groupes possibles à tous les niveaux
-        2. Trier par taille (plus petits d'abord)
-        3. Les retourner pour traitement séquentiel
+        RÈGLE IMPORTANTE: Un groupe de niveau N ne peut être détecté QUE si
+        ses marqueurs d'ouverture et de fermeture sont EXACTEMENT de longueur N,
+        pas plus, pas moins.
         """
         all_groups = []
+        i = 0
         
-        # Pour chaque position de départ possible
-        for start in range(len(line)):
-            if line[start] != '*':
+        while i < len(line):
+            if line[i] != '*':
+                i += 1
                 continue
             
-            # Compter les astérisques d'ouverture
-            opening_count = 0
-            pos = start
-            while pos < len(line) and line[pos] == '*':
-                opening_count += 1
-                pos += 1
+            # Compter les astérisques consécutifs
+            asterisk_start = i
+            asterisk_count = 0
+            while i < len(line) and line[i] == '*':
+                asterisk_count += 1
+                i += 1
             
-            # Vérifier l'isolation AVANT
-            if start > 0 and line[start - 1] == '*':
-                continue  # Fait partie d'un groupe plus large
+            # Vérifier l'isolation AVANT (pas d'astérisque avant)
+            if asterisk_start > 0 and line[asterisk_start - 1] == '*':
+                continue
             
-            content_start = pos
-            
-            # Pour chaque niveau d'astérisques d'ouverture (1, 2, 3, ...)
-            for level in range(1, opening_count + 1):
-                # Chercher une fermeture de ce niveau
+            # Pour chaque niveau de 1 à asterisk_count, chercher une fermeture
+            for level in range(1, asterisk_count + 1):
+                content_start = asterisk_start + level
                 search_pos = content_start
                 
+                # Chercher une séquence d'exactement 'level' astérisques
                 while search_pos < len(line):
                     if line[search_pos] == '*':
-                        # Compter les astérisques de fermeture
-                        closing_count = 0
                         closing_start = search_pos
+                        closing_count = 0
                         
                         while search_pos < len(line) and line[search_pos] == '*':
                             closing_count += 1
                             search_pos += 1
                         
-                        # Si on a AU MOINS le nombre nécessaire
+                        # RÈGLE: on veut EXACTEMENT 'level' astérisques de fermeture
+                        # Vérifier si on peut en prendre exactement 'level'
                         if closing_count >= level:
-                            # Vérifier l'isolation APRÈS (seulement pour le niveau exact)
+                            # Vérifier l'isolation APRÈS
                             end_pos = closing_start + level
-                            after_valid = (end_pos >= len(line) or line[end_pos] != '*')
+                            
+                            # L'isolation après dépend du nombre d'astérisques
+                            # Si closing_count == level: pas d'astérisque après ✓
+                            # Si closing_count > level: il y a des astérisques après, c'est OK
+                            #   mais on ne prend que 'level' astérisques
+                            
+                            after_valid = True
+                            if closing_count == level:
+                                # Exactement le bon nombre, vérifier qu'il n'y a pas d'astérisque après
+                                after_valid = (end_pos >= len(line) or line[end_pos] != '*')
                             
                             if after_valid:
                                 content = line[content_start:closing_start]
-                                full_text = line[start:end_pos]
+                                full_text = line[asterisk_start:end_pos]
                                 
                                 if content:  # Ignorer les groupes vides
                                     all_groups.append({
                                         'full_text': full_text,
                                         'content': content,
                                         'level': level,
-                                        'start': start,
+                                        'start': asterisk_start,
                                         'end': end_pos,
-                                        'length': end_pos - start
+                                        'length': end_pos - asterisk_start
                                     })
                             
-                            # Ne chercher que la PREMIÈRE fermeture valide pour ce niveau
+                            # Continuer la recherche pour ce niveau (peut-être plusieurs fermetures)
+                            # Mais en pratique, on veut la PREMIÈRE fermeture valide
                             break
                     else:
                         search_pos += 1
         
-        # Éliminer les doublons (même full_text)
+        # Éliminer les doublons
         seen = set()
         unique_groups = []
         for group in all_groups:
-            if group['full_text'] not in seen:
-                seen.add(group['full_text'])
+            key = (group['start'], group['end'])
+            if key not in seen:
+                seen.add(key)
                 unique_groups.append(group)
         
         # Trier par longueur (plus petits d'abord)
@@ -736,33 +746,32 @@ class TextExtractor:
         return orphans
 
     def _extract_all_tilde_groups(self, line: str) -> List[Dict[str, Any]]:
-        """
-        Extrait TOUS les groupes de tildes avec la même logique.
-        """
+        """Même logique pour les tildes."""
         all_groups = []
+        i = 0
         
-        for start in range(len(line)):
-            if line[start] != '~':
+        while i < len(line):
+            if line[i] != '~':
+                i += 1
                 continue
             
-            opening_count = 0
-            pos = start
-            while pos < len(line) and line[pos] == '~':
-                opening_count += 1
-                pos += 1
+            tilde_start = i
+            tilde_count = 0
+            while i < len(line) and line[i] == '~':
+                tilde_count += 1
+                i += 1
             
-            if start > 0 and line[start - 1] == '~':
+            if tilde_start > 0 and line[tilde_start - 1] == '~':
                 continue
             
-            content_start = pos
-            
-            for level in range(1, opening_count + 1):
+            for level in range(1, tilde_count + 1):
+                content_start = tilde_start + level
                 search_pos = content_start
                 
                 while search_pos < len(line):
                     if line[search_pos] == '~':
-                        closing_count = 0
                         closing_start = search_pos
+                        closing_count = 0
                         
                         while search_pos < len(line) and line[search_pos] == '~':
                             closing_count += 1
@@ -770,20 +779,23 @@ class TextExtractor:
                         
                         if closing_count >= level:
                             end_pos = closing_start + level
-                            after_valid = (end_pos >= len(line) or line[end_pos] != '~')
+                            
+                            after_valid = True
+                            if closing_count == level:
+                                after_valid = (end_pos >= len(line) or line[end_pos] != '~')
                             
                             if after_valid:
                                 content = line[content_start:closing_start]
-                                full_text = line[start:end_pos]
+                                full_text = line[tilde_start:end_pos]
                                 
                                 if content:
                                     all_groups.append({
                                         'full_text': full_text,
                                         'content': content,
                                         'level': level,
-                                        'start': start,
+                                        'start': tilde_start,
                                         'end': end_pos,
-                                        'length': end_pos - start
+                                        'length': end_pos - tilde_start
                                     })
                             break
                     else:
@@ -792,8 +804,9 @@ class TextExtractor:
         seen = set()
         unique_groups = []
         for group in all_groups:
-            if group['full_text'] not in seen:
-                seen.add(group['full_text'])
+            key = (group['start'], group['end'])
+            if key not in seen:
+                seen.add(key)
                 unique_groups.append(group)
         
         unique_groups.sort(key=lambda g: g['length'])
