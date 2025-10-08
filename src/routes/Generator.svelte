@@ -3,7 +3,7 @@
   import { _ } from 'svelte-i18n';
 </script>
 
-<section class="min-h-full flex flex-col text-white">
+<section class="flex min-h-full flex-col text-white">
   <RouteHeader
     title={$_('navigation.generator')}
     description={$_('navigation.generator_description')}
@@ -12,11 +12,11 @@
   />
 
   <div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">⚡ Générateur</h2>
-    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+    <h2 class="mb-4 text-2xl font-bold">⚡ Générateur</h2>
+    <div class="rounded-xl border border-gray-700 bg-gray-800 p-6">
       <p class="text-gray-300">Module generator en cours de développement...</p>
       <div class="mt-6">
-        <h3 class="text-lg font-semibold mb-3">Architecture prévue :</h3>
+        <h3 class="mb-3 text-lg font-semibold">Architecture prévue :</h3>
         <ul class="space-y-2 text-gray-400">
           <li>🔍 Extraction Rpa/Rpyc</li>
           <li>🌐 Génération TL</li>

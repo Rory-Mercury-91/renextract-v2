@@ -20,14 +20,14 @@
 {/if}
 
 <header
-  class="bg-gray-800 text-white p-4 flex items-center justify-between border-b border-gray-700 gap-4 h-20 text-nowrap"
+  class="flex h-20 items-center justify-between gap-4 text-nowrap border-b border-gray-700 bg-gray-800 p-4 text-white"
 >
   <!-- Left: App Name + Version -->
-  <div class="flex items-center gap-4 min-w-40">
+  <div class="flex min-w-40 items-center gap-4">
     <img
       src="/assets/logo.webp"
       alt="Logo RenExtract"
-      class="w-12 h-12 object-contain rounded-xl"
+      class="h-12 w-12 rounded-xl object-contain"
     />
 
     <div>
@@ -37,10 +37,10 @@
   </div>
 
   <!-- Center: Project Bar -->
-  <div class="flex items-center gap-2 w-full justify-center">
-    <Icon icon="hugeicons:folder-01" class="w-6 h-6 min-w-6 text-yellow-500" />
+  <div class="flex w-full items-center justify-center gap-2">
+    <Icon icon="hugeicons:folder-01" class="h-6 w-6 min-w-6 text-yellow-500" />
     <input
-      class="text-sm text-gray-700 bg-slate-100 py-1 px-2 rounded-lg w-full max-w-64"
+      class="w-full max-w-64 rounded-lg bg-slate-100 px-2 py-1 text-sm text-gray-700"
       style:direction="rtl"
       value={$editorPath}
       oninput={e => {
@@ -49,7 +49,7 @@
       placeholder={$editorPath || 'Aucun projet chargé'}
     />
     <button
-      class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
+      class="rounded bg-blue-600 px-3 py-1 text-sm font-medium transition-colors hover:bg-blue-700"
       onclick={() =>
         apiService.openDialog(
           {
@@ -76,20 +76,20 @@
     <UpdateManager showSettings={true} autoCheck={true} />
 
     <button
-      class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
+      class="flex items-center gap-1 px-2 py-1 text-gray-400 transition-colors hover:text-white"
       onclick={showHelp}
       title="Aide et documentation"
     >
-      <Icon icon="hugeicons:help-square" class="w-6 h-6 text-blue-600" />
+      <Icon icon="hugeicons:help-square" class="h-6 w-6 text-blue-600" />
       {$_('app.help')}
     </button>
 
     <button
-      class="text-gray-400 hover:text-white transition-colors px-2 py-1 flex items-center gap-1"
+      class="flex items-center gap-1 px-2 py-1 text-gray-400 transition-colors hover:text-white"
       onclick={() => (showAboutModal = true)}
       title="Informations sur RenExtract"
     >
-      <Icon icon="hugeicons:information-square" class="w-6 h-6 text-blue-600" />
+      <Icon icon="hugeicons:information-square" class="h-6 w-6 text-blue-600" />
       {$_('app.about')}
     </button>
   </div>

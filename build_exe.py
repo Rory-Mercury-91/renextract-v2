@@ -176,6 +176,7 @@ def clean_external_files():
     files_to_remove = [
         Path("dist/index.html"),
         Path("dist/assets"),
+        Path("dist/favicon.ico"),
     ]
 
     for file_path in files_to_remove:

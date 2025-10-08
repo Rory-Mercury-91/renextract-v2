@@ -54,31 +54,31 @@
 </script>
 
 <nav
-  class="bg-gray-800 text-white flex flex-col border-r border-gray-700 justify-between py-4 transition-all duration-500 ease-in-out"
+  class="flex flex-col justify-between border-r border-gray-700 bg-gray-800 py-4 text-white transition-all duration-500 ease-in-out"
   class:max-w-64={!isClose}
   class:w-16={isClose}
   class:lg:w-64={!isClose}
   class:lg:w-16={isClose}
 >
-  <div class="flex flex-col gap-1 w-full">
+  <div class="flex w-full flex-col gap-1">
     {#each sections as section}
       {#if section.link !== '/translator' || $appSettings.translatorFeature}
         <Link to={section.link}>
           {#snippet children(active)}
             <div
-              class="w-full flex px-4.5 gap-3 items-center justify-start py-3 text-left hover:bg-gray-700 transition-all duration-300 relative {section.color}"
+              class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left transition-all duration-300 hover:bg-gray-700 {section.color}"
               class:bg-blue-600={active}
               class:hover:bg-blue-700={active}
             >
               <span
-                class="text-xl flex"
+                class="flex text-xl"
                 class:w-min={!isClose}
                 class:w-full={isClose}
               >
-                <Icon icon={section.icon} class="w-6 h-6" />
+                <Icon icon={section.icon} class="h-6 w-6" />
               </span>
               <span
-                class="flex-1 hidden font-bold overflow-hidden"
+                class="hidden flex-1 overflow-hidden font-bold"
                 class:opacity-0={isClose}
                 class:opacity-100={!isClose}
                 class:max-w-0={isClose}
@@ -96,12 +96,12 @@
   </div>
 
   <button
-    class="hidden lg:flex mx-auto items-center justify-center transition-all duration-500 ease-in-out bg-slate-700 hover:bg-slate-600 rounded-full p-1"
+    class="mx-auto hidden items-center justify-center rounded-full bg-slate-700 p-1 transition-all duration-500 ease-in-out hover:bg-slate-600 lg:flex"
     class:rotate-180={isClose}
     class:scale-110={isClose}
     class:scale-100={!isClose}
     onclick={() => (isClose = !isClose)}
   >
-    <Icon icon="hugeicons:arrow-left-01" class="w-8 h-8" />
+    <Icon icon="hugeicons:arrow-left-01" class="h-8 w-8" />
   </button>
 </nav>

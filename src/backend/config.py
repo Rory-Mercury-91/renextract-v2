@@ -10,7 +10,6 @@ class AppConfig:
     """Configuration de l'application"""
 
     # Configuration GitHub pour les mises à jour
-    # TODO: Modifiez ces valeurs selon votre dépôt GitHub
     GITHUB_REPO_OWNER = os.getenv('GITHUB_REPO_OWNER', 'Rory-Mercury-91')
     GITHUB_REPO_NAME = os.getenv('GITHUB_REPO_NAME', 'renextract-v2')
 
@@ -53,7 +52,8 @@ class AppConfig:
     @classmethod
     def get_github_release_url(cls) -> str:
         """Retourne l'URL de l'API GitHub pour les releases"""
-        return f"https://api.github.com/repos/{cls.GITHUB_REPO_OWNER}/{cls.GITHUB_REPO_NAME}/releases"
+        return (f"https://api.github.com/repos/"
+                f"{cls.GITHUB_REPO_OWNER}/{cls.GITHUB_REPO_NAME}/releases")
 
     @classmethod
     def get_github_latest_release_url(cls) -> str:

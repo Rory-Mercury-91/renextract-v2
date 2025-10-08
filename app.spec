@@ -59,7 +59,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon='public/favicon.ico',
     onefile=True,
     exclude_binaries=False,
 )

@@ -9,7 +9,8 @@
   "bracketSameLine": false,
   "arrowParens": "avoid",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-svelte"],
+  "tailwindStylesheet": "./resources/css/app.css",
+  "plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
   "overrides": [
     {
       "files": "*.svelte",

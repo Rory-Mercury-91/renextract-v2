@@ -3,7 +3,7 @@
   import { _ } from 'svelte-i18n';
 </script>
 
-<section class="min-h-full flex flex-col text-white">
+<section class="flex min-h-full flex-col text-white">
   <RouteHeader
     title={$_('navigation.tools')}
     description={$_('navigation.tools_description')}

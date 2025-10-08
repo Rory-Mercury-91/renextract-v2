@@ -60,21 +60,21 @@
   checkHealth();
 </script>
 
-<section class="min-h-full flex flex-col text-white">
+<section class="flex min-h-full flex-col text-white">
   <RouteHeader
     title={$_('navigation.translator')}
     description={$_('navigation.translator_description')}
     icon="hugeicons:tools"
     color="text-red-300"
   >
-    <div class="flex flex-col gap-1 items-end mr-6 text-sm text-right">
+    <div class="mr-6 flex flex-col items-end gap-1 text-right text-sm">
       <button
-        class="px-4 py-1.5 flex text-sm justify-center items-center font-bold bg-red-300 hover:opacity-65 text-slate-800 rounded-lg duration-200 transition-all gap-2"
+        class="flex items-center justify-center gap-2 rounded-lg bg-red-300 px-4 py-1.5 text-sm font-bold text-slate-800 transition-all duration-200 hover:opacity-65"
         onclick={checkHealth}
         title="Rafraîchir TranslationToolsIA"
       >
         {#if loading}
-          <Icon icon="hugeicons:refresh" class="w-4 h-4 animate-spin" />
+          <Icon icon="hugeicons:refresh" class="h-4 w-4 animate-spin" />
         {/if}
         Recharger
       </button>
@@ -101,13 +101,13 @@
     </div>
   </RouteHeader>
 
-  <div class="p-4 grid gap-4 max-w-3xl">
+  <div class="grid max-w-3xl gap-4 p-4">
     <div class="grid gap-2 md:grid-cols-2">
       <div class="flex items-center gap-2">
         <input
           id="rec"
           type="checkbox"
-          class="w-6 h-6"
+          class="h-6 w-6"
           bind:checked={recursive}
         />
         <label for="rec">Inclure les sous-dossiers</label>
@@ -116,7 +116,7 @@
         <label class="text-sm" for="modelPath">Modèle</label>
         <input
           id="modelPath"
-          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
           bind:value={modelPath}
         />
       </div>
@@ -129,7 +129,7 @@
         >
         <input
           id="sourceLang"
-          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
           bind:value={sourceLang}
         />
       </div>
@@ -137,7 +137,7 @@
         <label class="text-sm" for="targetLang">Langue cible (NLLB code)</label>
         <input
           id="targetLang"
-          class="px-3 py-2 bg-gray-100 text-black rounded outline-none"
+          class="rounded bg-gray-100 px-3 py-2 text-black outline-none"
           bind:value={targetLang}
         />
       </div>
@@ -145,7 +145,7 @@
 
     <div>
       <button
-        class="px-4 py-2 rounded bg-red-500 hover:bg-red-400 disabled:opacity-50"
+        class="rounded bg-red-500 px-4 py-2 hover:bg-red-400 disabled:opacity-50"
         disabled={running || $editorPath === ''}
         onclick={runTranslation}
       >
@@ -157,7 +157,7 @@
       <label class="text-sm" for="logs">Logs</label>
       <textarea
         id="logs"
-        class="min-h-60 px-3 py-2 bg-gray-900 rounded outline-none font-mono text-xs"
+        class="min-h-60 rounded bg-gray-900 px-3 py-2 font-mono text-xs outline-none"
         readonly>{logs}</textarea
       >
     </div>

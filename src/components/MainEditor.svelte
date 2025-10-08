@@ -25,10 +25,10 @@
   }
 </script>
 
-<div class="flex-1 flex flex-col bg-gray-900 text-white min-h-[35rem]">
+<div class="flex min-h-[35rem] flex-1 flex-col bg-gray-900 text-white">
   <!-- Header with controls -->
-  <div class="bg-gray-800 p-4 border-b border-gray-700">
-    <div class="flex items-center justify-between mb-4">
+  <div class="border-b border-gray-700 bg-gray-800 p-4">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-lg font-semibold text-blue-400">Éditeur principal</h2>
       <div class="flex items-center gap-4 text-sm">
         <span>Aucun fichier chargé</span>
@@ -43,7 +43,7 @@
           id="language-select"
           bind:value={selectedLanguage}
           on:change={handleLanguageChange}
-          class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500"
+          class="rounded border border-gray-600 bg-gray-700 px-3 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
         >
           {#each languages as language}
             <option value={language}>{language}</option>
@@ -57,7 +57,7 @@
           id="file-select"
           bind:value={selectedFile}
           on:change={handleFileChange}
-          class="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500"
+          class="rounded border border-gray-600 bg-gray-700 px-3 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
         >
           {#each files as file}
             <option value={file}>{file}</option>
@@ -69,14 +69,14 @@
 
       <div class="flex items-center gap-2">
         <button
-          class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
+          class="rounded bg-gray-700 px-3 py-1 text-sm transition-colors hover:bg-gray-600"
         >
-          <Icon icon="hugeicons:folder-01" class="w-5 h-5 text-yellow-500" />
+          <Icon icon="hugeicons:folder-01" class="h-5 w-5 text-yellow-500" />
         </button>
         <button
-          class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors"
+          class="rounded bg-gray-700 px-3 py-1 text-sm transition-colors hover:bg-gray-600"
         >
-          <Icon icon="hugeicons:floppy-disk" class="w-5 h-5 text-blue-500" />
+          <Icon icon="hugeicons:floppy-disk" class="h-5 w-5 text-blue-500" />
         </button>
       </div>
 
@@ -87,12 +87,12 @@
   </div>
 
   <!-- Code editor area -->
-  <div class="flex-1 relative">
+  <div class="relative flex-1">
     <div class="absolute inset-0 bg-gray-900">
-      <div class="h-full flex">
+      <div class="flex h-full">
         <!-- Line numbers -->
         <div
-          class="bg-gray-800 px-3 py-4 text-gray-500 text-sm font-mono border-r border-gray-700 min-w-[60px]"
+          class="min-w-[60px] border-r border-gray-700 bg-gray-800 px-3 py-4 font-mono text-sm text-gray-500"
         >
           <div class="text-right">1</div>
         </div>
@@ -101,7 +101,7 @@
         <div class="flex-1 p-4">
           <textarea
             bind:value={code}
-            class="w-full h-full bg-transparent text-gray-300 font-mono text-sm resize-none outline-none"
+            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-300 outline-none"
             placeholder="Glissez un fichier .py ici ou utilisez les contrôles ci-dessus"
           ></textarea>
         </div>
@@ -111,7 +111,7 @@
 
   <!-- Status bar -->
   <div
-    class="bg-gray-800 px-4 py-2 border-t border-gray-700 text-sm text-gray-400 flex items-center justify-between"
+    class="flex items-center justify-between border-t border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-400"
   >
     <span>Ligne 1, Colonne 1</span>
     <span>1 lignes, 0 caractères</span>

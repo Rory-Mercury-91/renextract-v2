@@ -6,11 +6,11 @@ import json
 import os
 import platform
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
 import urllib.request
-import zipfile
 from pathlib import Path
 from typing import Dict, Optional
 import requests
@@ -209,7 +209,12 @@ class UpdateManager:
             # En cas d'erreur, considérer que c'est plus récent
             return True
 
-    def download_update(self, download_url: str, progress_callback=None) -> Dict:
+    def download_update(
+        self,
+        download_url: str,
+        latest_version: str = None,
+        progress_callback=None
+    ) -> Dict:
         """
         Télécharge la mise à jour
 
@@ -225,7 +230,17 @@ class UpdateManager:
 
             # Créer un dossier temporaire
             temp_dir = tempfile.mkdtemp(prefix="update_")
-            download_path = os.path.join(temp_dir, "update.zip")
+
+            # Déterminer l'extension du fichier selon l'OS
+            if self.current_os == "windows":
+                file_extension = ".exe"
+            else:
+                file_extension = ""
+
+            # Nom du fichier de téléchargement
+            version_to_use = latest_version or self.current_version
+            download_filename = f"app-{self.current_os}-v{version_to_use}{file_extension}"
+            download_path = os.path.join(temp_dir, download_filename)
 
             # Télécharger avec une barre de progression
             def download_progress(block_num, block_size, total_size):
@@ -244,60 +259,45 @@ class UpdateManager:
                     'error': 'Le fichier de mise à jour n\'a pas été téléchargé'
                 }
 
-            # Extraire l'archive
-            extract_path = os.path.join(temp_dir, "extracted")
-            os.makedirs(extract_path, exist_ok=True)
-
-            with zipfile.ZipFile(download_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
+            # Rendre l'exécutable exécutable sur Unix
+            if self.current_os != "windows":
+                os.chmod(download_path, 0o755)
 
             return {
                 'success': True,
                 'temp_dir': temp_dir,
-                'extract_path': extract_path,
-                'download_path': download_path
+                'download_path': download_path,
+                'executable_path': download_path  # Pour compatibilité avec l'ancien code
             }
 
-        except (OSError, urllib.error.URLError, zipfile.BadZipFile) as e:
+        except (OSError, urllib.error.URLError) as e:
             print(f"DEBUG: Failed to download update: {e}")
             return {
                 'success': False,
                 'error': f'Erreur de téléchargement: {str(e)}'
             }
 
-    def install_update(self, extract_path: str) -> Dict:
+    def install_update(self, executable_path: str) -> Dict:
         """
         Installe la mise à jour
 
         Args:
-            extract_path: Chemin vers le dossier extrait
+            executable_path: Chemin vers l'exécutable téléchargé
 
         Returns:
             Dict contenant le résultat de l'installation
         """
         try:
-            print(f"DEBUG: Installing update from {extract_path}")
+            print(f"DEBUG: Installing update from {executable_path}")
 
-            # Trouver l'exécutable dans le dossier extrait
-            exe_files = []
-            for root, _, files in os.walk(extract_path):
-                for file in files:
-                    if self.current_os == "windows" and file.endswith('.exe'):
-                        exe_files.append(os.path.join(root, file))
-                    elif self.current_os != "windows" and not file.endswith('.exe'):
-                        # Vérifier si c'est un exécutable
-                        file_path = os.path.join(root, file)
-                        if os.access(file_path, os.X_OK):
-                            exe_files.append(file_path)
-
-            if not exe_files:
+            # Vérifier que l'exécutable existe
+            if not os.path.exists(executable_path):
                 return {
                     'success': False,
-                    'error': 'Aucun exécutable trouvé dans la mise à jour'
+                    'error': 'L\'exécutable de mise à jour n\'existe pas'
                 }
 
-            # Prendre le premier exécutable trouvé
-            new_exe_path = exe_files[0]
+            new_exe_path = executable_path
 
             # Déterminer le chemin de destination
             if getattr(sys, 'frozen', False):
@@ -305,26 +305,158 @@ class UpdateManager:
                 current_exe = sys.executable
                 backup_exe = current_exe + ".backup"
             else:
-                # Mode développement
-                current_exe = os.path.join(
-                    os.path.dirname(__file__), "..", "..", "app.py")
-                backup_exe = current_exe + ".backup"
+                # Mode développement - ne pas installer en dev
+                return {
+                    'success': False,
+                    'error': 'Mise à jour automatique non disponible en mode développement'
+                }
 
-            # Créer une sauvegarde de l'exécutable actuel
-            if os.path.exists(current_exe):
-                shutil.copy2(current_exe, backup_exe)
+            # Sur Windows, on ne peut pas remplacer l'exe en cours d'exécution
+            # On crée un script batch qui fait le remplacement après la fermeture
+            if self.current_os == "windows":
+                # Créer un script batch pour la mise à jour
+                update_script = os.path.join(
+                    tempfile.gettempdir(), "update_app.bat")
 
-            # Copier le nouvel exécutable
-            shutil.copy2(new_exe_path, current_exe)
+                # Créer un fichier de log
+                log_file = os.path.join(
+                    os.path.dirname(current_exe), 'update.log')
 
-            # Rendre l'exécutable exécutable sur Unix
-            if self.current_os != "windows":
+                with open(update_script, 'w', encoding='utf-8') as f:
+                    f.write('@echo off\n')
+                    f.write('chcp 65001 >nul\n')  # UTF-8
+
+                    # Rediriger la sortie vers un fichier log
+                    f.write(f'set LOG_FILE={log_file}\n')
+                    f.write(
+                        'echo ======================================== > "%LOG_FILE%"\n')
+                    f.write('echo Mise a jour - %date% %time% >> "%LOG_FILE%"\n')
+                    f.write(
+                        'echo ======================================== >> "%LOG_FILE%"\n')
+                    f.write('echo. >> "%LOG_FILE%"\n')
+
+                    f.write('echo ========================================\n')
+                    f.write('echo Mise a jour en cours...\n')
+                    f.write('echo ========================================\n')
+                    f.write('echo.\n')
+                    f.write('echo Log: %LOG_FILE%\n')
+                    f.write('echo.\n')
+
+                    # Attendre que le processus se termine complètement
+                    f.write(
+                        'echo Attente de la fermeture de l\'application... >> "%LOG_FILE%"\n')
+                    f.write('echo Attente de la fermeture de l\'application...\n')
+
+                    # Attendre que le processus soit vraiment terminé
+                    exe_name = os.path.basename(current_exe)
+                    f.write(':WAIT_EXIT\n')
+                    f.write(f'tasklist /FI "IMAGENAME eq {exe_name}" 2>NUL | '
+                            f'find /I "{exe_name}" >NUL\n')
+                    f.write('if %ERRORLEVEL%==0 (\n')
+                    f.write(
+                        '  echo Processus encore actif, attente... >> "%LOG_FILE%"\n')
+                    f.write('  echo Processus encore actif, attente...\n')
+                    f.write('  timeout /t 2 /nobreak >nul\n')
+                    f.write('  goto WAIT_EXIT\n')
+                    f.write(')\n')
+                    f.write(
+                        'echo Processus completement termine! >> "%LOG_FILE%"\n')
+                    f.write('echo Processus completement termine!\n')
+                    f.write('timeout /t 2 /nobreak >nul\n')
+
+                    # Vérifier que le fichier n'est plus utilisé
+                    f.write(':WAIT_LOOP\n')
+                    f.write(
+                        f'copy /Y "{new_exe_path}" "{current_exe}" >nul 2>&1\n')
+                    f.write('if errorlevel 1 (\n')
+                    f.write(
+                        '  echo Fichier encore en cours d\'utilisation, nouvelle tentative...\n')
+                    f.write('  timeout /t 2 /nobreak >nul\n')
+                    f.write('  goto WAIT_LOOP\n')
+                    f.write(')\n')
+
+                    f.write('echo Copie reussie! >> "%LOG_FILE%"\n')
+                    f.write('echo Copie reussie!\n')
+                    f.write(
+                        f'if exist "{backup_exe}" del "{backup_exe}" >nul 2>&1\n')
+
+                    # Supprimer le fichier temporaire
+                    f.write(
+                        f'if exist "{new_exe_path}" del "{new_exe_path}" >nul 2>&1\n')
+
+                    f.write('echo.\n')
+                    f.write(
+                        'echo Mise a jour installee avec succes! >> "%LOG_FILE%"\n')
+                    f.write('echo Mise a jour installee avec succes!\n')
+
+                    f.write('echo.\n')
+                    f.write('echo ========================================\n')
+                    f.write('echo MISE A JOUR TERMINEE!\n')
+                    f.write('echo ========================================\n')
+                    f.write('echo.\n')
+                    f.write('echo Veuillez relancer l\'application manuellement.\n')
+                    f.write('echo.\n')
+                    f.write(f'echo Chemin: {current_exe}\n')
+                    f.write(f'echo Chemin: {current_exe} >> "%LOG_FILE%"\n')
+                    f.write('echo.\n')
+                    f.write(
+                        'echo Appuyez sur une touche pour fermer cette fenetre...\n')
+                    f.write('pause >nul\n')
+
+                    # Supprimer le script
+                    f.write(f'del "{update_script}" >nul 2>&1\n')
+                    f.write('exit\n')
+
+                # Lancer le script en arrière-plan et fermer l'app
+                # Pour le debug, on peut voir la fenêtre cmd en commentant CREATE_NO_WINDOW
+                subprocess.Popen(
+                    ['cmd', '/c', update_script],
+                    # Décommenter pour cacher la fenêtre
+                    # creationflags=subprocess.CREATE_NO_WINDOW,
+                    close_fds=True
+                )
+
+                return {
+                    'success': True,
+                    'message': 'Mise à jour installée. L\'application va redémarrer.',
+                    'should_exit': True  # Signal pour fermer l'app
+                }
+
+            else:
+                # Sur Unix, on peut tenter de remplacer directement
+                # Créer une sauvegarde
+                if os.path.exists(current_exe):
+                    shutil.copy2(current_exe, backup_exe)
+
+                # Copier le nouvel exécutable
+                shutil.copy2(new_exe_path, current_exe)
+
+                # Rendre l'exécutable exécutable
                 os.chmod(current_exe, 0o755)
 
-            return {
-                'success': True,
-                'message': 'Mise à jour installée avec succès. Redémarrez l\'application.'
-            }
+                # Créer un script shell pour relancer l'app
+                update_script = os.path.join(
+                    tempfile.gettempdir(), "update_app.sh")
+
+                with open(update_script, 'w', encoding='utf-8') as f:
+                    f.write('#!/bin/bash\n')
+                    f.write('sleep 2\n')
+                    f.write(f'"{current_exe}" &\n')
+                    f.write(f'rm "{update_script}"\n')
+
+                os.chmod(update_script, 0o755)
+
+                # Lancer le script
+                subprocess.Popen(
+                    [update_script],
+                    start_new_session=True
+                )
+
+                return {
+                    'success': True,
+                    'message': 'Mise à jour installée. L\'application va redémarrer.',
+                    'should_exit': True
+                }
 
         except (OSError, shutil.Error) as e:
             print(f"DEBUG: Failed to install update: {e}")
