@@ -24,6 +24,7 @@ from src.backend.backup_manager import BackupManager
 from src.backend.update_manager import UpdateManager
 from src.backend.config import AppConfig
 from src.backend.project import project_manager
+from src.backend.extraction import extract_texts_from_file
 
 # Load environment variables
 load_dotenv()
@@ -313,6 +314,60 @@ def delete_backup(backup_id):
         })
 
     except (OSError, KeyError, FileNotFoundError) as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/backups/create', methods=['POST'])
+def create_backup():
+    """Crée une nouvelle sauvegarde"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        source_path = data.get('source_path')
+        backup_type = data.get('backup_type', 'security')
+        description = data.get('description', '')
+
+        if not source_path:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin source requis'
+            }), 400
+
+        if not os.path.exists(source_path):
+            return jsonify({
+                'success': False,
+                'error': f'Fichier source introuvable: {source_path}'
+            }), 404
+
+        # Créer le backup
+        result = backup_manager.create_backup(
+            source_path=source_path,
+            backup_type=backup_type,
+            description=description
+        )
+
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'backup_id': result.get('backup_id'),
+                'backup_path': result.get('backup_path'),
+                'message': 'Sauvegarde créée avec succès'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Erreur lors de la création du backup')
+            }), 500
+
+    except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
@@ -1252,6 +1307,278 @@ def get_project_state():
             'success': True,
             'state': state
         })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ==================== EXTRACTION ENDPOINTS ====================
+
+@app.route('/api/extraction/extract', methods=['POST'])
+def extract_texts():
+    """Extrait les textes d'un fichier Ren'Py"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        file_content = data.get('file_content', [])
+        filepath = data.get('filepath', '')
+        detect_duplicates = data.get('detect_duplicates', True)
+
+        if not file_content or not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Contenu de fichier et chemin requis'
+            }), 400
+
+        # Lancer l'extraction
+        result = extract_texts_from_file(file_content, filepath, detect_duplicates)
+
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'result': result['result'],
+                'extraction_time': result['extraction_time']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/extraction/validate-file', methods=['POST'])
+def validate_extraction_file():
+    """Valide un fichier pour l'extraction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        filepath = data.get('filepath', '')
+        if not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de fichier requis'
+            }), 400
+
+        # Validation basique
+        if not os.path.exists(filepath):
+            return jsonify({
+                'success': False,
+                'validation': {
+                    'valid': False,
+                    'message': 'Fichier non trouvé'
+                }
+            })
+
+        if not filepath.lower().endswith('.rpy'):
+            return jsonify({
+                'success': False,
+                'validation': {
+                    'valid': False,
+                    'message': 'Type de fichier non supporté. Veuillez sélectionner un fichier .rpy.'
+                }
+            })
+
+        file_size = os.path.getsize(filepath)
+        max_size_mb = 50
+        max_size_bytes = max_size_mb * 1024 * 1024
+
+        if file_size > max_size_bytes:
+            return jsonify({
+                'success': False,
+                'validation': {
+                    'valid': False,
+                    'message': f'Le fichier est trop volumineux ({file_size / (1024*1024):.1f} Mo). La taille maximale est de {max_size_mb} Mo.'
+                }
+            })
+
+        if file_size == 0:
+            return jsonify({
+                'success': False,
+                'validation': {
+                    'valid': False,
+                    'message': 'Le fichier est vide.'
+                }
+            })
+
+        return jsonify({
+            'success': True,
+            'validation': {
+                'valid': True,
+                'message': 'Fichier valide',
+                'size': file_size,
+                'filename': os.path.basename(filepath)
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/extraction/get-settings', methods=['GET'])
+def get_extraction_settings():
+    """Obtient les paramètres d'extraction actuels"""
+    try:
+        settings = {
+            'detect_duplicates': True,  # Valeur par défaut
+            'code_prefix': 'RENPY_CODE_001',
+            'asterisk_prefix': 'RENPY_ASTERISK_001',
+            'tilde_prefix': 'RENPY_TILDE_001',
+            'empty_prefix': 'RENPY_EMPTY'
+        }
+
+        return jsonify({
+            'success': True,
+            'settings': settings
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/extraction/set-settings', methods=['POST'])
+def set_extraction_settings():
+    """Définit les paramètres d'extraction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        # Pour l'instant, on retourne juste un succès
+        # Dans une version future, on pourrait sauvegarder ces paramètres
+        return jsonify({
+            'success': True,
+            'message': 'Paramètres d\'extraction mis à jour'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/extraction/open-file', methods=['POST'])
+def open_extraction_file():
+    """Ouvre un fichier avec l'application système par défaut"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        filepath = data.get('filepath', '')
+        if not filepath:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de fichier requis'
+            }), 400
+
+        if not os.path.exists(filepath):
+            return jsonify({
+                'success': False,
+                'error': 'Fichier non trouvé'
+            }), 404
+
+        # Ouvrir le fichier avec l'application système par défaut
+        try:
+            if os.name == 'nt':  # Windows
+                os.startfile(filepath)
+            elif sys.platform == 'darwin':  # macOS
+                subprocess.call(['open', filepath])
+            else:  # Linux
+                subprocess.call(['xdg-open', filepath])
+
+            return jsonify({
+                'success': True,
+                'message': f'Fichier ouvert: {os.path.basename(filepath)}'
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Impossible d\'ouvrir le fichier: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/extraction/open-folder', methods=['POST'])
+def open_extraction_folder():
+    """Ouvre un dossier avec l'explorateur de fichiers système"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Données JSON manquantes'
+            }), 400
+
+        folderpath = data.get('folderpath', '')
+        if not folderpath:
+            return jsonify({
+                'success': False,
+                'error': 'Chemin de dossier requis'
+            }), 400
+
+        if not os.path.exists(folderpath):
+            return jsonify({
+                'success': False,
+                'error': 'Dossier non trouvé'
+            }), 404
+
+        # Ouvrir le dossier avec l'explorateur de fichiers
+        try:
+            if os.name == 'nt':  # Windows
+                os.startfile(folderpath)
+            elif sys.platform == 'darwin':  # macOS
+                subprocess.call(['open', folderpath])
+            else:  # Linux
+                subprocess.call(['xdg-open', folderpath])
+
+            return jsonify({
+                'success': True,
+                'message': f'Dossier ouvert: {os.path.basename(folderpath)}'
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Impossible d\'ouvrir le dossier: {str(e)}'
+            }), 500
 
     except Exception as e:
         return jsonify({

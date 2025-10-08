@@ -461,5 +461,233 @@ export const apiService = {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  },
+
+  // ==================== BACKUPS ====================
+
+  async createBackup(sourcePath: string, backupType: string = 'security', description: string = ''): Promise<{
+    success: boolean;
+    backup_id?: string;
+    backup_path?: string;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/backups/create', {
+        source_path: sourcePath,
+        backup_type: backupType,
+        description: description
+      });
+      return response.data as {
+        success: boolean;
+        backup_id?: string;
+        backup_path?: string;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Create Backup Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  // ==================== EXTRACTION ====================
+
+  async extractTexts(fileContent: string[], filepath: string, detectDuplicates: boolean = true): Promise<{
+    success: boolean;
+    result?: {
+      dialogue_file: string;
+      doublons_file?: string;
+      asterix_file?: string;
+      positions_file: string;
+      output_folder: string;
+      extracted_count: number;
+      asterix_count: number;
+      tilde_count: number;
+      empty_count: number;
+      duplicate_count: number;
+    };
+    extraction_time?: number;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/extract', {
+        file_content: fileContent,
+        filepath: filepath,
+        detect_duplicates: detectDuplicates
+      });
+      return response.data as {
+        success: boolean;
+        result?: {
+          dialogue_file: string;
+          doublons_file?: string;
+          asterix_file?: string;
+          positions_file: string;
+          output_folder: string;
+          extracted_count: number;
+          asterix_count: number;
+          tilde_count: number;
+          empty_count: number;
+          duplicate_count: number;
+        };
+        extraction_time?: number;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Extract Texts Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async validateExtractionFile(filepath: string): Promise<{
+    success: boolean;
+    validation?: {
+      valid: boolean;
+      message: string;
+      size?: number;
+      filename?: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/validate-file', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        validation?: {
+          valid: boolean;
+          message: string;
+          size?: number;
+          filename?: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validate Extraction File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getExtractionSettings(): Promise<{
+    success: boolean;
+    settings?: {
+      detect_duplicates: boolean;
+      code_prefix: string;
+      asterisk_prefix: string;
+      tilde_prefix: string;
+      empty_prefix: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await api.get('/extraction/get-settings');
+      return response.data as {
+        success: boolean;
+        settings?: {
+          detect_duplicates: boolean;
+          code_prefix: string;
+          asterisk_prefix: string;
+          tilde_prefix: string;
+          empty_prefix: string;
+        };
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Get Extraction Settings Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async setExtractionSettings(settings: {
+    detect_duplicates?: boolean;
+    code_prefix?: string;
+    asterisk_prefix?: string;
+    tilde_prefix?: string;
+    empty_prefix?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/set-settings', settings);
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Set Extraction Settings Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openExtractionFile(filepath: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/open-file', {
+        filepath: filepath
+      });
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Open Extraction File Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async openExtractionFolder(folderpath: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await api.post('/extraction/open-folder', {
+        folderpath: folderpath
+      });
+      return response.data as {
+        success: boolean;
+        message?: string;
+        error?: string;
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Open Extraction Folder Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 };
