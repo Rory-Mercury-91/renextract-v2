@@ -28,6 +28,68 @@ export interface BackupListResponse {
   error?: string;
 }
 
+// Interfaces pour la validation de reconstruction
+export interface FileValidation {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface ValidationSummary {
+  total_expected: number;
+  total_found: number;
+  errors: string[];
+}
+
+export interface ReconstructionValidation {
+  overall_valid: boolean;
+  files_validated: Record<string, FileValidation>;
+  summary: ValidationSummary;
+}
+
+// Interfaces pour la cohérence
+export interface CoherenceResult {
+  rapport_path: string;
+  stats: {
+    files_analyzed: number;
+    total_issues: number;
+    issues_by_type: Record<string, number>;
+    issues_by_severity: Record<string, number>;
+  };
+  issues: Array<{
+    file: string;
+    line_number: number;
+    type: string;
+    severity: 'error' | 'warning' | 'info';
+    message: string;
+    old_line: string;
+    new_line: string;
+  }>;
+  analysis_time: number;
+}
+
+export interface CoherenceOptions {
+  check_variables: boolean;
+  check_tags: boolean;
+  check_untranslated: boolean;
+  check_ellipsis: boolean;
+  check_escape_sequences: boolean;
+  check_percentages: boolean;
+  check_quotations: boolean;
+  check_parentheses: boolean;
+  check_syntax: boolean;
+  check_deepl_ellipsis: boolean;
+  check_isolated_percent: boolean;
+  check_french_quotes: boolean;
+  check_line_structure: boolean;
+  custom_exclusions: string[];
+}
+
+export interface SelectionInfo {
+  is_all_files: boolean;
+  selected_option?: string;
+}
+
 export interface BackupActionResponse {
   success: boolean;
   message?: string;
@@ -84,7 +146,7 @@ export const apiService = {
         }
         return result;
       }
-      // eslint-disable-next-line no-console
+       
       console.error('Open Dialog Error:', error);
       return {
         success: false,
@@ -150,7 +212,7 @@ export const apiService = {
         path: response.data.path as string | undefined
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Save Dialog Error:', error);
       return {
         success: false,
@@ -168,7 +230,7 @@ export const apiService = {
       const response = await api.get(`/backups?${params.toString()}`);
       return response.data as BackupListResponse;
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Get Backups Error:', error);
       return {
         success: false,
@@ -182,7 +244,7 @@ export const apiService = {
       const response = await api.post(`/backups/${backupId}/restore`);
       return response.data as BackupActionResponse;
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Restore Backup Error:', error);
       return {
         success: false,
@@ -198,7 +260,7 @@ export const apiService = {
       });
       return response.data as BackupActionResponse;
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Restore Backup To Error:', error);
       return {
         success: false,
@@ -212,7 +274,7 @@ export const apiService = {
       const response = await api.delete(`/backups/${backupId}`);
       return response.data as BackupActionResponse;
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Delete Backup Error:', error);
       return {
         success: false,
@@ -226,7 +288,7 @@ export const apiService = {
       const response = await api.post('/quit');
       return response.data as {success: boolean, message?: string, error?: string};
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Quit Application Error:', error);
       return {
         success: false,
@@ -250,7 +312,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Validate Project Error:', error);
       return {
         success: false,
@@ -275,7 +337,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Find Project Root Error:', error);
       return {
         success: false,
@@ -297,7 +359,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Scan Project Languages Error:', error);
       return {
         success: false,
@@ -328,7 +390,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Scan Language Files Error:', error);
       return {
         success: false,
@@ -355,7 +417,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Load File Content Error:', error);
       return {
         success: false,
@@ -389,7 +451,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Get Project Summary Error:', error);
       return {
         success: false,
@@ -416,7 +478,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Set Current Project Error:', error);
       return {
         success: false,
@@ -428,7 +490,7 @@ export const apiService = {
   async getProjectState(): Promise<{
     success: boolean;
     state?: {
-      mode: string;
+      mode: 'project' | 'single_file';
       project_path: string | null;
       language: string | null;
       current_file: string | null;
@@ -443,7 +505,7 @@ export const apiService = {
       return response.data as {
         success: boolean;
         state?: {
-          mode: string;
+          mode: 'project' | 'single_file';
           project_path: string | null;
           language: string | null;
           current_file: string | null;
@@ -454,7 +516,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Get Project State Error:', error);
       return {
         success: false,
@@ -486,7 +548,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Create Backup Error:', error);
       return {
         success: false,
@@ -538,7 +600,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Extract Texts Error:', error);
       return {
         success: false,
@@ -572,7 +634,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Validate Extraction File Error:', error);
       return {
         success: false,
@@ -606,7 +668,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Get Extraction Settings Error:', error);
       return {
         success: false,
@@ -634,7 +696,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Set Extraction Settings Error:', error);
       return {
         success: false,
@@ -658,7 +720,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Open Extraction File Error:', error);
       return {
         success: false,
@@ -682,7 +744,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Open Extraction Folder Error:', error);
       return {
         success: false,
@@ -700,15 +762,7 @@ export const apiService = {
     tildeCount: number = 0
   ): Promise<{
     success: boolean;
-    validation?: {
-      overall_valid: boolean;
-      files_validated: Record<string, any>;
-      summary: {
-        total_expected: number;
-        total_found: number;
-        errors: string[];
-      };
-    };
+    validation?: ReconstructionValidation;
     error?: string;
   }> {
     try {
@@ -720,19 +774,11 @@ export const apiService = {
       });
       return response.data as {
         success: boolean;
-        validation?: {
-          overall_valid: boolean;
-          files_validated: Record<string, any>;
-          summary: {
-            total_expected: number;
-            total_found: number;
-            errors: string[];
-          };
-        };
+        validation?: ReconstructionValidation;
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Validate Reconstruction Files Error:', error);
       return {
         success: false,
@@ -758,7 +804,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Fix Translation Errors Error:', error);
       return {
         success: false,
@@ -792,7 +838,7 @@ export const apiService = {
         error?: string;
       };
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('Reconstruct File Error:', error);
       return {
         success: false,
@@ -806,15 +852,15 @@ export const apiService = {
   async checkCoherence(
     targetPath: string,
     returnDetails: boolean = true,
-    selectionInfo?: any
-  ): Promise<{ success: boolean; result?: any; error?: string; }> {
+    selectionInfo?: SelectionInfo
+  ): Promise<{ success: boolean; result?: CoherenceResult; error?: string; }> {
     try {
       const response = await api.post('/coherence/check', {
         target_path: targetPath,
         return_details: returnDetails,
         selection_info: selectionInfo
       });
-      return response.data as { success: boolean; result?: any; error?: string; };
+      return response.data as { success: boolean; result?: CoherenceResult; error?: string; };
     } catch (error) {
       console.error('Check Coherence Error:', error);
       return {
@@ -824,10 +870,10 @@ export const apiService = {
     }
   },
 
-  async getCoherenceOptions(): Promise<{ success: boolean; options?: any; error?: string; }> {
+  async getCoherenceOptions(): Promise<{ success: boolean; options?: CoherenceOptions; error?: string; }> {
     try {
       const response = await api.get('/coherence/options');
-      return response.data as { success: boolean; options?: any; error?: string; };
+      return response.data as { success: boolean; options?: CoherenceOptions; error?: string; };
     } catch (error) {
       console.error('Get Coherence Options Error:', error);
       return {
@@ -837,7 +883,7 @@ export const apiService = {
     }
   },
 
-  async setCoherenceOptions(options: any): Promise<{ success: boolean; message?: string; error?: string; }> {
+  async setCoherenceOptions(options: Partial<CoherenceOptions>): Promise<{ success: boolean; message?: string; error?: string; }> {
     try {
       const response = await api.post('/coherence/options', { options });
       return response.data as { success: boolean; message?: string; error?: string; };

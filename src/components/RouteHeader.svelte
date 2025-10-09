@@ -14,7 +14,9 @@
   const { title, description, icon, color, children }: Props = $props();
 </script>
 
-<div class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+<div
+  class="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+>
   <div class="items-center justify-between" class:flex={title !== 'Paramètres'}>
     <div class="p-6">
       <div class="flex items-center gap-3">

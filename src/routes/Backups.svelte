@@ -45,7 +45,7 @@
 
       if (result.success) {
         backups = result.backups || [];
-        console.log(backups);
+        console.debug(backups);
         filteredBackups = backups;
         updateStatistics();
         updateGameFilter();
@@ -290,7 +290,9 @@
       </div>
       <div class="grid grid-cols-3 gap-6">
         <div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Sauvegardes totales</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Sauvegardes totales
+          </p>
           <p class="text-2xl font-bold">{totalBackups}</p>
         </div>
         <div>
@@ -308,7 +310,9 @@
 
     <!-- Filtres -->
     <div class="mb-4 rounded-lg p-6">
-      <h2 class="mb-4 text-lg font-semibold text-blue-600 dark:text-blue-400">🔍 Filtres</h2>
+      <h2 class="mb-4 text-lg font-semibold text-blue-600 dark:text-blue-400">
+        🔍 Filtres
+      </h2>
       <div class="grid grid-cols-2 gap-6">
         <div>
           <label for="game-filter" class="mb-2 block text-sm font-medium"
@@ -477,7 +481,9 @@
   </div>
 
   <!-- Footer / Status -->
-  <div class="border-t border-gray-300 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800">
+  <div
+    class="border-t border-gray-300 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
+  >
     <p class="text-sm text-gray-400">📊 État : {statusMessage}</p>
   </div>
 </div>

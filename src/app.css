@@ -43,28 +43,28 @@
   }
 
   /* Scrollbar personnalisée - Dark Mode */
-  [data-theme="dark"] ::-webkit-scrollbar-track {
+  [data-theme='dark'] ::-webkit-scrollbar-track {
     background: #1e293b;
   }
 
-  [data-theme="dark"] ::-webkit-scrollbar-thumb {
+  [data-theme='dark'] ::-webkit-scrollbar-thumb {
     background: #475569;
   }
 
-  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  [data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
   }
 
-  [data-theme="dark"] ::-webkit-scrollbar-thumb:active {
+  [data-theme='dark'] ::-webkit-scrollbar-thumb:active {
     background: #94a3b8;
   }
 
-  [data-theme="dark"] ::-webkit-scrollbar-corner {
+  [data-theme='dark'] ::-webkit-scrollbar-corner {
     background: #1e293b;
   }
 
   /* Pour Firefox - Dark Mode */
-  [data-theme="dark"] * {
+  [data-theme='dark'] * {
     scrollbar-color: #475569 #1e293b;
   }
 

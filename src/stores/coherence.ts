@@ -1,34 +1,13 @@
 // src/stores/coherence.ts
 // Store pour gérer l'état de la vérification de cohérence
 
-import { apiService } from '$lib/api';
+import { apiService, type CoherenceResult, type SelectionInfo } from '$lib/api';
 import { derived, get, writable } from 'svelte/store';
 import { appSettings } from './app';
 
-// Interfaces pour la cohérence
-export interface CoherenceIssue {
-  file: string;
-  line_number: number;
-  type: string;
-  severity: 'error' | 'warning' | 'info';
-  message: string;
-  old_line: string;
-  new_line: string;
-}
-
-export interface CoherenceStats {
-  files_analyzed: number;
-  total_issues: number;
-  issues_by_type: Record<string, number>;
-  issues_by_severity: Record<string, number>;
-}
-
-export interface CoherenceResult {
-  rapport_path: string;
-  stats: CoherenceStats;
-  issues: CoherenceIssue[];
-  analysis_time: number;
-}
+// Interfaces pour la cohérence (utilise celles de l'API)
+export type CoherenceIssue = CoherenceResult['issues'][0];
+export type CoherenceStats = CoherenceResult['stats'];
 
 export interface CoherenceOptions {
   check_variables: boolean;
@@ -52,7 +31,7 @@ const initialCoherenceState = {
   // État de vérification
   isChecking: false,
   checkProgress: '',
-  
+
   // Options de vérification
   options: {
     check_variables: true,
@@ -68,21 +47,21 @@ const initialCoherenceState = {
     check_isolated_percent: true,
     check_french_quotes: true,
     check_line_structure: true,
-    custom_exclusions: ['OK', 'Menu', 'Continue', 'Yes', 'No']
+    custom_exclusions: ['OK', 'Menu', 'Continue', 'Yes', 'No'],
   } as CoherenceOptions,
-  
+
   // Résultats
   lastResult: null as CoherenceResult | null,
   lastError: null as string | null,
-  
+
   // Statistiques
   totalChecks: 0,
   successfulChecks: 0,
   failedChecks: 0,
-  
+
   // Fichier en cours de vérification
   currentTarget: null as string | null,
-  selectionInfo: null as any
+  selectionInfo: null as SelectionInfo | null,
 };
 
 // Store principal
@@ -90,11 +69,26 @@ export const coherenceStore = writable(initialCoherenceState);
 
 // Stores dérivés
 export const isChecking = derived(coherenceStore, $state => $state.isChecking);
-export const checkProgress = derived(coherenceStore, $state => $state.checkProgress);
-export const coherenceOptions = derived(coherenceStore, $state => $state.options);
-export const lastCoherenceResult = derived(coherenceStore, $state => $state.lastResult);
-export const lastCoherenceError = derived(coherenceStore, $state => $state.lastError);
-export const currentCoherenceTarget = derived(coherenceStore, $state => $state.currentTarget);
+export const checkProgress = derived(
+  coherenceStore,
+  $state => $state.checkProgress
+);
+export const coherenceOptions = derived(
+  coherenceStore,
+  $state => $state.options
+);
+export const lastCoherenceResult = derived(
+  coherenceStore,
+  $state => $state.lastResult
+);
+export const lastCoherenceError = derived(
+  coherenceStore,
+  $state => $state.lastError
+);
+export const currentCoherenceTarget = derived(
+  coherenceStore,
+  $state => $state.currentTarget
+);
 
 // Actions de cohérence
 export const coherenceActions = {
@@ -107,9 +101,9 @@ export const coherenceActions = {
       if (response.success && response.options) {
         coherenceStore.update(state => ({
           ...state,
-          options: { ...state.options, ...response.options }
+          options: { ...state.options, ...response.options },
         }));
-        console.log('✅ Options de cohérence chargées');
+        console.info('✅ Options de cohérence chargées');
       }
     } catch (error) {
       console.error('Erreur chargement options cohérence:', error);
@@ -123,12 +117,12 @@ export const coherenceActions = {
     try {
       coherenceStore.update(state => ({
         ...state,
-        options: { ...state.options, ...options }
+        options: { ...state.options, ...options },
       }));
 
       const response = await apiService.setCoherenceOptions(options);
       if (response.success) {
-        console.log('✅ Options de cohérence sauvegardées');
+        console.info('✅ Options de cohérence sauvegardées');
         return true;
       } else {
         console.error('❌ Erreur sauvegarde options:', response.error);
@@ -145,7 +139,9 @@ export const coherenceActions = {
    */
   async quickCheckFile(filePath: string): Promise<boolean> {
     if (!filePath || !filePath.trim()) {
-      console.error('❌ Chemin de fichier manquant pour la vérification rapide');
+      console.error(
+        '❌ Chemin de fichier manquant pour la vérification rapide'
+      );
       return false;
     }
 
@@ -156,10 +152,10 @@ export const coherenceActions = {
         isChecking: true,
         checkProgress: 'Vérification rapide en cours...',
         currentTarget: filePath,
-        lastError: null
+        lastError: null,
       }));
 
-      console.log(`🔍 Vérification rapide: ${filePath}`);
+      console.debug(`🔍 Vérification rapide: ${filePath}`);
 
       // Lancer la vérification
       const response = await apiService.checkCoherence(filePath, true);
@@ -170,32 +166,36 @@ export const coherenceActions = {
           ...state,
           isChecking: false,
           checkProgress: 'Vérification terminée',
-          lastResult: response.result,
+          lastResult: response.result || null,
           lastError: null,
           totalChecks: state.totalChecks + 1,
-          successfulChecks: state.successfulChecks + 1
+          successfulChecks: state.successfulChecks + 1,
         }));
 
-        console.log('✅ Vérification rapide réussie');
-        
+        console.info('✅ Vérification rapide réussie');
+
         // Afficher une notification selon le résultat
         const stats = response.result.stats;
         const totalIssues = stats.total_issues;
-        
+
         if (totalIssues === 0) {
-          console.log('✅ Aucun problème détecté');
+          console.info('✅ Aucun problème détecté');
         } else {
-          const distinctTypes = Object.values(stats.issues_by_type).filter(count => count > 0).length;
-          console.log(`⚠️ ${totalIssues} erreur(s) détectée(s) sur ${distinctTypes} type(s)`);
+          const distinctTypes = Object.values(stats.issues_by_type).filter(
+            count => typeof count === 'number' && count > 0
+          ).length;
+          console.warn(
+            `⚠️ ${totalIssues} erreur(s) détectée(s) sur ${distinctTypes} type(s)`
+          );
         }
-        
+
         // Ouverture automatique du rapport si activée
         const settings = get(appSettings);
         if (settings.autoOpenings.reports && response.result.rapport_path) {
-          console.log('📄 Ouverture automatique du rapport de cohérence...');
+          console.info('📄 Ouverture automatique du rapport de cohérence...');
           await apiService.openCoherenceReport(response.result.rapport_path);
         }
-        
+
         return true;
       } else {
         // Erreur
@@ -205,7 +205,7 @@ export const coherenceActions = {
           checkProgress: 'Erreur lors de la vérification',
           lastError: response.error || 'Erreur inconnue',
           totalChecks: state.totalChecks + 1,
-          failedChecks: state.failedChecks + 1
+          failedChecks: state.failedChecks + 1,
         }));
 
         console.error('❌ Erreur vérification rapide:', response.error);
@@ -213,14 +213,15 @@ export const coherenceActions = {
       }
     } catch (error) {
       // Erreur exceptionnelle
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       coherenceStore.update(state => ({
         ...state,
         isChecking: false,
         checkProgress: 'Erreur exceptionnelle',
         lastError: errorMessage,
         totalChecks: state.totalChecks + 1,
-        failedChecks: state.failedChecks + 1
+        failedChecks: state.failedChecks + 1,
       }));
 
       console.error('❌ Erreur exceptionnelle vérification:', error);
@@ -231,9 +232,12 @@ export const coherenceActions = {
   /**
    * Lance une analyse complète de cohérence (onglet Cohérence)
    */
-  async analyzeCoherence(targetPath: string, selectionInfo?: any): Promise<boolean> {
+  async analyzeCoherence(
+    targetPath: string,
+    selectionInfo?: SelectionInfo
+  ): Promise<boolean> {
     if (!targetPath || !targetPath.trim()) {
-      console.error('❌ Chemin cible manquant pour l\'analyse');
+      console.error("❌ Chemin cible manquant pour l'analyse");
       return false;
     }
 
@@ -244,14 +248,18 @@ export const coherenceActions = {
         isChecking: true,
         checkProgress: 'Analyse de cohérence en cours...',
         currentTarget: targetPath,
-        selectionInfo,
-        lastError: null
+        selectionInfo: selectionInfo || null,
+        lastError: null,
       }));
 
-      console.log(`🔍 Analyse cohérence: ${targetPath}`);
+      console.debug(`🔍 Analyse cohérence: ${targetPath}`);
 
       // Lancer l'analyse
-      const response = await apiService.checkCoherence(targetPath, true, selectionInfo);
+      const response = await apiService.checkCoherence(
+        targetPath,
+        true,
+        selectionInfo
+      );
 
       if (response.success && response.result) {
         // Succès
@@ -259,43 +267,49 @@ export const coherenceActions = {
           ...state,
           isChecking: false,
           checkProgress: 'Analyse terminée',
-          lastResult: response.result,
+          lastResult: response.result || null,
           lastError: null,
           totalChecks: state.totalChecks + 1,
-          successfulChecks: state.successfulChecks + 1
+          successfulChecks: state.successfulChecks + 1,
         }));
 
-        console.log('✅ Analyse de cohérence réussie');
-        
+        console.info('✅ Analyse de cohérence réussie');
+
         // Afficher le résumé
         const stats = response.result.stats;
         const totalIssues = stats.total_issues;
         const filesAnalyzed = stats.files_analyzed;
-        
+
         if (totalIssues === 0) {
-          console.log(`✅ Analyse terminée - ${filesAnalyzed} fichier(s), aucun problème détecté`);
+          console.info(
+            `✅ Analyse terminée - ${filesAnalyzed} fichier(s), aucun problème détecté`
+          );
         } else {
-          const distinctTypes = Object.values(stats.issues_by_type).filter(count => count > 0).length;
-          console.log(`⚠️ Analyse terminée - ${filesAnalyzed} fichier(s), ${totalIssues} problème(s), ${distinctTypes} type(s)`);
+          const distinctTypes = Object.values(stats.issues_by_type).filter(
+            count => typeof count === 'number' && count > 0
+          ).length;
+          console.warn(
+            `⚠️ Analyse terminée - ${filesAnalyzed} fichier(s), ${totalIssues} problème(s), ${distinctTypes} type(s)`
+          );
         }
-        
+
         // Ouverture automatique du rapport si activée
         const settings = get(appSettings);
         if (settings.autoOpenings.reports && response.result.rapport_path) {
-          console.log('📄 Ouverture automatique du rapport de cohérence...');
+          console.info('📄 Ouverture automatique du rapport de cohérence...');
           await apiService.openCoherenceReport(response.result.rapport_path);
         }
-        
+
         return true;
       } else {
         // Erreur
         coherenceStore.update(state => ({
           ...state,
           isChecking: false,
-          checkProgress: 'Erreur lors de l\'analyse',
+          checkProgress: "Erreur lors de l'analyse",
           lastError: response.error || 'Erreur inconnue',
           totalChecks: state.totalChecks + 1,
-          failedChecks: state.failedChecks + 1
+          failedChecks: state.failedChecks + 1,
         }));
 
         console.error('❌ Erreur analyse cohérence:', response.error);
@@ -303,14 +317,15 @@ export const coherenceActions = {
       }
     } catch (error) {
       // Erreur exceptionnelle
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       coherenceStore.update(state => ({
         ...state,
         isChecking: false,
         checkProgress: 'Erreur exceptionnelle',
         lastError: errorMessage,
         totalChecks: state.totalChecks + 1,
-        failedChecks: state.failedChecks + 1
+        failedChecks: state.failedChecks + 1,
       }));
 
       console.error('❌ Erreur exceptionnelle analyse:', error);
@@ -325,9 +340,11 @@ export const coherenceActions = {
     const currentState = get(coherenceStore);
     if (currentState.lastResult?.rapport_path) {
       try {
-        const response = await apiService.openCoherenceReport(currentState.lastResult.rapport_path);
+        const response = await apiService.openCoherenceReport(
+          currentState.lastResult.rapport_path
+        );
         if (response.success) {
-          console.log('✅ Rapport détaillé ouvert');
+          console.info('✅ Rapport détaillé ouvert');
         } else {
           console.error('❌ Erreur ouverture rapport:', response.error);
         }
@@ -344,7 +361,7 @@ export const coherenceActions = {
     try {
       const response = await apiService.openCoherenceFolder();
       if (response.success) {
-        console.log('✅ Dossier des rapports ouvert');
+        console.info('✅ Dossier des rapports ouvert');
       } else {
         console.error('❌ Erreur ouverture dossier:', response.error);
       }
@@ -364,20 +381,23 @@ export const coherenceActions = {
       lastResult: null,
       lastError: null,
       currentTarget: null,
-      selectionInfo: null
+      selectionInfo: null,
     }));
   },
 
   /**
    * Met à jour une option spécifique
    */
-  updateOption<K extends keyof CoherenceOptions>(key: K, value: CoherenceOptions[K]): void {
+  updateOption<K extends keyof CoherenceOptions>(
+    key: K,
+    value: CoherenceOptions[K]
+  ): void {
     coherenceStore.update(state => ({
       ...state,
       options: {
         ...state.options,
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   },
 
@@ -401,8 +421,8 @@ export const coherenceActions = {
         check_deepl_ellipsis: enabled,
         check_isolated_percent: enabled,
         check_french_quotes: enabled,
-        check_line_structure: enabled
-      }
+        check_line_structure: enabled,
+      },
     }));
-  }
+  },
 };

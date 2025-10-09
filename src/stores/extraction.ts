@@ -32,14 +32,14 @@ export interface ExtractionState {
   isExtracting: boolean;
   extractionProgress: string;
   extractionTime: number;
-  
+
   // Résultats de l'extraction
   lastResult: ExtractionResult | null;
   lastError: string | null;
-  
+
   // Paramètres d'extraction
   settings: ExtractionSettings;
-  
+
   // Statistiques
   totalExtractions: number;
   successfulExtractions: number;
@@ -58,32 +58,49 @@ const initialState: ExtractionState = {
     code_prefix: 'RENPY_CODE_001',
     asterisk_prefix: 'RENPY_ASTERISK_001',
     tilde_prefix: 'RENPY_TILDE_001',
-    empty_prefix: 'RENPY_EMPTY'
+    empty_prefix: 'RENPY_EMPTY',
   },
   totalExtractions: 0,
   successfulExtractions: 0,
-  failedExtractions: 0
+  failedExtractions: 0,
 };
 
 // Store principal
 export const extractionStore = writable<ExtractionState>(initialState);
 
 // Stores dérivés pour faciliter l'accès
-export const isExtracting = derived(extractionStore, ($store) => $store.isExtracting);
-export const extractionProgress = derived(extractionStore, ($store) => $store.extractionProgress);
-export const lastExtractionResult = derived(extractionStore, ($store) => $store.lastResult);
-export const lastExtractionError = derived(extractionStore, ($store) => $store.lastError);
-export const extractionSettings = derived(extractionStore, ($store) => $store.settings);
-export const extractionStats = derived(extractionStore, ($store) => ({
+export const isExtracting = derived(
+  extractionStore,
+  $store => $store.isExtracting
+);
+export const extractionProgress = derived(
+  extractionStore,
+  $store => $store.extractionProgress
+);
+export const lastExtractionResult = derived(
+  extractionStore,
+  $store => $store.lastResult
+);
+export const lastExtractionError = derived(
+  extractionStore,
+  $store => $store.lastError
+);
+export const extractionSettings = derived(
+  extractionStore,
+  $store => $store.settings
+);
+export const extractionStats = derived(extractionStore, $store => ({
   total: $store.totalExtractions,
   successful: $store.successfulExtractions,
   failed: $store.failedExtractions,
-  successRate: $store.totalExtractions > 0 ? ($store.successfulExtractions / $store.totalExtractions) * 100 : 0
+  successRate:
+    $store.totalExtractions > 0
+      ? ($store.successfulExtractions / $store.totalExtractions) * 100
+      : 0,
 }));
 
 // Actions pour l'extraction
 export const extractionActions = {
-  
   /**
    * Charge les paramètres d'extraction depuis le backend
    */
@@ -93,7 +110,7 @@ export const extractionActions = {
       if (response.success && response.settings) {
         extractionStore.update(state => ({
           ...state,
-          settings: response.settings!
+          settings: response.settings || state.settings,
         }));
       }
     } catch (error) {
@@ -104,13 +121,15 @@ export const extractionActions = {
   /**
    * Met à jour les paramètres d'extraction
    */
-  async updateSettings(newSettings: Partial<ExtractionSettings>): Promise<boolean> {
+  async updateSettings(
+    newSettings: Partial<ExtractionSettings>
+  ): Promise<boolean> {
     try {
       const response = await apiService.setExtractionSettings(newSettings);
       if (response.success) {
         extractionStore.update(state => ({
           ...state,
-          settings: { ...state.settings, ...newSettings }
+          settings: { ...state.settings, ...newSettings },
         }));
         return true;
       } else {
@@ -126,25 +145,27 @@ export const extractionActions = {
   /**
    * Valide un fichier pour l'extraction
    */
-  async validateFile(filepath: string): Promise<{ valid: boolean; message: string }> {
+  async validateFile(
+    filepath: string
+  ): Promise<{ valid: boolean; message: string }> {
     try {
       const response = await apiService.validateExtractionFile(filepath);
       if (response.success && response.validation) {
         return {
           valid: response.validation.valid,
-          message: response.validation.message
+          message: response.validation.message,
         };
       } else {
         return {
           valid: false,
-          message: response.error || 'Erreur de validation'
+          message: response.error || 'Erreur de validation',
         };
       }
     } catch (error) {
       console.error('Erreur validation fichier:', error);
       return {
         valid: false,
-        message: 'Erreur de validation'
+        message: 'Erreur de validation',
       };
     }
   },
@@ -152,23 +173,30 @@ export const extractionActions = {
   /**
    * Lance l'extraction des textes
    */
-  async extractTexts(fileContent: string[], filepath: string, detectDuplicates?: boolean): Promise<boolean> {
+  async extractTexts(
+    fileContent: string[],
+    filepath: string,
+    detectDuplicates?: boolean
+  ): Promise<boolean> {
     const currentSettings = get(extractionStore);
-    const useDetectDuplicates = detectDuplicates !== undefined ? detectDuplicates : currentSettings.settings.detect_duplicates;
+    const useDetectDuplicates =
+      detectDuplicates !== undefined
+        ? detectDuplicates
+        : currentSettings.settings.detect_duplicates;
 
     try {
       // Mettre à jour l'état de chargement
       extractionStore.update(state => ({
         ...state,
         isExtracting: true,
-        extractionProgress: 'Initialisation de l\'extraction...',
-        lastError: null
+        extractionProgress: "Initialisation de l'extraction...",
+        lastError: null,
       }));
 
       // ÉTAPE 1: Créer une sauvegarde de sécurité avant extraction
       extractionStore.update(state => ({
         ...state,
-        extractionProgress: 'Création de la sauvegarde de sécurité...'
+        extractionProgress: 'Création de la sauvegarde de sécurité...',
       }));
 
       const backupResult = await apiService.createBackup(
@@ -181,16 +209,20 @@ export const extractionActions = {
         // Warning mais continue quand même (selon le flux)
         console.warn('⚠️ Sauvegarde échouée:', backupResult.error);
       } else {
-        console.log('✅ Sauvegarde créée:', backupResult.backup_path);
+        console.info('✅ Sauvegarde créée:', backupResult.backup_path);
       }
 
       // ÉTAPE 2: Lancer l'extraction
       extractionStore.update(state => ({
         ...state,
-        extractionProgress: 'Protection des codes et variables...'
+        extractionProgress: 'Protection des codes et variables...',
       }));
 
-      const response = await apiService.extractTexts(fileContent, filepath, useDetectDuplicates);
+      const response = await apiService.extractTexts(
+        fileContent,
+        filepath,
+        useDetectDuplicates
+      );
 
       if (response.success && response.result) {
         // Succès
@@ -199,13 +231,13 @@ export const extractionActions = {
           isExtracting: false,
           extractionProgress: 'Extraction terminée avec succès',
           extractionTime: response.extraction_time || 0,
-          lastResult: response.result!,
+          lastResult: response.result || null,
           lastError: null,
           totalExtractions: state.totalExtractions + 1,
-          successfulExtractions: state.successfulExtractions + 1
+          successfulExtractions: state.successfulExtractions + 1,
         }));
 
-        console.log('✅ Extraction réussie:', response.result);
+        console.info('✅ Extraction réussie:', response.result);
 
         // Ouverture automatique des fichiers si activée
         const settings = get(appSettings);
@@ -219,10 +251,10 @@ export const extractionActions = {
         extractionStore.update(state => ({
           ...state,
           isExtracting: false,
-          extractionProgress: 'Erreur lors de l\'extraction',
+          extractionProgress: "Erreur lors de l'extraction",
           lastError: response.error || 'Erreur inconnue',
           totalExtractions: state.totalExtractions + 1,
-          failedExtractions: state.failedExtractions + 1
+          failedExtractions: state.failedExtractions + 1,
         }));
 
         console.error('❌ Erreur extraction:', response.error);
@@ -230,15 +262,16 @@ export const extractionActions = {
       }
     } catch (error) {
       // Erreur exceptionnelle
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erreur inconnue';
+
       extractionStore.update(state => ({
         ...state,
         isExtracting: false,
-        extractionProgress: 'Erreur lors de l\'extraction',
+        extractionProgress: "Erreur lors de l'extraction",
         lastError: errorMessage,
         totalExtractions: state.totalExtractions + 1,
-        failedExtractions: state.failedExtractions + 1
+        failedExtractions: state.failedExtractions + 1,
       }));
 
       console.error('❌ Erreur exceptionnelle extraction:', error);
@@ -266,8 +299,8 @@ export const extractionActions = {
 
       // Ouvrir les fichiers
       if (filesToOpen.length > 0) {
-        console.log('📂 Ouverture automatique des fichiers:', filesToOpen);
-        
+        console.info('📂 Ouverture automatique des fichiers:', filesToOpen);
+
         // Utiliser l'API backend pour ouvrir les fichiers
         for (const file of filesToOpen) {
           await apiService.openExtractionFile(file);
@@ -287,7 +320,9 @@ export const extractionActions = {
     const currentState = get(extractionStore);
     if (currentState.lastResult?.output_folder) {
       try {
-        const response = await apiService.openExtractionFolder(currentState.lastResult.output_folder);
+        const response = await apiService.openExtractionFolder(
+          currentState.lastResult.output_folder
+        );
         if (!response.success) {
           console.error('Erreur ouverture dossier:', response.error);
         }
@@ -321,7 +356,7 @@ export const extractionActions = {
       extractionProgress: '',
       lastResult: null,
       lastError: null,
-      extractionTime: 0
+      extractionTime: 0,
     }));
   },
 
@@ -333,7 +368,7 @@ export const extractionActions = {
       ...state,
       totalExtractions: 0,
       successfulExtractions: 0,
-      failedExtractions: 0
+      failedExtractions: 0,
     }));
   },
 
@@ -353,29 +388,29 @@ export const extractionActions = {
    */
   getExtractionSummary(result: ExtractionResult): string {
     const parts = [];
-    
+
     if (result.extracted_count > 0) {
       parts.push(`${result.extracted_count} dialogues`);
     }
-    
+
     if (result.asterix_count > 0) {
       parts.push(`${result.asterix_count} astérisques`);
     }
-    
+
     if (result.tilde_count > 0) {
       parts.push(`${result.tilde_count} tildes`);
     }
-    
+
     if (result.empty_count > 0) {
       parts.push(`${result.empty_count} textes vides`);
     }
-    
+
     if (result.duplicate_count > 0) {
       parts.push(`${result.duplicate_count} doublons`);
     }
 
     return parts.join(' | ');
-  }
+  },
 };
 
 // Initialisation automatique des paramètres au démarrage

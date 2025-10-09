@@ -11,10 +11,10 @@
     icon="hugeicons:tools"
     color="text-green-300"
   />
-  
+
   <!-- Contenu principal -->
   <div class="flex-1 bg-gray-900 p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="mx-auto max-w-7xl">
       <CoherenceChecker />
     </div>
   </div>

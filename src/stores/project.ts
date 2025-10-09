@@ -60,15 +60,9 @@ export const currentProject = derived(
   $store => $store.projectPath
 );
 
-export const currentLanguage = derived(
-  projectStore,
-  $store => $store.language
-);
+export const currentLanguage = derived(projectStore, $store => $store.language);
 
-export const currentFile = derived(
-  projectStore,
-  $store => $store.currentFile
-);
+export const currentFile = derived(projectStore, $store => $store.currentFile);
 
 export const availableLanguages = derived(
   projectStore,
@@ -85,7 +79,9 @@ export const projectActions = {
   /**
    * Valide un chemin de projet
    */
-  async validateProject(projectPath: string): Promise<{ valid: boolean; message: string }> {
+  async validateProject(
+    projectPath: string
+  ): Promise<{ valid: boolean; message: string }> {
     try {
       const result = await apiService.validateProject(projectPath);
       if (result.success && result.validation) {
@@ -93,9 +89,9 @@ export const projectActions = {
       }
       return { valid: false, message: result.error || 'Erreur de validation' };
     } catch (error) {
-      return { 
-        valid: false, 
-        message: error instanceof Error ? error.message : 'Erreur inconnue' 
+      return {
+        valid: false,
+        message: error instanceof Error ? error.message : 'Erreur inconnue',
       };
     }
   },
@@ -134,7 +130,7 @@ export const projectActions = {
           projectStore.update(state => ({
             ...state,
             isLoading: false,
-            error: validation.message
+            error: validation.message,
           }));
           return false;
         }
@@ -148,29 +144,32 @@ export const projectActions = {
       const summary = summaryResult.success ? summaryResult.summary : null;
 
       // 4. Scanner les langues
-      const languagesResult = await apiService.scanProjectLanguages(projectPath);
-      const languages = languagesResult.success ? languagesResult.languages : [];
+      const languagesResult =
+        await apiService.scanProjectLanguages(projectPath);
+      const languages = languagesResult.success
+        ? languagesResult.languages
+        : [];
 
       // 5. Mettre à jour l'état
       projectStore.update(state => ({
         ...state,
         mode: 'project',
         projectPath,
-        projectSummary: summary,
+        projectSummary: summary || null,
         availableLanguages: languages,
         availableFiles: [],
         language: null,
         currentFile: null,
         fileContent: [],
         isLoading: false,
-        error: null
+        error: null,
       }));
 
       // 6. Sauvegarder le dernier projet
       appSettingsActions.setSetting('lastProject', {
         path: projectPath,
         language: '',
-        mode: 'project'
+        mode: 'project',
       });
 
       // 7. Mettre à jour le chemin dans le header
@@ -182,13 +181,13 @@ export const projectActions = {
       }
 
       return true;
-
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       projectStore.update(state => ({
         ...state,
         isLoading: false,
-        error: errorMsg
+        error: errorMsg,
       }));
       return false;
     }
@@ -199,7 +198,7 @@ export const projectActions = {
    */
   async selectLanguage(language: string): Promise<boolean> {
     const state = get(projectStore);
-    
+
     if (!state.projectPath) {
       console.error('No project loaded');
       return false;
@@ -224,7 +223,7 @@ export const projectActions = {
         availableFiles: files,
         currentFile: null,
         fileContent: [],
-        isLoading: false
+        isLoading: false,
       }));
 
       // Sauvegarder la langue sélectionnée
@@ -232,7 +231,7 @@ export const projectActions = {
       if (currentSettings.lastProject) {
         appSettingsActions.setSetting('lastProject', {
           ...currentSettings.lastProject,
-          language
+          language,
         });
       }
 
@@ -242,7 +241,6 @@ export const projectActions = {
       }
 
       return true;
-
     } catch (error) {
       console.error('Error selecting language:', error);
       projectStore.update(s => ({ ...s, isLoading: false }));
@@ -263,26 +261,26 @@ export const projectActions = {
         projectStore.update(s => ({
           ...s,
           currentFile: filepath,
-          fileContent: result.content,
+          fileContent: result.content || [],
           isLoading: false,
-          error: null
+          error: null,
         }));
         return true;
       } else {
         projectStore.update(s => ({
           ...s,
           isLoading: false,
-          error: result.error || 'Erreur lors du chargement du fichier'
+          error: result.error || 'Erreur lors du chargement du fichier',
         }));
         return false;
       }
-
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       projectStore.update(s => ({
         ...s,
         isLoading: false,
-        error: errorMsg
+        error: errorMsg,
       }));
       return false;
     }
@@ -307,19 +305,19 @@ export const projectActions = {
           mode: 'single_file',
           projectPath: filepath,
           currentFile: filepath,
-          fileContent: result.content,
+          fileContent: result.content || [],
           availableLanguages: [],
           availableFiles: [],
           language: null,
           isLoading: false,
-          error: null
+          error: null,
         }));
 
         // Sauvegarder le dernier fichier unique
         appSettingsActions.setSetting('lastProject', {
           path: filepath,
           language: '',
-          mode: 'single_file'
+          mode: 'single_file',
         });
 
         // Mettre à jour le chemin dans le header
@@ -330,17 +328,17 @@ export const projectActions = {
         projectStore.update(s => ({
           ...s,
           isLoading: false,
-          error: result.error || 'Erreur lors du chargement du fichier'
+          error: result.error || 'Erreur lors du chargement du fichier',
         }));
         return false;
       }
-
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMsg =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       projectStore.update(s => ({
         ...s,
         isLoading: false,
-        error: errorMsg
+        error: errorMsg,
       }));
       return false;
     }
@@ -376,7 +374,7 @@ export const projectActions = {
           currentFile: state.current_file || null,
           fileContent: state.file_content || [],
           availableLanguages: state.available_languages || [],
-          availableFiles: state.available_files || []
+          availableFiles: state.available_files || [],
         }));
       }
     } catch (error) {
@@ -391,23 +389,23 @@ export const projectActions = {
     try {
       // Attendre que les settings soient chargés
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       const settings = get(appSettings);
       const lastProject = settings.lastProject;
 
       if (!lastProject || !lastProject.path) {
-        console.log('No last project to load');
+        console.debug('No last project to load');
         return;
       }
 
-      console.log('Loading last project:', lastProject);
+      console.info('Loading last project:', lastProject);
 
       // Charger selon le mode
       if (lastProject.mode === 'single_file') {
         await this.loadSingleFile(lastProject.path);
       } else {
         const success = await this.loadProject(lastProject.path);
-        
+
         // Si une langue était sélectionnée, la recharger
         if (success && lastProject.language) {
           await this.selectLanguage(lastProject.language);
@@ -416,15 +414,15 @@ export const projectActions = {
     } catch (error) {
       console.error('Error loading last project:', error);
     }
-  }
+  },
 };
 
 // Synchroniser automatiquement avec le projet du header
 if (typeof window !== 'undefined') {
   // Écouter les changements de editorPath (header)
-  editorPath.subscribe(async (path) => {
+  editorPath.subscribe(async path => {
     if (path && path.trim() !== '') {
-      console.log('Header project changed:', path);
+      console.debug('Header project changed:', path);
       // Charger le projet automatiquement quand il change dans le header
       await projectActions.loadProject(path);
     } else {
@@ -437,7 +435,7 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     const initialPath = get(editorPath);
     if (initialPath && initialPath.trim() !== '') {
-      console.log('Loading initial project from header:', initialPath);
+      console.info('Loading initial project from header:', initialPath);
       void projectActions.loadProject(initialPath);
     } else {
       // Sinon charger le dernier projet sauvegardé

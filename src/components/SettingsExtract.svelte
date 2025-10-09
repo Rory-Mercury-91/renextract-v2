@@ -30,12 +30,22 @@
     }
   }
 
-  let codePreview = $derived(generatePreview($appSettings.extraction.patterns?.code || 'RENPY_CODE_001'));
-  let asteriskPreview = $derived(generatePreview($appSettings.extraction.patterns?.asterisk || 'RENPY_ASTERISK_001'));
-  let tildePreview = $derived(generatePreview($appSettings.extraction.patterns?.tilde || 'RENPY_TILDE_001'));
+  const codePreview = $derived(
+    generatePreview($appSettings.extraction.patterns?.code || 'RENPY_CODE_001')
+  );
+  const asteriskPreview = $derived(
+    generatePreview(
+      $appSettings.extraction.patterns?.asterisk || 'RENPY_ASTERISK_001'
+    )
+  );
+  const tildePreview = $derived(
+    generatePreview(
+      $appSettings.extraction.patterns?.tilde || 'RENPY_TILDE_001'
+    )
+  );
 
   function resetPatterns() {
-    appSettings.update((settings) => ({
+    appSettings.update(settings => ({
       ...settings,
       extraction: {
         ...settings.extraction,
@@ -52,9 +62,9 @@
     const patterns = $appSettings.extraction?.patterns || {
       code: 'RENPY_CODE_001',
       asterisk: 'RENPY_ASTERISK_001',
-      tilde: 'RENPY_TILDE_001'
+      tilde: 'RENPY_TILDE_001',
     };
-    
+
     const results = [
       `🔤 Codes/Variables:\n  ${generatePreview(patterns.code)}`,
       `⭐ Astérisques:\n  ${generatePreview(patterns.asterisk)}`,
@@ -67,14 +77,20 @@
   function validateLineLimit() {
     const limit = $appSettings.extraction?.lineLimit || 1000;
     if (limit < 100) {
-      return { valid: false, message: '⚠️ Valeur très basse (< 100). Recommandé: 500-2000' };
+      return {
+        valid: false,
+        message: '⚠️ Valeur très basse (< 100). Recommandé: 500-2000',
+      };
     } else if (limit > 10000) {
-      return { valid: false, message: '⚠️ Valeur très haute (> 10000). Recommandé: 500-2000' };
+      return {
+        valid: false,
+        message: '⚠️ Valeur très haute (> 10000). Recommandé: 500-2000',
+      };
     }
     return { valid: true, message: '' };
   }
 
-  let lineLimitValidation = $derived(validateLineLimit());
+  const lineLimitValidation = $derived(validateLineLimit());
 </script>
 
 <!-- Modal de configuration de cohérence -->
@@ -85,19 +101,21 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     onclick={() => (showHelpModal = false)}
-    onkeydown={(e) => e.key === 'Escape' && (showHelpModal = false)}
+    onkeydown={e => e.key === 'Escape' && (showHelpModal = false)}
     role="presentation"
     tabindex="-1"
   >
     <div
       class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-gray-800 p-6 shadow-xl"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.key === 'Escape' && (showHelpModal = false)}
+      onclick={e => e.stopPropagation()}
+      onkeydown={e => e.key === 'Escape' && (showHelpModal = false)}
       role="dialog"
       tabindex="0"
     >
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-white">🛡️ Protection Automatique du Contenu</h2>
+        <h2 class="text-2xl font-bold text-white">
+          🛡️ Protection Automatique du Contenu
+        </h2>
         <button
           onclick={() => (showHelpModal = false)}
           class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
@@ -151,12 +169,15 @@
             • Supprimer les balises qu'ils ne reconnaissent pas<br />
             • Modifier les variables<br />
             • Corriger la "syntaxe" en cassant le code Ren'Py<br /><br />
-            La protection garantit que seul le TEXTE est traduit, pas la STRUCTURE du code !
+            La protection garantit que seul le TEXTE est traduit, pas la STRUCTURE
+            du code !
           </p>
         </div>
 
         <div class="rounded-lg bg-purple-900/30 p-4">
-          <h3 class="mb-2 font-semibold text-purple-400">📝 PERSONNALISATION</h3>
+          <h3 class="mb-2 font-semibold text-purple-400">
+            📝 PERSONNALISATION
+          </h3>
           <p class="text-sm">
             Vous pouvez modifier les patterns de protection :<br />
             • (01), (02), (03)... → Court, lisible<br />
@@ -180,174 +201,202 @@
 {/if}
 
 {#if $appSettings.extraction?.patterns && $appSettings.coherence}
-<div class="space-y-8">
-  <!-- Header with help button -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h3 class="text-xl font-semibold text-white">Extraction & Protection</h3>
-      <p class="text-sm text-gray-400">
-        Configuration de la protection automatique du contenu
-      </p>
-    </div>
-    <button
-      onclick={() => (showHelpModal = true)}
-      class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-    >
-      <Icon icon="hugeicons:question" class="h-5 w-5" />
-      <span>À quoi ça sert ?</span>
-    </button>
-  </div>
-
-  <!-- Options de protection -->
-  <div class="space-y-4">
-    <h4 class="text-lg font-semibold text-blue-400">🔧 Options de protection</h4>
-    
-    <div class="flex flex-wrap gap-6">
-      <label class="flex items-center gap-3">
-        <input
-          type="checkbox"
-          bind:checked={$appSettings.extraction.detectDuplicates}
-          class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
-        />
-        <span class="text-white">Détecter et gérer les doublons</span>
-      </label>
-
-      <label class="flex items-center gap-3">
-        <input
-          type="checkbox"
-          bind:checked={$appSettings.extraction.projectProgressTracking}
-          class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
-        />
-        <span class="text-white">📊 Suivi de progression des projets</span>
-      </label>
-    </div>
-  </div>
-
-  <!-- Contrôles et limite -->
-  <div class="flex flex-wrap items-end gap-6">
-    <div>
-      <button
-        onclick={() => (showCoherenceModal = true)}
-        class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
-      >
-        <Icon icon="hugeicons:settings-01" class="h-5 w-5" />
-        <span>⚙️ Configurer les contrôles après extraction</span>
-      </button>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <label for="line-limit" class="text-white">📄 Limite par fichier :</label>
-      <input
-        id="line-limit"
-        type="number"
-        bind:value={$appSettings.extraction.lineLimit}
-        min="100"
-        max="100000"
-        class="w-24 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-        class:border-red-500={!lineLimitValidation.valid && $appSettings.extraction.lineLimit < 100}
-        class:border-yellow-500={!lineLimitValidation.valid && $appSettings.extraction.lineLimit > 10000}
-      />
-      <span class="text-white">lignes</span>
-    </div>
-  </div>
-
-  {#if !lineLimitValidation.valid}
-    <p class="text-sm" class:text-red-400={$appSettings.extraction.lineLimit < 100} class:text-yellow-400={$appSettings.extraction.lineLimit > 10000}>
-      {lineLimitValidation.message}
-    </p>
-  {/if}
-
-  <!-- Mode de sauvegarde -->
-  <div class="flex items-center gap-4">
-    <label for="save-mode" class="text-white">💾 Mode de sauvegarde par défaut :</label>
-    <select
-      id="save-mode"
-      bind:value={$appSettings.extraction.defaultSaveMode}
-      class="rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-    >
-      <option value="new_file">Créer nouveau fichier</option>
-      <option value="overwrite">Écraser l'original</option>
-    </select>
-  </div>
-
-  <!-- Patterns de protection -->
-  <div class="space-y-6">
-    <h4 class="text-lg font-semibold text-blue-400">🔧 Patterns de protection personnalisés</h4>
-
-    <!-- Codes/Variables -->
-    <div class="space-y-2">
-      <label for="code-pattern" class="block font-medium text-white">🔤 Codes/Variables</label>
-      <div class="flex items-center gap-4">
-        <input
-          id="code-pattern"
-          type="text"
-          bind:value={$appSettings.extraction.patterns.code}
-          placeholder="RENPY_CODE_001"
-          class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
-        />
-        <div class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300">
-          Aperçu: {codePreview}
-        </div>
+  <div class="space-y-8">
+    <!-- Header with help button -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-xl font-semibold text-white">
+          Extraction & Protection
+        </h3>
+        <p class="text-sm text-gray-400">
+          Configuration de la protection automatique du contenu
+        </p>
       </div>
-    </div>
-
-    <!-- Astérisques -->
-    <div class="space-y-2">
-      <label for="asterisk-pattern" class="block font-medium text-white">⭐ Astérisques</label>
-      <div class="flex items-center gap-4">
-        <input
-          id="asterisk-pattern"
-          type="text"
-          bind:value={$appSettings.extraction.patterns.asterisk}
-          placeholder="RENPY_ASTERISK_001"
-          class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
-        />
-        <div class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300">
-          Aperçu: {asteriskPreview}
-        </div>
-      </div>
-    </div>
-
-    <!-- Tildes -->
-    <div class="space-y-2">
-      <label for="tilde-pattern" class="block font-medium text-white">〰️ Tildes</label>
-      <div class="flex items-center gap-4">
-        <input
-          id="tilde-pattern"
-          type="text"
-          bind:value={$appSettings.extraction.patterns.tilde}
-          placeholder="RENPY_TILDE_001"
-          class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
-        />
-        <div class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300">
-          Aperçu: {tildePreview}
-        </div>
-      </div>
-    </div>
-
-    <!-- Boutons d'action -->
-    <div class="flex gap-3">
       <button
-        onclick={resetPatterns}
-        class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
-      >
-        <Icon icon="hugeicons:refresh" class="h-5 w-5" />
-        <span>🔄 Défaut</span>
-      </button>
-      <button
-        onclick={testPatterns}
+        onclick={() => (showHelpModal = true)}
         class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
       >
-        <Icon icon="hugeicons:test-tube" class="h-5 w-5" />
-        <span>🧪 Tester</span>
+        <Icon icon="hugeicons:question" class="h-5 w-5" />
+        <span>À quoi ça sert ?</span>
       </button>
     </div>
+
+    <!-- Options de protection -->
+    <div class="space-y-4">
+      <h4 class="text-lg font-semibold text-blue-400">
+        🔧 Options de protection
+      </h4>
+
+      <div class="flex flex-wrap gap-6">
+        <label class="flex items-center gap-3">
+          <input
+            type="checkbox"
+            bind:checked={$appSettings.extraction.detectDuplicates}
+            class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+          />
+          <span class="text-white">Détecter et gérer les doublons</span>
+        </label>
+
+        <label class="flex items-center gap-3">
+          <input
+            type="checkbox"
+            bind:checked={$appSettings.extraction.projectProgressTracking}
+            class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
+          />
+          <span class="text-white">📊 Suivi de progression des projets</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Contrôles et limite -->
+    <div class="flex flex-wrap items-end gap-6">
+      <div>
+        <button
+          onclick={() => (showCoherenceModal = true)}
+          class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+        >
+          <Icon icon="hugeicons:settings-01" class="h-5 w-5" />
+          <span>⚙️ Configurer les contrôles après extraction</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <label for="line-limit" class="text-white"
+          >📄 Limite par fichier :</label
+        >
+        <input
+          id="line-limit"
+          type="number"
+          bind:value={$appSettings.extraction.lineLimit}
+          min="100"
+          max="100000"
+          class="w-24 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+          class:border-red-500={!lineLimitValidation.valid &&
+            $appSettings.extraction.lineLimit < 100}
+          class:border-yellow-500={!lineLimitValidation.valid &&
+            $appSettings.extraction.lineLimit > 10000}
+        />
+        <span class="text-white">lignes</span>
+      </div>
+    </div>
+
+    {#if !lineLimitValidation.valid}
+      <p
+        class="text-sm"
+        class:text-red-400={$appSettings.extraction.lineLimit < 100}
+        class:text-yellow-400={$appSettings.extraction.lineLimit > 10000}
+      >
+        {lineLimitValidation.message}
+      </p>
+    {/if}
+
+    <!-- Mode de sauvegarde -->
+    <div class="flex items-center gap-4">
+      <label for="save-mode" class="text-white"
+        >💾 Mode de sauvegarde par défaut :</label
+      >
+      <select
+        id="save-mode"
+        bind:value={$appSettings.extraction.defaultSaveMode}
+        class="rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+      >
+        <option value="new_file">Créer nouveau fichier</option>
+        <option value="overwrite">Écraser l'original</option>
+      </select>
+    </div>
+
+    <!-- Patterns de protection -->
+    <div class="space-y-6">
+      <h4 class="text-lg font-semibold text-blue-400">
+        🔧 Patterns de protection personnalisés
+      </h4>
+
+      <!-- Codes/Variables -->
+      <div class="space-y-2">
+        <label for="code-pattern" class="block font-medium text-white"
+          >🔤 Codes/Variables</label
+        >
+        <div class="flex items-center gap-4">
+          <input
+            id="code-pattern"
+            type="text"
+            bind:value={$appSettings.extraction.patterns.code}
+            placeholder="RENPY_CODE_001"
+            class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
+          />
+          <div
+            class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
+          >
+            Aperçu: {codePreview}
+          </div>
+        </div>
+      </div>
+
+      <!-- Astérisques -->
+      <div class="space-y-2">
+        <label for="asterisk-pattern" class="block font-medium text-white"
+          >⭐ Astérisques</label
+        >
+        <div class="flex items-center gap-4">
+          <input
+            id="asterisk-pattern"
+            type="text"
+            bind:value={$appSettings.extraction.patterns.asterisk}
+            placeholder="RENPY_ASTERISK_001"
+            class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
+          />
+          <div
+            class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
+          >
+            Aperçu: {asteriskPreview}
+          </div>
+        </div>
+      </div>
+
+      <!-- Tildes -->
+      <div class="space-y-2">
+        <label for="tilde-pattern" class="block font-medium text-white"
+          >〰️ Tildes</label
+        >
+        <div class="flex items-center gap-4">
+          <input
+            id="tilde-pattern"
+            type="text"
+            bind:value={$appSettings.extraction.patterns.tilde}
+            placeholder="RENPY_TILDE_001"
+            class="w-64 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-center font-mono text-white focus:border-blue-500 focus:outline-none"
+          />
+          <div
+            class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
+          >
+            Aperçu: {tildePreview}
+          </div>
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="flex gap-3">
+        <button
+          onclick={resetPatterns}
+          class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+        >
+          <Icon icon="hugeicons:refresh" class="h-5 w-5" />
+          <span>🔄 Défaut</span>
+        </button>
+        <button
+          onclick={testPatterns}
+          class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+        >
+          <Icon icon="hugeicons:test-tube" class="h-5 w-5" />
+          <span>🧪 Tester</span>
+        </button>
+      </div>
+    </div>
   </div>
-</div>
 {:else}
-<div class="flex h-64 items-center justify-center">
-  <div class="text-center">
-    <p class="text-gray-400">Chargement des paramètres...</p>
+  <div class="flex h-64 items-center justify-center">
+    <div class="text-center">
+      <p class="text-gray-400">Chargement des paramètres...</p>
+    </div>
   </div>
-</div>
 {/if}

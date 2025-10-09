@@ -144,7 +144,17 @@ const initialSettings: AppSettings = {
     checkDoubleDashEllipsis: true,
     checkSpecialCodes: false,
     checkLineStructure: true,
-    customExclusions: ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...'],
+    customExclusions: [
+      'OK',
+      'Menu',
+      'Continue',
+      'Yes',
+      'No',
+      'Level',
+      '???',
+      '!!!',
+      '...',
+    ],
   },
   lastProject: {
     path: '',

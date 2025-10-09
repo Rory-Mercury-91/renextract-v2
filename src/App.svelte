@@ -22,14 +22,16 @@
   // Gestion du thème dark/light/auto
   const applyTheme = (theme: 'light' | 'dark' | 'auto') => {
     const root = document.documentElement;
-    
+
     if (theme === 'dark') {
       root.setAttribute('data-theme', 'dark');
     } else if (theme === 'light') {
       root.setAttribute('data-theme', 'light');
     } else if (theme === 'auto') {
       // Mode automatique : détecter la préférence système
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
       root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
     }
   };
@@ -52,15 +54,15 @@
   // Écouter les changements de préférence système en mode auto
   onMount(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleMediaChange = () => {
       if ($appSettings.theme === 'auto') {
         applyTheme('auto');
       }
     };
-    
+
     mediaQuery.addEventListener('change', handleMediaChange);
-    
+
     return () => {
       mediaQuery.removeEventListener('change', handleMediaChange);
     };

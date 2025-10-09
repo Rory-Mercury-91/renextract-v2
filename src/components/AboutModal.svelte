@@ -31,7 +31,9 @@
         </p>
       </div>
 
-      <p class="mt-6 text-xs text-gray-500 dark:text-gray-400">© 2025 RenExtract Project</p>
+      <p class="mt-6 text-xs text-gray-500 dark:text-gray-400">
+        © 2025 RenExtract Project
+      </p>
 
       <button
         class="mt-6 rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700"

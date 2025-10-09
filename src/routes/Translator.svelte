@@ -83,7 +83,9 @@
         <span class="font-bold">Status:</span>
         {#if health}
           {#if health.success && health.exists}
-            <span class="text-green-600 dark:text-green-400">TranslationToolsIA détecté</span>
+            <span class="text-green-600 dark:text-green-400"
+              >TranslationToolsIA détecté</span
+            >
             {#if health.gitHead}
               <span class="ml-2 text-xs text-gray-500 dark:text-gray-400"
                 >(HEAD {health.gitHead})</span

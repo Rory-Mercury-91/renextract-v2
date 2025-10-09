@@ -96,7 +96,7 @@
   </div>
 
   <button
-    class="mx-auto hidden items-center justify-center rounded-full bg-gray-200 p-1 transition-all duration-500 ease-in-out hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 lg:flex"
+    class="mx-auto hidden items-center justify-center rounded-full bg-gray-200 p-1 transition-all duration-500 ease-in-out hover:bg-gray-300 lg:flex dark:bg-slate-700 dark:hover:bg-slate-600"
     class:rotate-180={isClose}
     class:scale-110={isClose}
     class:scale-100={!isClose}

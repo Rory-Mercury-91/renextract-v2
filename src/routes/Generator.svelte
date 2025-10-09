@@ -13,8 +13,12 @@
 
   <div class="p-6">
     <h2 class="mb-4 text-2xl font-bold">⚡ Générateur</h2>
-    <div class="rounded-xl border border-gray-300 bg-gray-100 p-6 dark:border-gray-700 dark:bg-gray-800">
-      <p class="text-gray-700 dark:text-gray-300">Module generator en cours de développement...</p>
+    <div
+      class="rounded-xl border border-gray-300 bg-gray-100 p-6 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <p class="text-gray-700 dark:text-gray-300">
+        Module generator en cours de développement...
+      </p>
       <div class="mt-6">
         <h3 class="mb-3 text-lg font-semibold">Architecture prévue :</h3>
         <ul class="space-y-2 text-gray-600 dark:text-gray-400">

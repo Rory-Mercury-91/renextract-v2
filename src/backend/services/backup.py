@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""
-Backup Manager for RenExtract v2
+"""Backup Manager for RenExtract v2
 Standalone backup management system
 """
+
+import datetime
+import json
 import os
 import shutil
 import sys
-import datetime
-import json
-from typing import List, Dict, Optional
 from pathlib import Path
+from typing import ClassVar, Optional
 
 
 class BackupType:
     """Énumération des types de sauvegarde"""
+
     SECURITY = "security"
     CLEANUP = "cleanup"
     RPA_BUILD = "rpa_build"
@@ -23,24 +24,24 @@ class BackupType:
 class BackupManager:
     """Gestionnaire de sauvegardes pour RenExtract v2"""
 
-    BACKUP_DESCRIPTIONS = {
+    BACKUP_DESCRIPTIONS: ClassVar[dict] = {
         BackupType.SECURITY: "🛡️ Sécurité",
         BackupType.CLEANUP: "🧹 Nettoyage",
         BackupType.RPA_BUILD: "📦 Avant RPA",
-        BackupType.REALTIME_EDIT: "⚡ Édition temps réel"
+        BackupType.REALTIME_EDIT: "⚡ Édition temps réel",
     }
 
     # Configuration de rotation par type
-    ROTATION_CONFIG = {
+    ROTATION_CONFIG: ClassVar[dict] = {
         BackupType.REALTIME_EDIT: 10,  # Max 10 fichiers pour editing
         # Autres types: pas de rotation (None)
     }
 
-    def __init__(self, base_dir: str = None):
+    def __init__(self, base_dir: Optional[str] = None):
         """Initialise le gestionnaire de sauvegardes"""
         if base_dir is None:
             # Déterminer le répertoire de base de l'application
-            if getattr(sys, 'frozen', False):
+            if getattr(sys, "frozen", False):
                 # Mode exécutable (build)
                 base_dir = os.path.dirname(sys.executable)
             else:
@@ -70,14 +71,14 @@ class BackupManager:
             return path
 
         # Convertir les chemins WSL Windows vers Linux
-        if path.startswith('\\\\wsl.localhost\\'):
+        if path.startswith("\\\\wsl.localhost\\"):
             # \\wsl.localhost\Arch\home\rory\projets\... -> /home/rory/projets/...
-            path = path.replace('\\\\wsl.localhost\\Arch\\', '/')
-            path = path.replace('\\', '/')
+            path = path.replace("\\\\wsl.localhost\\Arch\\", "/")
+            path = path.replace("\\", "/")
 
         # Convertir les chemins Windows vers format Unix
-        if '\\' in path and not path.startswith('/'):
-            path = path.replace('\\', '/')
+        if "\\" in path and not path.startswith("/"):
+            path = path.replace("\\", "/")
 
         return path
 
@@ -85,19 +86,21 @@ class BackupManager:
         """Charge les métadonnées des sauvegardes"""
         try:
             if os.path.exists(self.metadata_file):
-                with open(self.metadata_file, 'r', encoding='utf-8') as f:
+                with open(self.metadata_file, encoding="utf-8") as f:
                     raw_metadata = json.load(f)
 
                 # Normaliser les chemins dans les métadonnées
                 self.metadata = {}
                 for backup_id, backup_info in raw_metadata.items():
                     normalized_info = backup_info.copy()
-                    if 'backup_path' in normalized_info:
-                        normalized_info['backup_path'] = self._normalize_path(
-                            normalized_info['backup_path'])
-                    if 'source_path' in normalized_info:
-                        normalized_info['source_path'] = self._normalize_path(
-                            normalized_info['source_path'])
+                    if "backup_path" in normalized_info:
+                        normalized_info["backup_path"] = self._normalize_path(
+                            normalized_info["backup_path"],
+                        )
+                    if "source_path" in normalized_info:
+                        normalized_info["source_path"] = self._normalize_path(
+                            normalized_info["source_path"],
+                        )
                     self.metadata[backup_id] = normalized_info
             else:
                 self.metadata = {}
@@ -108,7 +111,7 @@ class BackupManager:
     def _save_metadata(self):
         """Sauvegarde les métadonnées"""
         try:
-            with open(self.metadata_file, 'w', encoding='utf-8') as f:
+            with open(self.metadata_file, "w", encoding="utf-8") as f:
                 json.dump(self.metadata, f, indent=2, ensure_ascii=False)
         except (OSError, PermissionError) as e:
             print(f"Erreur sauvegarde métadonnées backups: {e}")
@@ -129,12 +132,12 @@ class BackupManager:
                     return f"Clipboard_{parts[2].replace('.rpy', '')}"
                 return "Projet_Clipboard"
 
-            normalized_path = filepath.replace('\\', '/')
-            path_parts = [part for part in normalized_path.split('/') if part]
+            normalized_path = filepath.replace("\\", "/")
+            path_parts = [part for part in normalized_path.split("/") if part]
 
             # Chercher le dossier "game" dans le chemin
             game_indices = [i for i, part in enumerate(
-                path_parts) if part.lower() == 'game']
+                path_parts) if part.lower() == "game"]
             for game_index in reversed(game_indices):
                 if game_index > 0:
                     game_name = path_parts[game_index - 1]
@@ -151,19 +154,19 @@ class BackupManager:
             print(f"Erreur extraction nom de jeu pour {filepath}: {e}")
             return "Projet_Inconnu"
 
-    def create_backup(self, source_path: str, backup_type: str = BackupType.SECURITY,
-                      description: str = None) -> Dict[str, any]:
+    def create_backup(
+        self,
+        source_path: str,
+        backup_type: str = BackupType.SECURITY,
+        description: Optional[str] = None,
+    ) -> dict[str, any]:
         """Crée une sauvegarde avec la structure hiérarchique"""
-        result = {
-            'success': False,
-            'backup_path': None,
-            'backup_id': None,
-            'error': None
-        }
+        result = {"success": False, "backup_path": None,
+                  "backup_id": None, "error": None}
 
         try:
             if not source_path or not os.path.exists(source_path):
-                result['error'] = "Fichier source introuvable"
+                result["error"] = "Fichier source introuvable"
                 return result
 
             if backup_type not in self.BACKUP_DESCRIPTIONS:
@@ -171,10 +174,10 @@ class BackupManager:
 
             # Gestion des fichiers virtuels
             if source_path.startswith("clipboard_") and not os.path.exists(source_path):
-                result['success'] = True
-                result['error'] = None
-                result['virtual_file'] = True
-                result['message'] = "Fichier virtuel - pas de sauvegarde nécessaire"
+                result["success"] = True
+                result["error"] = None
+                result["virtual_file"] = True
+                result["message"] = "Fichier virtuel - pas de sauvegarde nécessaire"
                 return result
 
             # Extraire le nom du jeu et du fichier
@@ -205,31 +208,31 @@ class BackupManager:
             backup_id = f"{game_name}_{file_name}_{timestamp_str}_{backup_type}"
 
             backup_metadata = {
-                'id': backup_id,
-                'source_path': source_path,
-                'backup_path': backup_path,
-                'game_name': game_name,
-                'file_name': file_name,
-                'type': backup_type,
-                'created': timestamp.isoformat(),
-                'size': os.path.getsize(backup_path),
-                'description': description or f"Sauvegarde {self.BACKUP_DESCRIPTIONS[backup_type]}",
-                'source_filename': os.path.basename(source_path),
-                'backup_filename': backup_filename
+                "id": backup_id,
+                "source_path": source_path,
+                "backup_path": backup_path,
+                "game_name": game_name,
+                "file_name": file_name,
+                "type": backup_type,
+                "created": timestamp.isoformat(),
+                "size": os.path.getsize(backup_path),
+                "description": description or f"Sauvegarde {self.BACKUP_DESCRIPTIONS[backup_type]}",
+                "source_filename": os.path.basename(source_path),
+                "backup_filename": backup_filename,
             }
 
             self.metadata[backup_id] = backup_metadata
             self._save_metadata()
 
-            result['success'] = True
-            result['backup_path'] = backup_path
-            result['backup_id'] = backup_id
+            result["success"] = True
+            result["backup_path"] = backup_path
+            result["backup_id"] = backup_id
 
             print(
                 f"Backup créé: {game_name}/{file_name}/{backup_type}/{backup_filename}")
 
         except (OSError, PermissionError, FileNotFoundError, ValueError) as e:
-            result['error'] = str(e)
+            result["error"] = str(e)
             print(f"Erreur création backup: {e}")
 
         return result
@@ -246,24 +249,23 @@ class BackupManager:
             for file in os.listdir(backup_folder):
                 file_path = os.path.join(backup_folder, file)
                 if os.path.isfile(file_path):
-                    backup_files.append({
-                        'path': file_path,
-                        'name': file,
-                        'mtime': os.path.getmtime(file_path)
-                    })
+                    backup_files.append(
+                        {"path": file_path, "name": file,
+                            "mtime": os.path.getmtime(file_path)},
+                    )
 
             # Trier par date de modification (plus ancien en premier)
-            backup_files.sort(key=lambda x: x['mtime'])
+            backup_files.sort(key=lambda x: x["mtime"])
 
             # Supprimer les fichiers excédentaires
             while len(backup_files) >= max_files:
                 oldest_file = backup_files.pop(0)
                 try:
-                    os.remove(oldest_file['path'])
+                    os.remove(oldest_file["path"])
                     print(f"Rotation: suppression de {oldest_file['name']}")
 
                     # Supprimer des métadonnées si présent
-                    self._remove_from_metadata(oldest_file['path'])
+                    self._remove_from_metadata(oldest_file["path"])
 
                 except (OSError, PermissionError) as e:
                     print(
@@ -281,7 +283,7 @@ class BackupManager:
         try:
             to_remove = []
             for backup_id, metadata in self.metadata.items():
-                if metadata.get('backup_path') == backup_path:
+                if metadata.get("backup_path") == backup_path:
                     to_remove.append(backup_id)
 
             for backup_id in to_remove:
@@ -293,7 +295,9 @@ class BackupManager:
         except (KeyError, OSError) as e:
             print(f"Erreur suppression métadonnées: {e}")
 
-    def list_all_backups(self, game_filter: str = None, type_filter: str = None) -> List[Dict]:
+    def list_all_backups(
+        self, game_filter: Optional[str] = None, type_filter: Optional[str] = None,
+    ) -> list[dict]:
         """Liste toutes les sauvegardes avec la structure hiérarchique"""
         backups = []
 
@@ -301,13 +305,14 @@ class BackupManager:
             if not os.path.exists(self.backup_root):
                 return backups
 
-            # Scanner la structure hiérarchique: Game_name/file_name/backup_type/
+            # Scanner la structure hiérarchique:
+            # Game_name/file_name/backup_type/
             for game_name in os.listdir(self.backup_root):
                 if game_filter and game_filter != "Tous" and game_name != game_filter:
                     continue
 
                 game_path = os.path.join(self.backup_root, game_name)
-                if not os.path.isdir(game_path) or game_name.startswith('.'):
+                if not os.path.isdir(game_path) or game_name.startswith("."):
                     continue
 
                 # Parcourir les fichiers
@@ -333,34 +338,35 @@ class BackupManager:
                                 continue
 
                             backup_info = self._get_or_create_backup_info_hierarchical(
-                                backup_full_path, game_name, file_name, backup_type
+                                backup_full_path, game_name, file_name, backup_type,
                             )
                             if backup_info:
                                 backups.append(backup_info)
 
             # Trier par date de création (plus récent en premier)
-            backups.sort(key=lambda x: x['created'], reverse=True)
+            backups.sort(key=lambda x: x["created"], reverse=True)
 
         except (OSError, ValueError, KeyError) as e:
             print(f"Erreur listage backups hiérarchiques: {e}")
 
         return backups
 
-    def _get_or_create_backup_info_hierarchical(self, backup_path: str, game_name: str,
-                                                file_name: str, backup_type: str) -> Optional[Dict]:
+    def _get_or_create_backup_info_hierarchical(
+        self, backup_path: str, game_name: str, file_name: str, backup_type: str,
+    ) -> dict | None:
         """Crée les infos de backup pour la structure hiérarchique"""
         try:
             backup_filename = os.path.basename(backup_path)
 
             # Chercher dans les métadonnées existantes
-            for backup_id, metadata in self.metadata.items():
-                if metadata.get('backup_path') == backup_path:
+            for _backup_id, metadata in self.metadata.items():
+                if metadata.get("backup_path") == backup_path:
                     return metadata
 
             # Créer de nouvelles métadonnées
             stats = os.stat(backup_path)
             created_time = datetime.datetime.fromtimestamp(stats.st_ctime)
-            timestamp_str = created_time.strftime('%Y%m%d_%H%M%S')
+            timestamp_str = created_time.strftime("%Y%m%d_%H%M%S")
             backup_id = f"{game_name}_{file_name}_{timestamp_str}_{backup_type}"
 
             # Reconstruire le nom de fichier source
@@ -368,18 +374,19 @@ class BackupManager:
                 backup_filename, file_name)
 
             backup_info = {
-                'id': backup_id,
-                'backup_path': backup_path,
-                'game_name': game_name,
-                'file_name': file_name,
-                'type': backup_type,
-                'created': created_time.isoformat(),
-                'size': stats.st_size,
-                'description': (f"Sauvegarde "
-                                f"{self.BACKUP_DESCRIPTIONS.get(backup_type, backup_type)}"),
-                'source_filename': source_filename,
-                'backup_filename': backup_filename,
-                'source_path': None  # À reconstruire à la demande
+                "id": backup_id,
+                "backup_path": backup_path,
+                "game_name": game_name,
+                "file_name": file_name,
+                "type": backup_type,
+                "created": created_time.isoformat(),
+                "size": stats.st_size,
+                "description": (
+                    f"Sauvegarde {self.BACKUP_DESCRIPTIONS.get(backup_type, backup_type)}"
+                ),
+                "source_filename": source_filename,
+                "backup_filename": backup_filename,
+                "source_path": None,  # À reconstruire à la demande
             }
 
             # Sauvegarder dans les métadonnées
@@ -401,8 +408,7 @@ class BackupManager:
             # Le nom source est généralement le nom du fichier + extension
             if backup_ext:
                 return f"{file_name}{backup_ext}"
-            else:
-                return f"{file_name}.rpy"  # Extension par défaut
+            return f"{file_name}.rpy"  # Extension par défaut
 
         except (ValueError, AttributeError) as e:
             print(f"Erreur reconstruction nom source: {e}")

@@ -32,7 +32,9 @@
 
     <div>
       <h1 class="text-lg font-bold">RenExtract</h1>
-      <p class="text-xs text-gray-500 dark:text-gray-400">v{packageJson.version}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        v{packageJson.version}
+      </p>
     </div>
   </div>
 
@@ -41,7 +43,7 @@
     <Icon icon="hugeicons:folder-01" class="h-6 w-6 min-w-6 text-yellow-500" />
     <input
       class="w-full max-w-64 rounded-lg bg-gray-100 px-2 py-1 text-sm text-gray-900 dark:bg-slate-100 dark:text-gray-700"
-      style:direction={$editorPath === "" ? "ltr" : "rtl"}
+      style:direction={$editorPath === '' ? 'ltr' : 'rtl'}
       value={$editorPath}
       oninput={e => {
         $editorPath = e.currentTarget.value;

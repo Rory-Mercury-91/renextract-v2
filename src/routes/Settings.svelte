@@ -37,7 +37,9 @@
   const saving = $state(false);
 </script>
 
-<section class="flex min-h-full flex-col justify-between text-gray-900 dark:text-white">
+<section
+  class="flex min-h-full flex-col justify-between text-gray-900 dark:text-white"
+>
   <RouteHeader
     title={$_('navigation.settings')}
     description={$_('navigation.settings_description')}

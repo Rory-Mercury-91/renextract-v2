@@ -21,10 +21,23 @@
     checkDeeplEllipsis: $appSettings.coherence?.checkDeeplEllipsis ?? true,
     checkIsolatedPercent: $appSettings.coherence?.checkIsolatedPercent ?? true,
     checkFrenchQuotes: $appSettings.coherence?.checkFrenchQuotes ?? true,
-    checkDoubleDashEllipsis: $appSettings.coherence?.checkDoubleDashEllipsis ?? true,
+    checkDoubleDashEllipsis:
+      $appSettings.coherence?.checkDoubleDashEllipsis ?? true,
     checkSpecialCodes: $appSettings.coherence?.checkSpecialCodes ?? false,
     checkLineStructure: $appSettings.coherence?.checkLineStructure ?? true,
-    customExclusions: [...($appSettings.coherence?.customExclusions || ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...'])],
+    customExclusions: [
+      ...($appSettings.coherence?.customExclusions || [
+        'OK',
+        'Menu',
+        'Continue',
+        'Yes',
+        'No',
+        'Level',
+        '???',
+        '!!!',
+        '...',
+      ]),
+    ],
   });
 
   interface CoherenceCheck {
@@ -44,13 +57,13 @@
     {
       key: 'checkTags',
       label: 'Balises {} incohérentes',
-      description: 'Vérifie l\'équilibre des balises Ren\'Py',
+      description: "Vérifie l'équilibre des balises Ren'Py",
       danger: '🔴',
     },
     {
       key: 'checkEscapeSequences',
-      label: 'Séquences d\'échappement (\\n, \\t, \\r)',
-      description: 'Vérifie les séquences d\'échappement',
+      label: "Séquences d'échappement (\\n, \\t, \\r)",
+      description: "Vérifie les séquences d'échappement",
       danger: '🔴',
     },
     {
@@ -73,7 +86,7 @@
     },
     {
       key: 'checkSyntax',
-      label: 'Syntaxe Ren\'Py',
+      label: "Syntaxe Ren'Py",
       description: 'Vérifie indentation et structure',
       danger: '🔴',
     },
@@ -107,7 +120,7 @@
     {
       key: 'checkParentheses',
       label: 'Parenthèses et crochets',
-      description: 'Vérifie l\'équilibre des délimiteurs',
+      description: "Vérifie l'équilibre des délimiteurs",
       danger: '🟡',
     },
   ];
@@ -128,7 +141,7 @@
   ];
 
   function enableAll() {
-    Object.keys(localCoherenceOptions).forEach((key) => {
+    Object.keys(localCoherenceOptions).forEach(key => {
       if (key !== 'customExclusions') {
         (localCoherenceOptions as any)[key] = true;
       }
@@ -137,20 +150,20 @@
 
   function enableRecommended() {
     // Activer tous sauf les mineurs
-    criticalChecks.forEach((check) => {
+    criticalChecks.forEach(check => {
       (localCoherenceOptions as any)[check.key] = true;
     });
-    qualityChecks.forEach((check) => {
+    qualityChecks.forEach(check => {
       (localCoherenceOptions as any)[check.key] = true;
     });
     // Désactiver les mineurs
-    minorChecks.forEach((check) => {
+    minorChecks.forEach(check => {
       (localCoherenceOptions as any)[check.key] = false;
     });
   }
 
   function disableAll() {
-    Object.keys(localCoherenceOptions).forEach((key) => {
+    Object.keys(localCoherenceOptions).forEach(key => {
       if (key !== 'customExclusions') {
         (localCoherenceOptions as any)[key] = false;
       }
@@ -158,7 +171,7 @@
   }
 
   function saveSettings() {
-    appSettings.update((settings) => ({
+    appSettings.update(settings => ({
       ...settings,
       coherence: {
         ...localCoherenceOptions,
@@ -173,32 +186,61 @@
       checkVariables: $appSettings.coherence?.checkVariables ?? true,
       checkTags: $appSettings.coherence?.checkTags ?? true,
       checkUntranslated: $appSettings.coherence?.checkUntranslated ?? true,
-      checkEscapeSequences: $appSettings.coherence?.checkEscapeSequences ?? true,
+      checkEscapeSequences:
+        $appSettings.coherence?.checkEscapeSequences ?? true,
       checkPercentages: $appSettings.coherence?.checkPercentages ?? true,
       checkQuotations: $appSettings.coherence?.checkQuotations ?? true,
       checkParentheses: $appSettings.coherence?.checkParentheses ?? true,
       checkSyntax: $appSettings.coherence?.checkSyntax ?? true,
       checkDeeplEllipsis: $appSettings.coherence?.checkDeeplEllipsis ?? true,
-      checkIsolatedPercent: $appSettings.coherence?.checkIsolatedPercent ?? true,
+      checkIsolatedPercent:
+        $appSettings.coherence?.checkIsolatedPercent ?? true,
       checkFrenchQuotes: $appSettings.coherence?.checkFrenchQuotes ?? true,
-      checkDoubleDashEllipsis: $appSettings.coherence?.checkDoubleDashEllipsis ?? true,
+      checkDoubleDashEllipsis:
+        $appSettings.coherence?.checkDoubleDashEllipsis ?? true,
       checkSpecialCodes: $appSettings.coherence?.checkSpecialCodes ?? false,
       checkLineStructure: $appSettings.coherence?.checkLineStructure ?? true,
-      customExclusions: [...($appSettings.coherence?.customExclusions || ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...'])],
+      customExclusions: [
+        ...($appSettings.coherence?.customExclusions || [
+          'OK',
+          'Menu',
+          'Continue',
+          'Yes',
+          'No',
+          'Level',
+          '???',
+          '!!!',
+          '...',
+        ]),
+      ],
     };
     showModal = false;
   }
 
   // Gestion des exclusions personnalisées
-  let exclusionsText = $state(($appSettings.coherence?.customExclusions || ['OK', 'Menu', 'Continue', 'Yes', 'No', 'Level', '???', '!!!', '...']).join(', '));
-  
+  let exclusionsText = $state(
+    (
+      $appSettings.coherence?.customExclusions || [
+        'OK',
+        'Menu',
+        'Continue',
+        'Yes',
+        'No',
+        'Level',
+        '???',
+        '!!!',
+        '...',
+      ]
+    ).join(', ')
+  );
+
   function updateExclusions() {
     localCoherenceOptions.customExclusions = exclusionsText
       .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
   }
-  
+
   // Mettre à jour exclusionsText quand la modal s'ouvre
   $effect(() => {
     if (showModal) {
@@ -212,21 +254,23 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     onclick={cancel}
-    onkeydown={(e) => e.key === 'Escape' && cancel()}
+    onkeydown={e => e.key === 'Escape' && cancel()}
     role="presentation"
     tabindex="-1"
   >
     <!-- Modal content -->
     <div
       class="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-gray-800 shadow-xl"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.key === 'Escape' && cancel()}
+      onclick={e => e.stopPropagation()}
+      onkeydown={e => e.key === 'Escape' && cancel()}
       role="dialog"
       aria-labelledby="modal-title"
       tabindex="0"
     >
       <!-- Header -->
-      <div class="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 px-6 py-4">
+      <div
+        class="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 px-6 py-4"
+      >
         <div class="flex items-center justify-between">
           <h2 id="modal-title" class="text-xl font-bold text-white">
             ⚙️ Configuration des contrôles de cohérence
@@ -240,7 +284,9 @@
           </button>
         </div>
         <p class="mt-2 text-sm text-gray-400">
-          ℹ️ Pour les détails de chaque vérification, consultez : <code class="rounded bg-gray-700 px-1">docs/COHERENCE_COMPLETE.md</code>
+          ℹ️ Pour les détails de chaque vérification, consultez : <code
+            class="rounded bg-gray-700 px-1">docs/COHERENCE_COMPLETE.md</code
+          >
         </p>
       </div>
 
@@ -253,11 +299,13 @@
           </h3>
           <div class="space-y-2">
             {#each criticalChecks as check}
-              <label class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700">
+              <label
+                class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
+              >
                 <input
                   type="checkbox"
                   checked={localCoherenceOptions[check.key] as boolean}
-                  onchange={(e) => {
+                  onchange={e => {
                     const target = e.target as HTMLInputElement;
                     (localCoherenceOptions as any)[check.key] = target.checked;
                   }}
@@ -282,11 +330,13 @@
           </h3>
           <div class="space-y-2">
             {#each qualityChecks as check}
-              <label class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700">
+              <label
+                class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
+              >
                 <input
                   type="checkbox"
                   checked={localCoherenceOptions[check.key] as boolean}
-                  onchange={(e) => {
+                  onchange={e => {
                     const target = e.target as HTMLInputElement;
                     (localCoherenceOptions as any)[check.key] = target.checked;
                   }}
@@ -311,11 +361,13 @@
           </h3>
           <div class="space-y-2">
             {#each minorChecks as check}
-              <label class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700">
+              <label
+                class="flex items-start gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
+              >
                 <input
                   type="checkbox"
                   checked={localCoherenceOptions[check.key] as boolean}
-                  onchange={(e) => {
+                  onchange={e => {
                     const target = e.target as HTMLInputElement;
                     (localCoherenceOptions as any)[check.key] = target.checked;
                   }}
@@ -339,8 +391,12 @@
             📝 Exclusions personnalisées
           </h3>
           <div class="rounded-lg bg-gray-700/50 p-4">
-            <label for="exclusions" class="mb-2 block text-sm font-medium text-gray-300">
-              Mots à exclure de la détection "Lignes non traduites" (séparés par des virgules)
+            <label
+              for="exclusions"
+              class="mb-2 block text-sm font-medium text-gray-300"
+            >
+              Mots à exclure de la détection "Lignes non traduites" (séparés par
+              des virgules)
             </label>
             <input
               id="exclusions"
@@ -351,7 +407,8 @@
               class="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
             />
             <p class="mt-2 text-xs text-gray-400">
-              Exemples : mots internationaux (OK, Menu), patterns de ponctuation (???, !!!, ...)
+              Exemples : mots internationaux (OK, Menu), patterns de ponctuation
+              (???, !!!, ...)
             </p>
           </div>
         </div>
@@ -380,7 +437,9 @@
       </div>
 
       <!-- Footer -->
-      <div class="sticky bottom-0 border-t border-gray-700 bg-gray-800 px-6 py-4">
+      <div
+        class="sticky bottom-0 border-t border-gray-700 bg-gray-800 px-6 py-4"
+      >
         <div class="flex justify-end gap-3">
           <button
             onclick={cancel}
