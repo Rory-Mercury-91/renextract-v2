@@ -19,6 +19,21 @@
 
   const url = $state(window.location.pathname);
 
+  // Gestion du thème dark/light/auto
+  const applyTheme = (theme: 'light' | 'dark' | 'auto') => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+    } else if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else if (theme === 'auto') {
+      // Mode automatique : détecter la préférence système
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+  };
+
   onMount(async () => {
     try {
       // Check API connection
@@ -29,6 +44,31 @@
       error = 'Unable to connect to Python backend';
       isLoading = true;
     }
+
+    // Appliquer le thème initial
+    applyTheme($appSettings.theme);
+  });
+
+  // Écouter les changements de préférence système en mode auto
+  onMount(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleMediaChange = () => {
+      if ($appSettings.theme === 'auto') {
+        applyTheme('auto');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleMediaChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleMediaChange);
+    };
+  });
+
+  // Écouter les changements du paramètre theme
+  $effect(() => {
+    applyTheme($appSettings.theme);
   });
 </script>
 
@@ -36,16 +76,16 @@
   {#if isLoading}
     <div class="flex flex-1 flex-col items-center justify-center gap-5">
       <div
-        class="h-10 w-10 animate-spin rounded-full border-4 border-gray-600 border-t-blue-500"
+        class="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 dark:border-gray-600"
       ></div>
-      <p class="text-gray-400">
+      <p class="text-gray-600 dark:text-gray-400">
         {$_('app.loading') || 'Loading application...'}
       </p>
     </div>
   {:else if error}
     <div class="flex flex-1 items-center justify-center">
       <div
-        class="max-w-md rounded-lg border border-red-700 bg-red-900 p-10 text-center text-red-300"
+        class="max-w-md rounded-lg border border-red-300 bg-red-50 p-10 text-center text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-300"
       >
         <h2 class="mb-2 text-xl font-semibold">
           {$_('app.connection_error') || 'Connection error'}

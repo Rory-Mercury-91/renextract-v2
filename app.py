@@ -5,6 +5,7 @@ Main application using pywebview with Flask backend
 import json
 import os
 import subprocess
+from subprocess import CalledProcessError
 import sys
 import threading
 import time
@@ -804,7 +805,11 @@ def open_dialog_unified():
         if is_wsl_environment():
             if isinstance(manual_path, str) and manual_path.strip():
                 return jsonify({'success': True, 'path': manual_path})
-            return wsl_mode_response('/api/file-dialog/open')
+            return jsonify({
+                'success': False,
+                'error': 'WSL_PATH_REQUIRED',
+                'message': "Environnement WSL : le chemin doit être fourni par le client."
+            }), 400
 
         # Mode normal: ouvrir le dialogue natif selon le type
         path = open_dialog_hybrid(

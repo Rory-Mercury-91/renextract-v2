@@ -20,7 +20,7 @@
 {/if}
 
 <header
-  class="flex h-20 items-center justify-between gap-4 text-nowrap border-b border-gray-700 bg-gray-800 p-4 text-white"
+  class="flex h-20 items-center justify-between gap-4 text-nowrap border-b border-gray-200 bg-white p-4 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
 >
   <!-- Left: App Name + Version -->
   <div class="flex min-w-40 items-center gap-4">
@@ -32,7 +32,7 @@
 
     <div>
       <h1 class="text-lg font-bold">RenExtract</h1>
-      <p class="text-xs text-gray-400">v{packageJson.version}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">v{packageJson.version}</p>
     </div>
   </div>
 
@@ -40,8 +40,8 @@
   <div class="flex w-full items-center justify-center gap-2">
     <Icon icon="hugeicons:folder-01" class="h-6 w-6 min-w-6 text-yellow-500" />
     <input
-      class="w-full max-w-64 rounded-lg bg-slate-100 px-2 py-1 text-sm text-gray-700"
-      style:direction="rtl"
+      class="w-full max-w-64 rounded-lg bg-gray-100 px-2 py-1 text-sm text-gray-900 dark:bg-slate-100 dark:text-gray-700"
+      style:direction={$editorPath === "" ? "ltr" : "rtl"}
       value={$editorPath}
       oninput={e => {
         $editorPath = e.currentTarget.value;
@@ -49,7 +49,7 @@
       placeholder={$editorPath || 'Aucun projet chargé'}
     />
     <button
-      class="rounded bg-blue-600 px-3 py-1 text-sm font-medium transition-colors hover:bg-blue-700"
+      class="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
       onclick={() =>
         apiService.openDialog(
           {
@@ -76,7 +76,7 @@
     <UpdateManager showSettings={true} autoCheck={true} />
 
     <button
-      class="flex items-center gap-1 px-2 py-1 text-gray-400 transition-colors hover:text-white"
+      class="flex items-center gap-1 px-2 py-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       onclick={showHelp}
       title="Aide et documentation"
     >
@@ -85,7 +85,7 @@
     </button>
 
     <button
-      class="flex items-center gap-1 px-2 py-1 text-gray-400 transition-colors hover:text-white"
+      class="flex items-center gap-1 px-2 py-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       onclick={() => (showAboutModal = true)}
       title="Informations sur RenExtract"
     >

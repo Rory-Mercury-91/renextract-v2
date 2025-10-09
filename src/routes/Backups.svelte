@@ -254,7 +254,7 @@
   });
 </script>
 
-<div class="flex h-full flex-col text-white">
+<div class="flex h-full flex-col text-gray-900 dark:text-white">
   <RouteHeader
     title={$_('navigation.backup')}
     description={$_('navigation.backup_description')}
@@ -273,8 +273,8 @@
         {/if}
         Recharger
       </button>
-      <div class="text-gray-400">
-        <span class="text-green-400">●</span> Dernier scan: {formatLastScanTime()}
+      <div class="text-gray-600 dark:text-gray-400">
+        <span class="text-green-600 dark:text-green-400">●</span> Dernier scan: {formatLastScanTime()}
       </div>
     </div>
   </RouteHeader>
@@ -284,22 +284,22 @@
     <!-- Statistiques -->
     <div class="mb-4 rounded-lg p-6">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-blue-400">
+        <h2 class="text-lg font-semibold text-blue-600 dark:text-blue-400">
           📊 Statistiques des sauvegardes
         </h2>
       </div>
       <div class="grid grid-cols-3 gap-6">
         <div>
-          <p class="text-sm text-gray-400">Sauvegardes totales</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Sauvegardes totales</p>
           <p class="text-2xl font-bold">{totalBackups}</p>
         </div>
         <div>
-          <p class="text-sm text-gray-400">Jeux concernés</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Jeux concernés</p>
           <p class="text-2xl font-bold">{totalGames}</p>
         </div>
         <div>
-          <p class="text-sm text-gray-400">Taille totale</p>
-          <p class="text-2xl font-bold text-blue-400">
+          <p class="text-sm text-gray-600 dark:text-gray-400">Taille totale</p>
+          <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {formatSize(totalSize)}
           </p>
         </div>
@@ -308,7 +308,7 @@
 
     <!-- Filtres -->
     <div class="mb-4 rounded-lg p-6">
-      <h2 class="mb-4 text-lg font-semibold text-blue-400">🔍 Filtres</h2>
+      <h2 class="mb-4 text-lg font-semibold text-blue-600 dark:text-blue-400">🔍 Filtres</h2>
       <div class="grid grid-cols-2 gap-6">
         <div>
           <label for="game-filter" class="mb-2 block text-sm font-medium"
@@ -318,7 +318,7 @@
             id="game-filter"
             bind:value={selectedGame}
             onchange={handleFilterChange}
-            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             {#each games as game}
               <option value={game}>{game}</option>
@@ -333,7 +333,7 @@
             id="type-filter"
             bind:value={selectedType}
             onchange={handleFilterChange}
-            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             <option value="Tous">Tous</option>
             {#each Object.entries(BACKUP_DESCRIPTIONS) as [key, value]}
@@ -346,19 +346,19 @@
 
     <!-- Liste des sauvegardes -->
     <div class="rounded-lg p-6">
-      <h2 class="mb-4 text-lg font-semibold text-blue-400">
+      <h2 class="mb-4 text-lg font-semibold text-blue-600 dark:text-blue-400">
         📋 Liste des sauvegardes
       </h2>
 
       {#if loading}
         <div class="flex items-center justify-center py-12">
           <div
-            class="h-10 w-10 animate-spin rounded-full border-4 border-gray-600 border-t-blue-500"
+            class="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 dark:border-gray-600"
           ></div>
-          <p class="ml-4 text-gray-400">Chargement...</p>
+          <p class="ml-4 text-gray-600 dark:text-gray-400">Chargement...</p>
         </div>
       {:else if error}
-        <div class="py-12 text-center text-red-400">
+        <div class="py-12 text-center text-red-600 dark:text-red-400">
           <p>❌ {error}</p>
           <button
             class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
@@ -368,16 +368,16 @@
           </button>
         </div>
       {:else if filteredBackups.length === 0}
-        <div class="py-12 text-center text-gray-400">
+        <div class="py-12 text-center text-gray-600 dark:text-gray-400">
           <p>Aucune sauvegarde trouvée</p>
         </div>
       {:else}
         <div class="overflow-x-auto">
           <table class="w-full">
-            <thead class="bg-gray-700">
+            <thead class="bg-gray-200 dark:bg-gray-700">
               <tr>
                 <th
-                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-600"
+                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-300 dark:hover:bg-gray-600"
                   onclick={() => sortBy('game_name')}
                 >
                   Jeu {sortColumn === 'game_name'
@@ -387,7 +387,7 @@
                     : ''}
                 </th>
                 <th
-                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-600"
+                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-300 dark:hover:bg-gray-600"
                   onclick={() => sortBy('source_filename')}
                 >
                   Fichier {sortColumn === 'source_filename'
@@ -397,7 +397,7 @@
                     : ''}
                 </th>
                 <th
-                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-600"
+                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-300 dark:hover:bg-gray-600"
                   onclick={() => sortBy('type')}
                 >
                   Type {sortColumn === 'type'
@@ -407,7 +407,7 @@
                     : ''}
                 </th>
                 <th
-                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-600"
+                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-300 dark:hover:bg-gray-600"
                   onclick={() => sortBy('created')}
                 >
                   Date {sortColumn === 'created'
@@ -417,7 +417,7 @@
                     : ''}
                 </th>
                 <th
-                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-600"
+                  class="cursor-pointer px-4 py-3 text-left hover:bg-gray-300 dark:hover:bg-gray-600"
                   onclick={() => sortBy('size')}
                 >
                   Taille {sortColumn === 'size'
@@ -477,7 +477,7 @@
   </div>
 
   <!-- Footer / Status -->
-  <div class="border-t border-gray-700 bg-gray-800 p-4">
+  <div class="border-t border-gray-300 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800">
     <p class="text-sm text-gray-400">📊 État : {statusMessage}</p>
   </div>
 </div>

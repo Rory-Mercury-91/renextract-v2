@@ -37,7 +37,7 @@
   const saving = $state(false);
 </script>
 
-<section class="flex min-h-full flex-col justify-between text-white">
+<section class="flex min-h-full flex-col justify-between text-gray-900 dark:text-white">
   <RouteHeader
     title={$_('navigation.settings')}
     description={$_('navigation.settings_description')}
@@ -69,7 +69,7 @@
 
   <!-- Action buttons -->
   <div
-    class="flex items-center justify-center space-x-4 border-t border-gray-700 bg-gray-800 p-6"
+    class="flex items-center justify-center space-x-4 border-t border-gray-300 bg-gray-100 p-6 dark:border-gray-700 dark:bg-gray-800"
   >
     <!-- Bouton de ménage -->
     <button

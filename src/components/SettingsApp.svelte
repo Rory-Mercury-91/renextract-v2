@@ -10,10 +10,10 @@
 
 <section class="h-full w-full space-y-8 rounded-lg p-6">
   <div>
-    <h2 class="mb-4 text-2xl font-bold text-blue-400">
+    <h2 class="mb-4 text-2xl font-bold text-blue-600 dark:text-blue-400">
       Interface et applications
     </h2>
-    <p class="mb-6 text-gray-400">
+    <p class="mb-6 text-gray-600 dark:text-gray-400">
       Configuration générale de l'interface utilisateur.
     </p>
   </div>
@@ -27,7 +27,7 @@
         <select
           id="language-select"
           bind:value={$appSettings.language}
-          class="rounded-lg bg-gray-100 px-2 py-1 text-black"
+          class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
         >
           {#each $locales as locale}
             <option value={locale}
@@ -46,7 +46,7 @@
         <select
           id="theme-select"
           bind:value={$appSettings.theme}
-          class="rounded-lg bg-gray-100 px-2 py-1 text-black"
+          class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
         >
           <option value="auto">Auto</option>
           <option value="light">Clair</option>
@@ -55,7 +55,7 @@
       </div>
 
       <label
-        class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+        class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
       >
         <input
           type="checkbox"
@@ -77,7 +77,7 @@
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-3">
         <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
@@ -88,7 +88,7 @@
         </label>
 
         <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
@@ -101,7 +101,7 @@
 
       <div class="space-y-3">
         <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
@@ -112,7 +112,7 @@
         </label>
 
         <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
@@ -140,7 +140,7 @@
           >
           <select
             id="notification-mode"
-            class="rounded-lg bg-gray-100 px-2 py-1 text-black"
+            class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
           >
             <option value="status">Statut seulement</option>
             <option value="dialog">Dialogue complet</option>
@@ -149,7 +149,7 @@
         </div>
 
         <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-800"
+          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
@@ -169,14 +169,14 @@
           <select
             id="text-editor"
             bind:value={$appSettings.externalTools.textEditor}
-            class="rounded-lg bg-gray-100 px-2 py-1 text-black"
+            class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
           >
             <option value="VS Code">VS Code</option>
             <option value="Notepad++">Notepad++</option>
             <option value="Atom/Pulsar">Atom/Pulsar</option>
             <option value="Sublime Text">Sublime Text</option>
           </select>
-          <p class="mt-1 text-xs text-gray-400">
+          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
             Éditeur pour ouvrir les fichiers depuis l'interface temps réel et
             les rapports HTML.
           </p>

@@ -54,7 +54,7 @@
 </script>
 
 <nav
-  class="flex flex-col justify-between border-r border-gray-700 bg-gray-800 py-4 text-white transition-all duration-500 ease-in-out"
+  class="flex flex-col justify-between border-r border-gray-200 bg-gray-50 py-4 text-gray-900 transition-all duration-500 ease-in-out dark:border-gray-700 dark:bg-gray-800 dark:text-white"
   class:max-w-64={!isClose}
   class:w-16={isClose}
   class:lg:w-64={!isClose}
@@ -66,7 +66,7 @@
         <Link to={section.link}>
           {#snippet children(active)}
             <div
-              class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left transition-all duration-300 hover:bg-gray-700 {section.color}"
+              class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left transition-all duration-300 hover:bg-gray-200 dark:hover:bg-gray-700 {section.color}"
               class:bg-blue-600={active}
               class:hover:bg-blue-700={active}
             >
@@ -96,7 +96,7 @@
   </div>
 
   <button
-    class="mx-auto hidden items-center justify-center rounded-full bg-slate-700 p-1 transition-all duration-500 ease-in-out hover:bg-slate-600 lg:flex"
+    class="mx-auto hidden items-center justify-center rounded-full bg-gray-200 p-1 transition-all duration-500 ease-in-out hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 lg:flex"
     class:rotate-180={isClose}
     class:scale-110={isClose}
     class:scale-100={!isClose}
