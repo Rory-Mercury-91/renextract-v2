@@ -48,24 +48,23 @@ export interface ReconstructionValidation {
 }
 
 // Interfaces pour la cohérence
-export interface CoherenceResult {
-  rapport_path: string;
+
+// Nouveau type pour l'interface Svelte
+export interface CoherenceResultSvelte {
   stats: {
-    files_analyzed: number;
     total_issues: number;
+    files_analyzed: number;
     issues_by_type: Record<string, number>;
-    issues_by_severity: Record<string, number>;
   };
-  issues: Array<{
-    file: string;
-    line_number: number;
+  issues_by_file: Record<string, Array<{
     type: string;
-    severity: 'error' | 'warning' | 'info';
+    line_number: number;
     message: string;
-    old_line: string;
-    new_line: string;
-  }>;
-  analysis_time: number;
+    old_content?: string;
+    new_content?: string;
+    file: string;
+  }>>;
+  target_path: string;
 }
 
 export interface CoherenceOptions {
@@ -85,10 +84,7 @@ export interface CoherenceOptions {
   custom_exclusions: string[];
 }
 
-export interface SelectionInfo {
-  is_all_files: boolean;
-  selected_option?: string;
-}
+// SelectionInfo supprimé car plus utilisé
 
 export interface BackupActionResponse {
   success: boolean;
@@ -227,7 +223,7 @@ export const apiService = {
       if (gameFilter) params.append('game', gameFilter);
       if (typeFilter) params.append('type', typeFilter);
 
-      const response = await api.get(`/backups?${params.toString()}`);
+      const response = await api.get(`/backup/list?${params.toString()}`);
       return response.data as BackupListResponse;
     } catch (error) {
        
@@ -381,6 +377,7 @@ export const apiService = {
     try {
       const response = await api.post('/project/files', {
         project_path: projectPath,
+        file_type: 'languages',
         language,
         exclusions
       });
@@ -762,7 +759,7 @@ export const apiService = {
     tildeCount: number = 0
   ): Promise<{
     success: boolean;
-    validation?: ReconstructionValidation;
+    validation?: ReconstructionValidation; 
     error?: string;
   }> {
     try {
@@ -848,21 +845,25 @@ export const apiService = {
   },
 
   // ==================== COHÉRENCE ====================
-  
-  async checkCoherence(
-    targetPath: string,
-    returnDetails: boolean = true,
-    selectionInfo?: SelectionInfo
-  ): Promise<{ success: boolean; result?: CoherenceResult; error?: string; }> {
+
+  async checkCoherenceSvelte(
+    targetPath: string
+  ): Promise<{ 
+    success: boolean; 
+    result?: CoherenceResultSvelte; 
+    error?: string; 
+  }> {
     try {
-      const response = await api.post('/coherence/check', {
-        target_path: targetPath,
-        return_details: returnDetails,
-        selection_info: selectionInfo
+      const response = await api.post('/coherence/check-svelte', {
+        target_path: targetPath
       });
-      return response.data as { success: boolean; result?: CoherenceResult; error?: string; };
+      return response.data as { 
+        success: boolean; 
+        result?: CoherenceResultSvelte; 
+        error?: string; 
+      };
     } catch (error) {
-      console.error('Check Coherence Error:', error);
+      console.error('Check Coherence Svelte Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

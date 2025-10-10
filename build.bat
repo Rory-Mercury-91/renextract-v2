@@ -26,6 +26,11 @@ REM Build executable
 echo Building executable...
 python build_exe.py
 
+REM Clean frontend artifacts copied into the executable
+if exist "dist\index.html" del /Q "dist\index.html"
+if exist "dist\favicon.ico" del /Q "dist\favicon.ico"
+if exist "dist\assets" rmdir /S /Q "dist\assets"
+
 echo.
 echo ================================================
 echo BUILD COMPLETED!

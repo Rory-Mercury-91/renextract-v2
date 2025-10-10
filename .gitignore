@@ -1,5 +1,4 @@
 # Python
-__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -35,7 +34,6 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
-.cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -59,13 +57,14 @@ yarn-error.log*
 lerna-debug.log*
 
 # TypeScript cache
-*.tsbuildinfo
 
-# Optional npm cache directory
+# cache directory/files
 .npm
-
-# Optional eslint cache
+*.tsbuildinfo
 .eslintcache
+.ruff_cache/
+.cache
+__pycache__/
 
 # Output of 'npm pack'
 *.tgz

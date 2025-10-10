@@ -11,6 +11,7 @@
   import { projectStore } from '$stores/project';
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
+  import CoherenceResults from './CoherenceResults.svelte';
 
   // État réactif
   const currentProject = $derived(
@@ -30,6 +31,7 @@
 
   // État local
   let selectedLanguage = $state('');
+  let selectedFile = $state('');
   let analysisMode = $state<'single_file' | 'all_files'>('single_file');
   let excludedFiles = $state('');
   let excludedLines = $state('');
@@ -43,6 +45,13 @@
   $effect(() => {
     if (currentLanguage && !selectedLanguage) {
       selectedLanguage = currentLanguage;
+    }
+  });
+
+  // Réinitialiser le fichier sélectionné quand la langue change
+  $effect(() => {
+    if (selectedLanguage) {
+      selectedFile = '';
     }
   });
 
@@ -135,12 +144,19 @@
 
   // Validation et lancement
   function canStartAnalysis(): boolean {
-    return (
+    const basicChecks = (
       !checking &&
       !!selectedLanguage &&
       !!currentProject &&
       !!currentProject.path
     );
+
+    // En mode fichier spécifique, vérifier qu'un fichier est sélectionné
+    if (analysisMode === 'single_file') {
+      return basicChecks && !!selectedFile;
+    }
+
+    return basicChecks;
   }
 
   async function startAnalysis() {
@@ -161,36 +177,29 @@
           selected_option: `Tous les fichiers ${selectedLanguage}`,
         };
       } else {
-        // Analyser le fichier actuel
-        if (!$projectStore.currentFile) {
-          console.error("❌ Aucun fichier actuel pour l'analyse");
+        // Analyser le fichier sélectionné
+        if (!selectedFile) {
+          console.error("❌ Aucun fichier sélectionné pour l'analyse");
           return;
         }
-        targetPath = $projectStore.currentFile;
+        targetPath = selectedFile;
         selectionInfo = {
           project_path: currentProject!.path,
           language: selectedLanguage,
-          file_paths: [$projectStore.currentFile],
+          file_paths: [selectedFile],
           is_all_files: false,
-          selected_option: $projectStore.currentFile.split('/').pop(),
+          selected_option: selectedFile.split('/').pop(),
         };
       }
 
       console.debug(`🔍 Début analyse cohérence: ${targetPath}`);
-      await coherenceActions.analyzeCoherence(targetPath, selectionInfo);
+      await coherenceActions.analyzeCoherence(targetPath);
     } catch (error) {
       console.error('❌ Erreur lancement analyse:', error);
     }
   }
 
-  // Actions sur les résultats
-  async function openDetailedReport() {
-    await coherenceActions.openDetailedReport();
-  }
-
-  async function openReportsFolder() {
-    await coherenceActions.openReportsFolder();
-  }
+  // Les actions sur les résultats sont maintenant gérées directement par le composant CoherenceResults
 </script>
 
 <div class="flex flex-col gap-6">
@@ -266,7 +275,7 @@
               class="mr-2 text-teal-600 focus:ring-teal-500"
               disabled={checking}
             />
-            <span class="text-sm text-white">Fichier actuel uniquement</span>
+            <span class="text-sm text-white">Fichier spécifique</span>
           </label>
           <label for="mode-all" class="flex items-center">
             <input
@@ -284,6 +293,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Sélection de fichier (seulement en mode fichier spécifique) -->
+    {#if analysisMode === 'single_file' && selectedLanguage}
+      <div class="mt-4">
+        <label
+          for="file-select"
+          class="mb-2 block text-sm font-medium text-gray-300"
+        >
+          Fichier à analyser
+        </label>
+        <select
+          id="file-select"
+          bind:value={selectedFile}
+          class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
+          disabled={checking}
+        >
+          <option value="">Sélectionner un fichier...</option>
+          {#if $projectStore.availableFiles}
+            {#each $projectStore.availableFiles as file}
+              <option value={file.path}>{file.name}</option>
+            {/each}
+          {/if}
+        </select>
+      </div>
+    {/if}
   </div>
 
   <!-- Options de vérification -->
@@ -392,103 +426,16 @@
     </div>
   {/if}
 
-  <!-- Résultats -->
+  <!-- Résultats avec le nouveau composant Svelte -->
   {#if lastCoherenceRes && !checking}
-    <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
-      <div class="mb-4 flex items-center justify-between">
-        <h3 class="flex items-center gap-2 text-lg font-semibold text-white">
-          <Icon icon="hugeicons:chart-bar" class="h-5 w-5" />
-          Résultats de l'analyse
-        </h3>
-        <div class="flex gap-2">
-          {#if lastCoherenceRes.stats.total_issues > 0}
-            <button
-              onclick={openDetailedReport}
-              class="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-white transition-colors hover:bg-teal-700"
-            >
-              <Icon icon="hugeicons:file-document" class="h-4 w-4" />
-              Rapport détaillé
-            </button>
-          {/if}
-          <button
-            onclick={openReportsFolder}
-            class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
-          >
-            <Icon icon="hugeicons:folder-open" class="h-4 w-4" />
-            Ouvrir dossier
-          </button>
-        </div>
-      </div>
-
-      <!-- Statistiques -->
-      <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div class="rounded-lg bg-gray-700 p-4 text-center">
-          <div
-            class="text-2xl font-bold {lastCoherenceRes.stats.total_issues === 0
-              ? 'text-green-400'
-              : 'text-red-400'}"
-          >
-            {lastCoherenceRes.stats.total_issues}
-          </div>
-          <div class="text-sm text-gray-300">Problèmes</div>
-        </div>
-        <div class="rounded-lg bg-gray-700 p-4 text-center">
-          <div class="text-2xl font-bold text-blue-400">
-            {lastCoherenceRes.stats.files_analyzed}
-          </div>
-          <div class="text-sm text-gray-300">Fichiers</div>
-        </div>
-        <div class="rounded-lg bg-gray-700 p-4 text-center">
-          <div class="text-2xl font-bold text-orange-400">
-            {Object.values(lastCoherenceRes.stats.issues_by_type).filter(
-              count => count > 0
-            ).length}
-          </div>
-          <div class="text-sm text-gray-300">Types</div>
-        </div>
-        <div class="rounded-lg bg-gray-700 p-4 text-center">
-          <div class="text-2xl font-bold text-purple-400">
-            {lastCoherenceRes.analysis_time.toFixed(1)}s
-          </div>
-          <div class="text-sm text-gray-300">Durée</div>
-        </div>
-      </div>
-
-      <!-- Message de résultat -->
-      {#if lastCoherenceRes.stats.total_issues === 0}
-        <div
-          class="rounded-lg border border-green-700 bg-green-900/30 p-6 text-center"
-        >
-          <Icon
-            icon="hugeicons:checkmark-circle-02"
-            class="mx-auto mb-3 h-12 w-12 text-green-400"
-          />
-          <h4 class="mb-2 text-lg font-semibold text-green-200">
-            ✅ Aucun problème détecté !
-          </h4>
-          <p class="text-green-400">
-            Votre traduction est cohérente et de qualité.
-          </p>
-        </div>
-      {:else}
-        <div
-          class="rounded-lg border border-orange-700 bg-orange-900/30 p-6 text-center"
-        >
-          <Icon
-            icon="hugeicons:warning-triangle"
-            class="mx-auto mb-3 h-12 w-12 text-orange-400"
-          />
-          <h4 class="mb-2 text-lg font-semibold text-orange-200">
-            ⚠️ Problèmes détectés
-          </h4>
-          <p class="text-orange-400">
-            {lastCoherenceRes.stats.total_issues} problème(s) trouvé(s) sur {Object.values(
-              lastCoherenceRes.stats.issues_by_type
-            ).filter(count => count > 0).length} type(s) différent(s).
-          </p>
-        </div>
-      {/if}
-    </div>
+    <CoherenceResults
+      result={lastCoherenceRes}
+      onOpenInEditor={(filePath, lineNumber) => {
+        // Fonction pour ouvrir dans l'éditeur
+        console.info("Ouvrir dans l'éditeur:", filePath, 'ligne:', lineNumber);
+        // TODO: Implémenter l'ouverture dans l'éditeur
+      }}
+    />
   {/if}
 
   <!-- Erreur -->

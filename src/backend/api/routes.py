@@ -5,15 +5,18 @@ Toutes les routes sont regroupées dans ce fichier pour une meilleure organisati
 
 import logging
 import os
+import tkinter as tk
+from collections import defaultdict
+from tkinter import filedialog
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_from_directory
 
-from src.backend.core.coherence import OptimizedCoherenceChecker
+from src.backend.core.coherence import CoherenceChecker
 
 # Import des services
-from src.backend.core.extractor import OptimizedTextExtractor
+from src.backend.core.extractor import TextExtractor
 from src.backend.core.project import ProjectManager
-from src.backend.core.reconstructor import OptimizedFileReconstructor
+from src.backend.core.reconstructor import FileReconstructor
 from src.backend.services.backup import BackupManager
 from src.backend.services.config import AppConfig
 from src.backend.services.update import UpdateManager
@@ -21,33 +24,17 @@ from src.backend.services.update import UpdateManager
 logger = logging.getLogger(__name__)
 
 # Création du blueprint principal
-api_bp = Blueprint("api", __name__)
+API = Blueprint("api", __name__)
 
 # ============================================================================
 # ROUTES PRINCIPALES
 # ============================================================================
 
 
-@api_bp.route("/api/health")
+@API.route("/api/health")
 def health_check():
     """Vérification de l'état de l'API"""
     return jsonify({"status": "healthy", "message": "RenExtract v2 API is running"})
-
-
-@api_bp.route("/api/message")
-def get_message():
-    """Récupère le message de l'application"""
-    return jsonify({"message": "RenExtract v2 - Optimisé et réorganisé !"})
-
-
-@api_bp.route("/api/message", methods=["POST"])
-def update_message():
-    """Met à jour le message de l'application"""
-    data = request.get_json()
-    if data and "message" in data:
-        # Ici on pourrait sauvegarder le message
-        return jsonify({"success": True, "message": data["message"]})
-    return jsonify({"success": False, "error": "Message requis"}), 400
 
 
 # ============================================================================
@@ -55,9 +42,9 @@ def update_message():
 # ============================================================================
 
 
-@api_bp.route("/api/extraction/extract", methods=["POST"])
+@API.route("/api/extraction/extract", methods=["POST"])
 def extract_texts():
-    """Extraction de textes avec la version optimisée"""
+    """Extraction de textes"""
     try:
         data = request.get_json()
         if not data or "file_content" not in data or "filepath" not in data:
@@ -65,8 +52,8 @@ def extract_texts():
 
         filepath = data["filepath"]
 
-        # Utiliser l'extracteur optimisé
-        extractor = OptimizedTextExtractor(cache_size=1000)
+        # Utiliser l'extracteur
+        extractor = TextExtractor(cache_size=1000)
         result = extractor.extract_texts_streaming(filepath, batch_size=100)
 
         # Convertir le générateur en liste pour la réponse
@@ -79,7 +66,7 @@ def extract_texts():
         return jsonify({"success": False, "error": f"Erreur lors de l'extraction: {e!s}"}), 500
 
 
-@api_bp.route("/api/extraction/validate-file", methods=["POST"])
+@API.route("/api/extraction/validate-file", methods=["POST"])
 def validate_extraction_file():
     """Validation d'un fichier d'extraction"""
     try:
@@ -110,41 +97,134 @@ def validate_extraction_file():
         return jsonify({"success": False, "error": f"Erreur lors de la validation: {e!s}"}), 500
 
 
+@API.route("/api/extraction/get-settings", methods=["GET"])
+def get_extraction_settings():
+    """Récupère les paramètres d'extraction"""
+    try:
+        # Charger les paramètres depuis la configuration
+        settings = AppConfig.load_settings_from_disk()
+        extraction_settings = settings.get("extraction", {})
+
+        # Paramètres par défaut
+        default_settings = {
+            "detect_duplicates": True,
+            "code_prefix": "code",
+            "asterisk_prefix": "asterisk",
+            "tilde_prefix": "tilde",
+            "empty_prefix": "empty",
+        }
+
+        # Fusionner avec les paramètres par défaut
+        final_settings = {**default_settings, **extraction_settings}
+
+        return jsonify({"success": True, "settings": final_settings})
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur récupération paramètres extraction: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/extraction/set-settings", methods=["POST"])
+def set_extraction_settings():
+    """Met à jour les paramètres d'extraction"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "Paramètres requis"}), 400
+
+        # Charger les paramètres actuels
+        current_settings = AppConfig.load_settings_from_disk()
+
+        # Mettre à jour les paramètres d'extraction
+        if "extraction" not in current_settings:
+            current_settings["extraction"] = {}
+
+        current_settings["extraction"].update(data)
+
+        # Sauvegarder
+        AppConfig.save_settings_to_disk(current_settings)
+
+        return jsonify({"success": True, "message": "Paramètres d'extraction mis à jour"})
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur mise à jour paramètres extraction: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
 # ============================================================================
 # ROUTES DE COHÉRENCE
 # ============================================================================
 
 
-@api_bp.route("/api/coherence/check", methods=["POST"])
-def check_coherence():
-    """Vérification de cohérence avec la version optimisée"""
+# L'ancienne route /api/coherence/check a été supprimée
+# Elle est remplacée par /api/coherence/check-svelte qui retourne du JSON structuré
+
+
+@API.route("/api/coherence/check-svelte", methods=["POST"])
+def check_coherence_svelte():
+    """Vérification de cohérence pour l'interface Svelte"""
     try:
         data = request.get_json()
         if not data or "target_path" not in data:
             return jsonify({"success": False, "error": "Chemin cible requis"}), 400
 
         target_path = data["target_path"]
-        return_details = data.get("return_details", False)
-        selection_info = data.get("selection_info")
 
-        # Utiliser le vérificateur optimisé
-        checker = OptimizedCoherenceChecker(max_workers=4, cache_size=500)
+        # Utiliser le vérificateur
+        checker = CoherenceChecker(max_workers=4, cache_size=500)
+
+        # Lancer l'analyse et récupérer les détails
         result = checker.check_coherence_parallel(
-            target_path, return_details=return_details, selection_info=selection_info,
+            target_path,
+            return_details=True,
         )
 
-        return jsonify({"success": True, "result": result})
+        # Extraire les données du résultat
+        if isinstance(result, dict):
+            all_issues = result.get("issues", [])
+            existing_stats = result.get("stats", {})
+        else:
+            all_issues = result
+            existing_stats = {}
+
+        # Calculer les statistiques si pas déjà calculées
+        if not existing_stats:
+            unique_files = {issue["file"] for issue in all_issues}
+            stats = checker.calculate_statistics(all_issues, len(unique_files))
+        else:
+            stats = existing_stats
+
+        issues_by_file = defaultdict(list)
+        for issue in all_issues:
+            issues_by_file[issue["file"]].append(issue)
+
+        # Grouper les problèmes par type pour les statistiques
+        issues_by_type = defaultdict(int)
+        for issue in all_issues:
+            issues_by_type[issue["type"]] += 1
+
+        # Préparer la réponse structurée pour Svelte
+        svelte_result = {
+            "stats": {
+                "total_issues": stats.get("total_issues", 0),
+                "files_analyzed": stats.get("files_analyzed", 0),
+                "issues_by_type": dict(issues_by_type),
+            },
+            "issues_by_file": dict(issues_by_file),
+            "target_path": target_path,
+        }
+
+        return jsonify({"success": True, "result": svelte_result})
 
     except (OSError, ValueError, TypeError) as e:
-        logger.error("Erreur vérification cohérence: %s", e)
+        logger.error("Erreur vérification cohérence Svelte: %s", e)
         return jsonify({"success": False, "error": f"Erreur lors de la vérification: {e!s}"}), 500
 
 
-@api_bp.route("/api/coherence/options", methods=["GET"])
+@API.route("/api/coherence/options", methods=["GET"])
 def get_coherence_options():
     """Récupère les options de cohérence"""
     try:
-        checker = OptimizedCoherenceChecker()
+        checker = CoherenceChecker()
         options = checker.options
         return jsonify({"success": True, "options": options})
     except (OSError, ValueError, TypeError) as e:
@@ -152,7 +232,7 @@ def get_coherence_options():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/coherence/options", methods=["POST"])
+@API.route("/api/coherence/options", methods=["POST"])
 def set_coherence_options():
     """Configure les options de cohérence"""
     try:
@@ -160,7 +240,7 @@ def set_coherence_options():
         if not data:
             return jsonify({"success": False, "error": "Options requises"}), 400
 
-        checker = OptimizedCoherenceChecker()
+        checker = CoherenceChecker()
         checker.options.update(data)
 
         return jsonify({"success": True, "message": "Options mises à jour"})
@@ -175,7 +255,7 @@ def set_coherence_options():
 # ============================================================================
 
 
-@api_bp.route("/api/reconstruction/validate", methods=["POST"])
+@API.route("/api/reconstruction/validate", methods=["POST"])
 def validate_reconstruction_files():
     """Validation des fichiers de reconstruction"""
     try:
@@ -196,9 +276,9 @@ def validate_reconstruction_files():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/reconstruction/reconstruct", methods=["POST"])
+@API.route("/api/reconstruction/reconstruct", methods=["POST"])
 def reconstruct_file():
-    """Reconstruction d'un fichier avec la version optimisée"""
+    """Reconstruction d'un fichier"""
     try:
         data = request.get_json()
         if not data or "file_content" not in data or "filepath" not in data:
@@ -208,10 +288,10 @@ def reconstruct_file():
         filepath = data["filepath"]
         save_mode = data.get("save_mode", "new_file")
 
-        # Utiliser le reconstructeur optimisé
-        reconstructor = OptimizedFileReconstructor(cache_size=100)
-        reconstructor.load_file_content_optimized(file_content, filepath)
-        result = reconstructor.reconstruct_file_optimized(save_mode)
+        # Utiliser le reconstructeur
+        reconstructor = FileReconstructor(cache_size=100)
+        reconstructor.load_file_content(file_content, filepath)
+        result = reconstructor.reconstruct_file(save_mode)
 
         return jsonify({"success": True, "result": result})
 
@@ -225,7 +305,7 @@ def reconstruct_file():
 # ============================================================================
 
 
-@api_bp.route("/api/project/validate", methods=["POST"])
+@API.route("/api/project/validate", methods=["POST"])
 def validate_project():
     """Validation d'un projet Ren'Py"""
     try:
@@ -244,7 +324,7 @@ def validate_project():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/project/languages", methods=["POST"])
+@API.route("/api/project/languages", methods=["POST"])
 def scan_project_languages():
     """Scan des langues disponibles dans un projet"""
     try:
@@ -263,12 +343,114 @@ def scan_project_languages():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
+@API.route("/api/project/find-root", methods=["POST"])
+def find_project_root():
+    """Trouve la racine d'un projet Ren'Py à partir d'un sous-dossier"""
+    try:
+        data = request.get_json()
+        if not data or "subdir_path" not in data:
+            return jsonify({"success": False, "error": "Chemin de sous-dossier requis"}), 400
+
+        subdir_path = data["subdir_path"]
+        max_levels = data.get("max_levels", 10)
+
+        project_manager = ProjectManager()
+        root_path = project_manager.find_project_root(subdir_path, max_levels)
+
+        if root_path:
+            return jsonify({"success": True, "root_path": root_path})
+        else:
+            return jsonify({"success": False, "error": "Racine de projet non trouvée"})
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur recherche racine projet: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/project/set-current", methods=["POST"])
+def set_current_project():
+    """Définit le projet courant"""
+    try:
+        data = request.get_json()
+        if not data or "project_path" not in data:
+            return jsonify({"success": False, "error": "Chemin de projet requis"}), 400
+
+        project_path = data["project_path"]
+        project_manager = ProjectManager()
+        result = project_manager.set_current_project(project_path)
+
+        return jsonify({"success": result})
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur définition projet courant: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/project/summary", methods=["POST"])
+def get_project_summary():
+    """Obtient un résumé du projet"""
+    try:
+        data = request.get_json()
+        if not data or "project_path" not in data:
+            return jsonify({"success": False, "error": "Chemin de projet requis"}), 400
+
+        project_path = data["project_path"]
+        project_manager = ProjectManager()
+        summary = project_manager.get_project_summary(project_path)
+
+        return jsonify({"success": True, "summary": summary})
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur résumé projet: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/project/files", methods=["POST"])
+def get_project_files():
+    """Obtient la liste des fichiers du projet"""
+    try:
+        data = request.get_json()
+        if not data or "project_path" not in data:
+            return jsonify({"success": False, "error": "Chemin de projet requis"}), 400
+
+        project_path = data["project_path"]
+        file_type = data.get("file_type", "all")
+        language = data.get("language")
+        project_manager = ProjectManager()
+        files = project_manager.get_project_files(project_path, file_type, language)
+
+        return jsonify({"success": True, "files": files})
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur fichiers projet: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/project/load-file", methods=["POST"])
+def load_project_file():
+    """Charge le contenu d'un fichier de projet"""
+    try:
+        data = request.get_json()
+        if not data or "filepath" not in data:
+            return jsonify({"success": False, "error": "Chemin de fichier requis"}), 400
+
+        filepath = data["filepath"]
+        project_manager = ProjectManager()
+        result = project_manager.load_file_content(filepath)
+
+        return jsonify(result)
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur chargement fichier: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
 # ============================================================================
 # ROUTES DE CONFIGURATION
 # ============================================================================
 
 
-@api_bp.route("/api/settings", methods=["GET"])
+@API.route("/api/settings", methods=["GET"])
 def get_settings():
     """Récupère les paramètres de l'application"""
     try:
@@ -279,7 +461,7 @@ def get_settings():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/settings", methods=["POST"])
+@API.route("/api/settings", methods=["POST"])
 def update_settings():
     """Met à jour les paramètres de l'application"""
     try:
@@ -300,12 +482,14 @@ def update_settings():
 # ============================================================================
 
 
-@api_bp.route("/api/updates/check", methods=["GET"])
+@API.route("/api/updates/check", methods=["GET"])
 def check_for_updates():
     """Vérifie les mises à jour disponibles"""
     try:
         update_manager = UpdateManager(
-            AppConfig.GITHUB_REPO_OWNER, AppConfig.GITHUB_REPO_NAME, AppConfig.APP_VERSION,
+            AppConfig.GITHUB_REPO_OWNER,
+            AppConfig.GITHUB_REPO_NAME,
+            AppConfig.APP_VERSION,
         )
         result = update_manager.check_for_updates()
         return jsonify(result)
@@ -314,7 +498,7 @@ def check_for_updates():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/updates/download", methods=["POST"])
+@API.route("/api/updates/download", methods=["POST"])
 def download_update():
     """Télécharge une mise à jour"""
     try:
@@ -324,7 +508,9 @@ def download_update():
 
         download_url = data["download_url"]
         update_manager = UpdateManager(
-            AppConfig.GITHUB_REPO_OWNER, AppConfig.GITHUB_REPO_NAME, AppConfig.APP_VERSION,
+            AppConfig.GITHUB_REPO_OWNER,
+            AppConfig.GITHUB_REPO_NAME,
+            AppConfig.APP_VERSION,
         )
         result = update_manager.download_update(download_url)
 
@@ -340,21 +526,63 @@ def download_update():
 # ============================================================================
 
 
-@api_bp.route("/api/file-dialog/open", methods=["POST"])
+@API.route("/api/file-dialog/open", methods=["POST"])
 def open_dialog():
-    """Ouvre un dialogue de sélection de fichier"""
+    """Ouvre un dialogue de sélection de fichier ou dossier"""
     try:
-        # Implémentation simplifiée
-        return jsonify(
-            {"success": True, "message": "Dialogue de fichier (implémentation simplifiée)"},
-        )
+        # Récupérer les paramètres de la requête
+        data = request.get_json() or {}
+        dialog_type = data.get("dialog_type", "file")
+        title = data.get("title", "Sélectionner un fichier")
+        initialdir = data.get("initialdir", "")
 
+        # Créer une fenêtre tkinter cachée
+        root = tk.Tk()
+        root.withdraw()  # Cacher la fenêtre principale
+
+        selected_path = None
+
+        if dialog_type == "folder":
+            # Ouvrir le dialogue de dossier
+            selected_path = filedialog.askdirectory(title=title, initialdir=initialdir)
+        else:
+            # Ouvrir le dialogue de fichier
+            selected_path = filedialog.askopenfilename(
+                title=title,
+                initialdir=initialdir,
+                filetypes=[("Fichiers Ren'Py", "*.rpy"), ("Tous les fichiers", "*.*")],
+            )
+
+        # Fermer la fenêtre tkinter
+        root.destroy()
+
+        if selected_path:
+            return jsonify(
+                {
+                    "success": True,
+                    "path": selected_path,
+                    "message": "Sélectionné: " + selected_path,
+                }
+            )
+        else:
+            return jsonify({"success": False, "message": "Aucune sélection"})
+
+    except ImportError:
+        # Fallback si tkinter n'est pas disponible
+        logger.warning("tkinter non disponible, utilisation du fallback")
+        return jsonify(
+            {
+                "success": False,
+                "error": "tkinter non disponible sur ce système",
+                "message": "Veuillez installer tkinter ou utiliser un autre système",
+            }
+        )
     except (OSError, ValueError, TypeError) as e:
         logger.error("Erreur dialogue fichier: %s", e)
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/file-dialog/save", methods=["POST"])
+@API.route("/api/file-dialog/save", methods=["POST"])
 def save_dialog():
     """Ouvre un dialogue de sauvegarde"""
     try:
@@ -378,7 +606,7 @@ def save_dialog():
 # ============================================================================
 
 
-@api_bp.route("/api/translator/translate", methods=["POST"])
+@API.route("/api/translator/translate", methods=["POST"])
 def translate_text():
     """Traduction de texte (fonctionnalité optionnelle)"""
     try:
@@ -409,7 +637,7 @@ def translate_text():
 # ============================================================================
 
 
-@api_bp.route("/api/backup/create", methods=["POST"])
+@API.route("/api/backup/create", methods=["POST"])
 def create_backup():
     """Création d'une sauvegarde"""
     try:
@@ -428,7 +656,7 @@ def create_backup():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/backup/restore", methods=["POST"])
+@API.route("/api/backup/restore", methods=["POST"])
 def restore_backup():
     """Restauration d'une sauvegarde"""
     try:
@@ -446,12 +674,17 @@ def restore_backup():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/backup/list", methods=["GET"])
+@API.route("/api/backup/list", methods=["GET"])
 def list_backups():
     """Liste des sauvegardes disponibles"""
     try:
-        # Note: list_backups method needs to be implemented in BackupManager
-        backups = []
+        # Récupérer les paramètres de filtrage
+        game_filter = request.args.get("game")
+        type_filter = request.args.get("type")
+
+        # Utiliser le BackupManager pour lister les sauvegardes
+        backup_manager = BackupManager()
+        backups = backup_manager.list_all_backups(game_filter, type_filter)
 
         return jsonify({"success": True, "backups": backups})
 
@@ -465,7 +698,7 @@ def list_backups():
 # ============================================================================
 
 
-@api_bp.route("/api/items")
+@API.route("/api/items")
 def get_items():
     """Récupère les éléments de l'interface"""
     return jsonify(
@@ -509,7 +742,7 @@ def get_items():
 # ============================================================================
 
 
-@api_bp.route("/api/file-dialog/save-path", methods=["POST"])
+@API.route("/api/file-dialog/save-path", methods=["POST"])
 def set_save_path():
     """Définit le chemin de sauvegarde"""
     try:
@@ -532,7 +765,7 @@ def set_save_path():
 # ============================================================================
 
 
-@api_bp.route("/api/updates/install", methods=["POST"])
+@API.route("/api/updates/install", methods=["POST"])
 def install_update():
     """Installe une mise à jour"""
     try:
@@ -546,12 +779,14 @@ def install_update():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/updates/config", methods=["GET"])
+@API.route("/api/updates/config", methods=["GET"])
 def get_update_config():
     """Récupère la configuration des mises à jour"""
     try:
         update_manager = UpdateManager(
-            AppConfig.GITHUB_REPO_OWNER, AppConfig.GITHUB_REPO_NAME, AppConfig.APP_VERSION,
+            AppConfig.GITHUB_REPO_OWNER,
+            AppConfig.GITHUB_REPO_NAME,
+            AppConfig.APP_VERSION,
         )
         config = update_manager.get_config()
 
@@ -562,7 +797,7 @@ def get_update_config():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/updates/config", methods=["POST"])
+@API.route("/api/updates/config", methods=["POST"])
 def update_update_config():
     """Met à jour la configuration des mises à jour"""
     try:
@@ -580,7 +815,7 @@ def update_update_config():
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
-@api_bp.route("/api/updates/auto-check", methods=["GET"])
+@API.route("/api/updates/auto-check", methods=["GET"])
 def should_auto_check():
     """Vérifie si la vérification automatique est activée"""
     try:
@@ -599,9 +834,52 @@ def should_auto_check():
 # ============================================================================
 
 
-@api_bp.route("/")
+@API.route("/")
 def index():
-    """Route racine de l'API"""
+    """Route racine - sert l'interface Svelte"""
+    static_folder = current_app.static_folder
+    index_path = os.path.join(static_folder, "index.html")
+
+    logger.info("🔍 Tentative de chargement de l'interface Svelte")
+    logger.info("📁 Dossier statique: %s", static_folder)
+    logger.info("📄 Chemin index.html: %s", index_path)
+    logger.info("✅ Fichier existe: %s", os.path.exists(index_path))
+
+    if not os.path.exists(index_path):
+        logger.error("❌ Interface Svelte non trouvée: %s", index_path)
+        return jsonify(
+            {
+                "error": "Interface Svelte non trouvée",
+                "message": "Veuillez compiler l'application avec: pnpm run build",
+                "static_folder": static_folder,
+                "index_path": index_path,
+            }
+        ), 404
+
+    logger.info("✅ Interface Svelte trouvée, envoi du fichier")
+    return send_from_directory(static_folder, "index.html")
+
+
+@API.route("/<path:filename>")
+def serve_static(filename):
+    """Sert les fichiers statiques de SvelteKit"""
+    static_folder = current_app.static_folder
+    file_path = os.path.join(static_folder, filename)
+
+    logger.debug("📁 Demande de fichier statique: %s", filename)
+    logger.debug("📄 Chemin complet: %s", file_path)
+    logger.debug("✅ Fichier existe: %s", os.path.exists(file_path))
+
+    if not os.path.exists(file_path):
+        logger.warning("⚠️ Fichier statique non trouvé: %s", filename)
+        return jsonify({"error": "Fichier non trouvé: " + filename}), 404
+
+    return send_from_directory(static_folder, filename)
+
+
+@API.route("/api")
+def api_info():
+    """Route d'information de l'API"""
     return jsonify(
         {
             "message": "RenExtract v2 API - Structure réorganisée",
@@ -609,7 +887,6 @@ def index():
             "status": "active",
             "endpoints": [
                 "/api/health",
-                "/api/message",
                 "/api/items",
                 "/api/extraction/*",
                 "/api/coherence/*",

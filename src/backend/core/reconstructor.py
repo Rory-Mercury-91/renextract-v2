@@ -11,13 +11,14 @@ import os
 import re
 import time
 from collections import OrderedDict
+from datetime import datetime
 from functools import lru_cache
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class OptimizedFileReconstructor:
+class FileReconstructor:
     """Classe optimisée pour la reconstruction des fichiers traduits"""
 
     def __init__(self, cache_size: int = 100):
@@ -120,7 +121,7 @@ class OptimizedFileReconstructor:
             return self._cache.get(filepath)
         return None
 
-    def load_file_content_optimized(self, file_content: list[str], original_path: str):
+    def load_file_content(self, file_content: list[str], original_path: str):
         """Charge le fichier original et les données d'extraction de manière optimisée"""
         if not file_content or not isinstance(file_content, list):
             raise ValueError("Contenu de fichier invalide ou manquant")
@@ -420,7 +421,7 @@ class OptimizedFileReconstructor:
             logger.error("Erreur construction mapping traduction: %s", e)
             self.translation_map = {}
 
-    def reconstruct_file_optimized(self, save_mode: str = "new_file") -> dict[str, Any]:
+    def reconstruct_file(self, save_mode: str = "new_file") -> dict[str, Any]:
         """Reconstruit le fichier traduit de manière optimisée"""
         start_time = time.time()
 
@@ -459,7 +460,7 @@ class OptimizedFileReconstructor:
                 "reconstruction_time": reconstruction_time,
             }
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             logger.error("Erreur reconstruction: %s", e)
             return {"success": False, "error": str(e)}
 
@@ -606,7 +607,6 @@ class OptimizedFileReconstructor:
 
     def _add_reconstruction_marker_optimized(self, content: list[str]) -> list[str]:
         """Ajoute un marqueur de reconstruction à la fin du fichier de manière optimisée"""
-        from datetime import datetime
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         marker = (
@@ -635,7 +635,7 @@ class OptimizedFileReconstructor:
             game_name = os.path.basename(project_path.rstrip(os.sep))
             game_name = re.sub(r'[<>:"/\\|?*]', "_", game_name)
             return game_name
-        except Exception:
+        except (OSError, ValueError, TypeError):
             return "jeu_inconnu"
 
     def clear_cache(self):
@@ -655,4 +655,4 @@ class OptimizedFileReconstructor:
 
 
 # Instance globale optimisée
-optimized_reconstructor = OptimizedFileReconstructor(cache_size=100)
+optimized_reconstructor = FileReconstructor(cache_size=100)

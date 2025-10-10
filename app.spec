@@ -13,8 +13,8 @@ if dist_path.exists():
         if file_path.is_file():
             # Calculer le chemin relatif pour l'inclusion
             rel_path = file_path.relative_to(dist_path)
-            # Inclure tous les fichiers statiques dans l'exécutable
-            datas.append((str(file_path), str(rel_path.parent) if rel_path.parent != Path('.') else '.'))
+            # Inclure tous les fichiers statiques dans l'exécutable avec la structure dist/
+            datas.append((str(file_path), f"dist/{rel_path.parent}" if rel_path.parent != Path('.') else "dist"))
 
 a = Analysis(
     ['app.py'],
@@ -49,8 +49,8 @@ exe = EXE(
     name='app-temp',
     debug=True,
     bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
+    strip=True,   # Stripper les symboles pour réduire la taille
+    upx=False,    # Désactiver UPX qui peut causer des faux positifs
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
@@ -60,6 +60,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon='public/favicon.ico',
+    manifest='app.manifest',
     onefile=True,
     exclude_binaries=False,
 )

@@ -3,7 +3,6 @@
 
 Modules disponibles :
 - routes: Toutes les routes API consolidées
-- coherence_html: Génération de rapports HTML
 """
 
-__all__ = ["coherence_html", "routes"]
+__all__ = ["routes"]

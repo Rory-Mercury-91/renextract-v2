@@ -3,6 +3,7 @@
 Main application using pywebview with Flask backend
 Structure réorganisée - Version 2.0
 """
+
 import os
 import sys
 import threading
@@ -14,10 +15,11 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
+from src.backend.api.routes import API
+
 # Import de la nouvelle structure réorganisée
 from src.backend.services.backup import BackupManager
 from src.backend.services.config import AppConfig
-from src.backend.api.routes import api_bp
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +29,7 @@ def initialize_application_folders():
     """Crée les dossiers nécessaires au premier lancement de l'application"""
     try:
         # Déterminer le répertoire de base (où se trouve l'exécutable)
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             # Mode exécutable (build)
             base_dir = os.path.dirname(sys.executable)
         else:
@@ -35,7 +37,7 @@ def initialize_application_folders():
             base_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Dossiers à créer
-        folders = ['01_Temporary', '02_Reports', '03_Backups', '04_Configs']
+        folders = ["01_Temporary", "02_Reports", "03_Backups", "04_Configs"]
 
         created_folders = []
         for folder in folders:
@@ -56,13 +58,13 @@ def initialize_application_folders():
 
 def get_static_path():
     """Détermine le chemin vers les fichiers statiques"""
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Mode exécutable (build)
         # pylint: disable=protected-access
-        static_path = Path(sys._MEIPASS) / 'dist'
+        static_path = Path(sys._MEIPASS) / "dist"
     else:
         # Mode développement
-        static_path = Path('dist')
+        static_path = Path("dist")
     return str(static_path)
 
 
@@ -70,7 +72,7 @@ def get_static_path():
 app_base_dir = initialize_application_folders()
 
 # Flask configuration
-app = Flask(__name__, static_folder=get_static_path(), static_url_path='')
+app = Flask(__name__, static_folder=get_static_path(), static_url_path="")
 CORS(app)
 
 # Initialiser les gestionnaires
@@ -85,17 +87,18 @@ if config_errors:
     print("⚠️  Erreurs de configuration détectées:")
     for error in config_errors:
         print(f"   - {error}")
-    print("   Veuillez configurer les variables d'environnement ou \
-    modifier src/backend/services/config.py")
+    print(
+        "   Veuillez configurer les variables d'environnement ou \
+    modifier src/backend/services/config.py"
+    )
 
 # Enregistrer le blueprint principal consolidé
-app.register_blueprint(api_bp)
+app.register_blueprint(API)
 
 
 def start_flask():
     """Démarre le serveur Flask"""
-    app.run(host=AppConfig.FLASK_HOST, port=AppConfig.FLASK_PORT,
-            debug=AppConfig.FLASK_DEBUG)
+    app.run(host=AppConfig.FLASK_HOST, port=AppConfig.FLASK_PORT, debug=AppConfig.FLASK_DEBUG)
 
 
 def main():
@@ -112,16 +115,16 @@ def main():
 
     # Démarrer l'interface webview
     webview.create_window(
-        'RenExtract v2',
-        f'http://{AppConfig.FLASK_HOST}:{AppConfig.FLASK_PORT}',
+        "RenExtract v2",
+        f"http://{AppConfig.FLASK_HOST}:{AppConfig.FLASK_PORT}",
         width=1200,
         height=800,
         resizable=True,
-        min_size=(800, 600)
+        min_size=(800, 600),
     )
 
     webview.start(debug=AppConfig.FLASK_DEBUG)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

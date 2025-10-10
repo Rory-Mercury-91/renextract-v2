@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Configuration de l'application
-"""
+"""Configuration de l'application"""
 
 import json
 import os
@@ -78,14 +77,10 @@ class AppConfig:
     APP_VERSION = os.getenv("APP_VERSION", "0.9.0")
 
     # Configuration des mises à jour
-    UPDATE_CHECK_INTERVAL_HOURS = int(
-        os.getenv("UPDATE_CHECK_INTERVAL_HOURS", "24"))
-    AUTO_CHECK_UPDATES = os.getenv(
-        "AUTO_CHECK_UPDATES", "true").lower() == "true"
-    AUTO_DOWNLOAD_UPDATES = os.getenv(
-        "AUTO_DOWNLOAD_UPDATES", "false").lower() == "true"
-    AUTO_INSTALL_UPDATES = os.getenv(
-        "AUTO_INSTALL_UPDATES", "false").lower() == "true"
+    UPDATE_CHECK_INTERVAL_HOURS = int(os.getenv("UPDATE_CHECK_INTERVAL_HOURS", "24"))
+    AUTO_CHECK_UPDATES = os.getenv("AUTO_CHECK_UPDATES", "true").lower() == "true"
+    AUTO_DOWNLOAD_UPDATES = os.getenv("AUTO_DOWNLOAD_UPDATES", "false").lower() == "true"
+    AUTO_INSTALL_UPDATES = os.getenv("AUTO_INSTALL_UPDATES", "false").lower() == "true"
 
     # Configuration de l'application
     APP_NAME = "RenExtract"
@@ -130,8 +125,7 @@ class AppConfig:
     @classmethod
     def ensure_directories(cls):
         """Crée les dossiers nécessaires s'ils n'existent pas"""
-        directories = [cls.CONFIG_DIR, cls.BACKUP_DIR,
-                       cls.REPORTS_DIR, cls.TEMP_DIR]
+        directories = [cls.CONFIG_DIR, cls.BACKUP_DIR, cls.REPORTS_DIR, cls.TEMP_DIR]
 
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
@@ -169,8 +163,7 @@ class AppConfig:
     def load_settings_from_disk(app_base_dir=None):
         """Charge les paramètres depuis le disque"""
 
-        settings_file_path = Path(app_base_dir or ".") / \
-            "04_Configs" / "app_settings.json"
+        settings_file_path = Path(app_base_dir or ".") / "04_Configs" / "app_settings.json"
         settings = AppConfig.get_default_settings()
 
         try:
@@ -197,8 +190,7 @@ class AppConfig:
     def save_settings_to_disk(settings, app_base_dir=None):
         """Sauvegarde les paramètres sur le disque"""
 
-        settings_file_path = Path(app_base_dir or ".") / \
-            "04_Configs" / "app_settings.json"
+        settings_file_path = Path(app_base_dir or ".") / "04_Configs" / "app_settings.json"
 
         try:
             settings_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -240,7 +232,8 @@ class AppConfig:
         if "debugActive" in sanitized and not isinstance(sanitized["debugActive"], bool):
             del sanitized["debugActive"]
         if "translatorFeature" in sanitized and not isinstance(
-            sanitized["translatorFeature"], bool,
+            sanitized["translatorFeature"],
+            bool,
         ):
             del sanitized["translatorFeature"]
 

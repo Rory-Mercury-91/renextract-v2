@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "quality:fix": "prettier --write . && eslint . --fix && ruff check src/backend --fix && ruff format src/backend && svelte-check",
+    "quality": "prettier --write . && eslint . --fix && ruff check src/backend --fix && ruff format src/backend && svelte-check",
     "ttia:clone": "test -d external/TranslationToolsIA || mkdir -p external && git clone https://github.com/Virusf/TranslationToolsIA.git external/TranslationToolsIA",
     "ttia:update": "test -d external/TranslationToolsIA && git -C external/TranslationToolsIA pull || echo 'TranslationToolsIA non cloné. Lancez: pnpm run ttia:clone'",
     "ttia:status": "test -d external/TranslationToolsIA && git -C external/TranslationToolsIA rev-parse --short HEAD || echo 'absent'"

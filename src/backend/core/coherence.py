@@ -1,8 +1,7 @@
 # src/backend/core/coherence.py
-# Version optimisée de la vérification de cohérence avec cache et
-# parallélisation
+# Vérification de cohérence
 
-"""Module de vérification de cohérence optimisé pour RenExtract v2."""
+"""Module de vérification de cohérence"""
 
 import glob
 import hashlib
@@ -12,20 +11,19 @@ import re
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+
+# datetime supprimé car plus utilisé pour la génération de rapports HTML
 from functools import lru_cache
 from typing import Any
-
-from src.backend.api.coherence_html import generate_modern_html_report
 
 logger = logging.getLogger(__name__)
 
 
-class OptimizedCoherenceChecker:
-    """Vérificateur de cohérence optimisé avec cache et parallélisation"""
+class CoherenceChecker:
+    """Vérificateur de cohérence"""
 
     def __init__(self, max_workers: int = 4, cache_size: int = 500):
-        """Initialise le vérificateur optimisé"""
+        """Initialise le vérificateur"""
         self.max_workers = max_workers
         self.cache_size = cache_size
         self._cache = {}
@@ -83,23 +81,18 @@ class OptimizedCoherenceChecker:
             return self._cache.get(filepath, [])
         return None
 
-    def check_coherence_parallel(
-        self,
-        target_path: str,
-        return_details: bool = False,
-        selection_info: dict | None = None,
-    ) -> Any:
+    def check_coherence_parallel(self, target_path: str, return_details: bool = False) -> Any:
         """Vérification de cohérence avec parallélisation"""
         start_time = time.time()
 
         try:
-            logger.info("🔍 Début vérification cohérence optimisée: %s", target_path)
+            logger.info("🔍 Début vérification cohérence: %s", target_path)
 
             # 1. Déterminer les fichiers à analyser
             if os.path.isfile(target_path):
                 files_to_check = [target_path]
             else:
-                files_to_check = self._find_translation_files_optimized(target_path)
+                files_to_check = self._find_translation_files(target_path)
 
             logger.info("📂 %d fichier(s) à analyser", len(files_to_check))
 
@@ -109,7 +102,7 @@ class OptimizedCoherenceChecker:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 # Soumettre les tâches
                 future_to_file = {
-                    executor.submit(self._check_file_coherence_optimized, file_path): file_path
+                    executor.submit(self._check_file_coherence, file_path): file_path
                     for file_path in files_to_check
                 }
 
@@ -128,15 +121,7 @@ class OptimizedCoherenceChecker:
                         logger.error("❌ Erreur analyse %s: %s", file_path, e)
 
             # 3. Calculer les statistiques
-            stats = self._calculate_statistics_optimized(all_issues, len(files_to_check))
-
-            # 4. Générer le rapport
-            rapport_path = self._generate_coherence_report_optimized(
-                all_issues,
-                target_path,
-                selection_info,
-                stats,
-            )
+            stats = self.calculate_statistics(all_issues, len(files_to_check))
 
             analysis_time = time.time() - start_time
             logger.info(
@@ -145,27 +130,26 @@ class OptimizedCoherenceChecker:
                 stats["total_issues"],
             )
 
-            # 5. Retourner les résultats
+            # 4. Retourner les résultats (plus de génération HTML)
             if return_details:
                 return {
-                    "rapport_path": rapport_path,
                     "stats": stats,
                     "issues": all_issues,
                     "analysis_time": analysis_time,
                 }
-            return rapport_path
+            return all_issues
 
         except Exception as e:
             logger.error("Erreur vérification cohérence: %s", e)
             raise
 
-    def _find_translation_files_optimized(self, target_path: str) -> list[str]:
-        """Trouve les fichiers de traduction de manière optimisée"""
+    def _find_translation_files(self, target_path: str) -> list[str]:
+        """Trouve les fichiers de traduction"""
         try:
             if not os.path.exists(target_path):
                 return []
 
-            # Recherche optimisée avec glob
+            # Recherche avec glob
             pattern = os.path.join(target_path, "**", "*.rpy")
             files = glob.glob(pattern, recursive=True)
 
@@ -191,8 +175,8 @@ class OptimizedCoherenceChecker:
             logger.error("Erreur recherche fichiers: %s", e)
             return []
 
-    def _check_file_coherence_optimized(self, file_path: str) -> list[dict[str, Any]]:
-        """Analyse la cohérence d'un fichier de manière optimisée"""
+    def _check_file_coherence(self, file_path: str) -> list[dict[str, Any]]:
+        """Analyse la cohérence d'un fichier"""
         try:
             # Vérifier le cache d'abord
             cached_result = self._get_cached_result(file_path)
@@ -207,7 +191,7 @@ class OptimizedCoherenceChecker:
 
             old_line = None
 
-            # Traitement optimisé ligne par ligne
+            # Traitement ligne par ligne
             for i, line in enumerate(lines, 1):
                 stripped = line.strip()
 
@@ -216,20 +200,20 @@ class OptimizedCoherenceChecker:
                     continue
 
                 # Détecter les lignes OLD
-                if self._is_old_line_optimized(stripped):
-                    if not self._is_voice_line_optimized(stripped):
+                if self._is_old_line(stripped):
+                    if not self._is_voice_line(stripped):
                         # Extraire le texte entre # " et "
                         old_line = stripped[3:-1]
                     continue
 
                 # Détecter les lignes NEW
-                if self._is_new_line_optimized(stripped):
-                    if not self._is_voice_line_optimized(stripped):
+                if self._is_new_line(stripped):
+                    if not self._is_voice_line(stripped):
                         new_line = stripped[1:-1] if stripped.endswith('"') else stripped[1:]
 
                         if old_line:
                             # Vérifier la cohérence OLD/NEW
-                            line_issues = self._check_line_coherence_optimized(
+                            line_issues = self._check_line_coherence(
                                 old_line,
                                 new_line,
                                 file_path,
@@ -251,12 +235,12 @@ class OptimizedCoherenceChecker:
             return []
 
     @lru_cache(maxsize=1000)
-    def _is_old_line_optimized(self, line: str) -> bool:
+    def _is_old_line(self, line: str) -> bool:
         """Vérifie si une ligne est une ligne OLD (avec cache)"""
         return line.startswith('# "') and line.endswith('"')
 
     @lru_cache(maxsize=1000)
-    def _is_new_line_optimized(self, line: str) -> bool:
+    def _is_new_line(self, line: str) -> bool:
         """Vérifie si une ligne est une ligne NEW (avec cache)"""
         if line.startswith("# "):
             return False
@@ -264,18 +248,18 @@ class OptimizedCoherenceChecker:
         return '"' in line and not line.startswith("#")
 
     @lru_cache(maxsize=1000)
-    def _is_voice_line_optimized(self, line: str) -> bool:
+    def _is_voice_line(self, line: str) -> bool:
         """Vérifie si une ligne contient une instruction voice (avec cache)"""
         return "voice " in line and '"' in line
 
-    def _check_line_coherence_optimized(
+    def _check_line_coherence(
         self,
         old_line: str,
         new_line: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie la cohérence entre une ligne OLD et NEW de manière optimisée"""
+        """Vérifie la cohérence entre une ligne OLD et NEW"""
         issues = []
 
         try:
@@ -285,9 +269,9 @@ class OptimizedCoherenceChecker:
             if not old_text or not new_text:
                 return issues
 
-            # Vérifications optimisées selon les options
+            # Vérifications selon les options
             if self.options.get("check_untranslated", True):
-                if self._is_untranslated_line_optimized(old_text, new_text):
+                if self._is_untranslated_line(old_text, new_text):
                     issues.append(
                         {
                             "file": file_path,
@@ -304,32 +288,32 @@ class OptimizedCoherenceChecker:
             check_functions = []
 
             if self.options.get("check_variables", True):
-                check_functions.append(("variables", self._check_variables_optimized))
+                check_functions.append(("variables", self._check_variables))
 
             if self.options.get("check_tags", True):
-                check_functions.append(("tags", self._check_tags_optimized))
+                check_functions.append(("tags", self._check_tags))
 
             if self.options.get("check_escape_sequences", True):
-                check_functions.append(("escape_sequences", self._check_escape_sequences_optimized))
+                check_functions.append(("escape_sequences", self._check_escape_sequences))
 
             if self.options.get("check_percentages", True):
-                check_functions.append(("percentages", self._check_percentages_optimized))
+                check_functions.append(("percentages", self._check_percentages))
 
             if self.options.get("check_parentheses", True):
-                check_functions.append(("parentheses", self._check_parentheses_optimized))
+                check_functions.append(("parentheses", self._check_parentheses))
 
             if self.options.get("check_deepl_ellipsis", True):
-                check_functions.append(("deepl_ellipsis", self._check_deepl_ellipsis_optimized))
+                check_functions.append(("deepl_ellipsis", self._check_deepl_ellipsis))
 
             if self.options.get("check_isolated_percent", True):
-                check_functions.append(("isolated_percent", self._check_isolated_percent_optimized))
+                check_functions.append(("isolated_percent", self._check_isolated_percent))
 
             if self.options.get("check_french_quotes", True):
-                check_functions.append(("french_quotes", self._check_french_quotes_optimized))
+                check_functions.append(("french_quotes", self._check_french_quotes))
 
             if self.options.get("check_double_dash_ellipsis", True):
                 check_functions.append(
-                    ("double_dash_ellipsis", self._check_double_dash_ellipsis_optimized),
+                    ("double_dash_ellipsis", self._check_double_dash_ellipsis),
                 )
 
             # Exécuter les vérifications
@@ -355,15 +339,15 @@ class OptimizedCoherenceChecker:
         return issues
 
     @lru_cache(maxsize=1000)
-    def _is_untranslated_line_optimized(self, old_text: str, new_text: str) -> bool:
+    def _is_untranslated_line(self, old_text: str, new_text: str) -> bool:
         """Vérifie si une ligne est probablement non traduite (avec cache)"""
         if old_text.strip() != new_text.strip():
             return False
 
         text = old_text.strip()
 
-        # Auto-exclusions optimisées
-        if self._is_auto_excluded_optimized(text):
+        # Auto-exclusions
+        if self._is_auto_excluded(text):
             return False
 
         # Exclusions personnalisées
@@ -378,7 +362,7 @@ class OptimizedCoherenceChecker:
         return True
 
     @lru_cache(maxsize=1000)
-    def _is_auto_excluded_optimized(self, text: str) -> bool:
+    def _is_auto_excluded(self, text: str) -> bool:
         """Vérifie les auto-exclusions par défaut (avec cache)"""
         # Ellipsis
         if self.options.get("check_ellipsis", True) and text in ["...", "…", "....", "....."]:
@@ -406,14 +390,14 @@ class OptimizedCoherenceChecker:
 
         return False
 
-    def _check_variables_optimized(
+    def _check_variables(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie la cohérence des variables [] de manière optimisée"""
+        """Vérifie la cohérence des variables []"""
         issues = []
 
         try:
@@ -421,8 +405,8 @@ class OptimizedCoherenceChecker:
             new_vars = re.findall(r"\[[^\]]*\]", new_text)
 
             # Normaliser les variables
-            old_vars_norm = [self._normalize_variable_optimized(var) for var in old_vars]
-            new_vars_norm = [self._normalize_variable_optimized(var) for var in new_vars]
+            old_vars_norm = [self._normalize_variable(var) for var in old_vars]
+            new_vars_norm = [self._normalize_variable(var) for var in new_vars]
 
             if sorted(old_vars_norm) != sorted(new_vars_norm):
                 issues.append(
@@ -443,18 +427,18 @@ class OptimizedCoherenceChecker:
         return issues
 
     @lru_cache(maxsize=1000)
-    def _normalize_variable_optimized(self, variable: str) -> str:
+    def _normalize_variable(self, variable: str) -> str:
         """Normalise une variable en enlevant les fonctions de traduction (avec cache)"""
         return re.sub(r"![tulc]", "", variable)
 
-    def _check_tags_optimized(
+    def _check_tags(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie que les balises {xxx} sont équilibrées de manière optimisée"""
+        """Vérifie que les balises {xxx} sont équilibrées"""
         issues = []
 
         # Vérifier l'équilibre des accolades
@@ -476,14 +460,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_escape_sequences_optimized(
+    def _check_escape_sequences(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie la cohérence des séquences d'échappement de manière optimisée"""
+        """Vérifie la cohérence des séquences d'échappement"""
         issues = []
 
         escape_sequences = [r"\\n", r"\\t", r"\\r", r"\\\\"]
@@ -508,14 +492,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_percentages_optimized(
+    def _check_percentages(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie la cohérence des variables de formatage de manière optimisée"""
+        """Vérifie la cohérence des variables de formatage"""
         issues = []
 
         # Pattern pour %s, %d, %f, etc.
@@ -541,14 +525,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_parentheses_optimized(
+    def _check_parentheses(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Vérifie l'équilibre des parenthèses de manière optimisée"""
+        """Vérifie l'équilibre des parenthèses"""
         issues = []
 
         # Paires à vérifier
@@ -574,14 +558,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_deepl_ellipsis_optimized(
+    def _check_deepl_ellipsis(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Détecte les ellipses DeepL de manière optimisée"""
+        """Détecte les ellipses DeepL"""
         issues = []
 
         if "[...]" in new_text or "[…]" in new_text:
@@ -600,14 +584,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_isolated_percent_optimized(
+    def _check_isolated_percent(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Détecte les % isolés de manière optimisée"""
+        """Détecte les % isolés"""
         issues = []
 
         # Pattern pour % isolé
@@ -630,14 +614,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_french_quotes_optimized(
+    def _check_french_quotes(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Détecte les guillemets français de manière optimisée"""
+        """Détecte les guillemets français"""
         issues = []
 
         # Détecter « et »
@@ -657,14 +641,14 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _check_double_dash_ellipsis_optimized(
+    def _check_double_dash_ellipsis(
         self,
         old_text: str,
         new_text: str,
         file_path: str,
         line_number: int,
     ) -> list[dict[str, Any]]:
-        """Détecte les doubles tirets -- de manière optimisée"""
+        """Détecte les doubles tirets"""
         issues = []
 
         # Détecter -- (mais pas --- ou plus)
@@ -687,12 +671,12 @@ class OptimizedCoherenceChecker:
 
         return issues
 
-    def _calculate_statistics_optimized(
+    def calculate_statistics(
         self,
         all_issues: list[dict[str, Any]],
         files_analyzed: int,
     ) -> dict[str, Any]:
-        """Calcule les statistiques des problèmes détectés de manière optimisée"""
+        """Calcule les statistiques des problèmes détectés"""
         stats = {
             "files_analyzed": files_analyzed,
             "total_issues": len(all_issues),
@@ -713,59 +697,8 @@ class OptimizedCoherenceChecker:
 
         return stats
 
-    def _generate_coherence_report_optimized(
-        self,
-        all_issues: list[dict[str, Any]],
-        target_path: str,
-        selection_info: dict | None,
-        stats: dict[str, Any],
-    ) -> str:
-        """Génère un rapport HTML de manière optimisée"""
-        try:
-            # Créer le dossier de rapports
-            if selection_info and "project_path" in selection_info:
-                project_path = selection_info["project_path"]
-                project_name = os.path.basename(project_path)
-                rapport_folder = os.path.join("02_Reports", project_name, "coherence")
-            else:
-                rapport_folder = "02_Reports"
-
-            os.makedirs(rapport_folder, exist_ok=True)
-
-            # Générer le nom du fichier
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            if selection_info:
-                project_name = os.path.basename(selection_info.get("project_path", "")) or "unknown"
-                rapport_name = f"{project_name}_coherence_optimized_{timestamp}.html"
-            else:
-                rapport_name = f"coherence_optimized_{timestamp}.html"
-
-            rapport_path = os.path.join(rapport_folder, rapport_name)
-
-            # Grouper les problèmes par fichier
-            issues_by_file = defaultdict(list)
-            for issue in all_issues:
-                file_path = issue["file"]
-                issues_by_file[file_path].append(issue)
-
-            # Générer le HTML avec le design moderne
-            html_content = generate_modern_html_report(
-                issues_by_file,
-                target_path,
-                selection_info,
-                stats,
-            )
-
-            # Sauvegarder
-            with open(rapport_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
-
-            logger.info("📊 Rapport de cohérence optimisé généré: %s", rapport_path)
-            return rapport_path
-
-        except Exception as e:
-            logger.error("Erreur génération rapport: %s", e)
-            raise
+    # La méthode _generate_coherence_report a été supprimée
+    # car le nouveau système Svelte affiche les résultats directement dans l'interface
 
     def clear_cache(self):
         """Vide le cache"""
@@ -783,5 +716,5 @@ class OptimizedCoherenceChecker:
         }
 
 
-# Instance globale optimisée
-optimized_coherence_checker = OptimizedCoherenceChecker(max_workers=4, cache_size=500)
+# Instance globale
+coherence_checker = CoherenceChecker(max_workers=4, cache_size=500)

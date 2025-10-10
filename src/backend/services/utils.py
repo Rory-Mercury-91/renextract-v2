@@ -1,5 +1,4 @@
-"""Utilitaires communs pour l'application
-"""
+"""Utilitaires communs pour l'application"""
 
 import os
 

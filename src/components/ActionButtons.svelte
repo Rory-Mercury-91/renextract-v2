@@ -365,15 +365,7 @@
             </div>
           {/if}
         </div>
-        {#if lastCoherenceRes.stats.total_issues > 0}
-          <button
-            onclick={() => coherenceActions.openDetailedReport()}
-            class="text-orange-600 transition-colors hover:text-orange-800"
-            title="Ouvrir le rapport détaillé"
-          >
-            <Icon icon="hugeicons:file-document" class="h-5 w-5" />
-          </button>
-        {/if}
+        <!-- Le nouveau système Svelte affiche les résultats directement dans l'interface -->
       </div>
     </div>
   {/if}

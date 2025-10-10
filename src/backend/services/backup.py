@@ -47,13 +47,11 @@ class BackupManager:
             else:
                 # Mode développement - remonter de src/backend/ vers la racine
                 current_file = os.path.abspath(__file__)
-                base_dir = os.path.dirname(
-                    os.path.dirname(os.path.dirname(current_file)))
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 
         self.base_dir = base_dir
         self.backup_root = os.path.join(base_dir, "03_Backups")
-        self.metadata_file = os.path.join(
-            self.backup_root, "backup_metadata.json")
+        self.metadata_file = os.path.join(self.backup_root, "backup_metadata.json")
 
         # Debug: afficher les chemins
         print(f"DEBUG BackupManager: base_dir = {self.base_dir}")
@@ -136,8 +134,7 @@ class BackupManager:
             path_parts = [part for part in normalized_path.split("/") if part]
 
             # Chercher le dossier "game" dans le chemin
-            game_indices = [i for i, part in enumerate(
-                path_parts) if part.lower() == "game"]
+            game_indices = [i for i, part in enumerate(path_parts) if part.lower() == "game"]
             for game_index in reversed(game_indices):
                 if game_index > 0:
                     game_name = path_parts[game_index - 1]
@@ -161,8 +158,7 @@ class BackupManager:
         description: Optional[str] = None,
     ) -> dict[str, any]:
         """Crée une sauvegarde avec la structure hiérarchique"""
-        result = {"success": False, "backup_path": None,
-                  "backup_id": None, "error": None}
+        result = {"success": False, "backup_path": None, "backup_id": None, "error": None}
 
         try:
             if not source_path or not os.path.exists(source_path):
@@ -185,8 +181,7 @@ class BackupManager:
             file_name = Path(source_path).stem  # Nom sans extension
 
             # Créer la structure hiérarchique: Game_name/file_name/backup_type/
-            backup_folder = os.path.join(
-                self.backup_root, game_name, file_name, backup_type)
+            backup_folder = os.path.join(self.backup_root, game_name, file_name, backup_type)
             os.makedirs(backup_folder, exist_ok=True)
 
             timestamp = datetime.datetime.now()
@@ -228,8 +223,7 @@ class BackupManager:
             result["backup_path"] = backup_path
             result["backup_id"] = backup_id
 
-            print(
-                f"Backup créé: {game_name}/{file_name}/{backup_type}/{backup_filename}")
+            print(f"Backup créé: {game_name}/{file_name}/{backup_type}/{backup_filename}")
 
         except (OSError, PermissionError, FileNotFoundError, ValueError) as e:
             result["error"] = str(e)
@@ -250,8 +244,7 @@ class BackupManager:
                 file_path = os.path.join(backup_folder, file)
                 if os.path.isfile(file_path):
                     backup_files.append(
-                        {"path": file_path, "name": file,
-                            "mtime": os.path.getmtime(file_path)},
+                        {"path": file_path, "name": file, "mtime": os.path.getmtime(file_path)},
                     )
 
             # Trier par date de modification (plus ancien en premier)
@@ -268,12 +261,10 @@ class BackupManager:
                     self._remove_from_metadata(oldest_file["path"])
 
                 except (OSError, PermissionError) as e:
-                    print(
-                        f"Erreur suppression rotation {oldest_file['name']}: {e}")
+                    print(f"Erreur suppression rotation {oldest_file['name']}: {e}")
 
             if backup_type == BackupType.REALTIME_EDIT:
-                print(
-                    f"Rotation editing: {len(backup_files) + 1}/{max_files} fichiers")
+                print(f"Rotation editing: {len(backup_files) + 1}/{max_files} fichiers")
 
         except (OSError, ValueError) as e:
             print(f"Erreur rotation {backup_type}: {e}")
@@ -296,7 +287,9 @@ class BackupManager:
             print(f"Erreur suppression métadonnées: {e}")
 
     def list_all_backups(
-        self, game_filter: Optional[str] = None, type_filter: Optional[str] = None,
+        self,
+        game_filter: Optional[str] = None,
+        type_filter: Optional[str] = None,
     ) -> list[dict]:
         """Liste toutes les sauvegardes avec la structure hiérarchique"""
         backups = []
@@ -332,13 +325,15 @@ class BackupManager:
 
                         # Scanner les fichiers de sauvegarde
                         for backup_file in os.listdir(type_path):
-                            backup_full_path = os.path.join(
-                                type_path, backup_file)
+                            backup_full_path = os.path.join(type_path, backup_file)
                             if not os.path.isfile(backup_full_path):
                                 continue
 
                             backup_info = self._get_or_create_backup_info_hierarchical(
-                                backup_full_path, game_name, file_name, backup_type,
+                                backup_full_path,
+                                game_name,
+                                file_name,
+                                backup_type,
                             )
                             if backup_info:
                                 backups.append(backup_info)
@@ -352,7 +347,11 @@ class BackupManager:
         return backups
 
     def _get_or_create_backup_info_hierarchical(
-        self, backup_path: str, game_name: str, file_name: str, backup_type: str,
+        self,
+        backup_path: str,
+        game_name: str,
+        file_name: str,
+        backup_type: str,
     ) -> dict | None:
         """Crée les infos de backup pour la structure hiérarchique"""
         try:
@@ -370,8 +369,7 @@ class BackupManager:
             backup_id = f"{game_name}_{file_name}_{timestamp_str}_{backup_type}"
 
             # Reconstruire le nom de fichier source
-            source_filename = self._reconstruct_source_filename(
-                backup_filename, file_name)
+            source_filename = self._reconstruct_source_filename(backup_filename, file_name)
 
             backup_info = {
                 "id": backup_id,
@@ -394,8 +392,7 @@ class BackupManager:
             return backup_info
 
         except (OSError, ValueError, KeyError) as e:
-            print(
-                f"Erreur création info backup hiérarchique {backup_path}: {e}")
+            print(f"Erreur création info backup hiérarchique {backup_path}: {e}")
             return None
 
     def _reconstruct_source_filename(self, backup_filename: str, file_name: str) -> str:
@@ -437,15 +434,13 @@ class BackupManager:
                         if os.path.isdir(type_path) and not os.listdir(type_path):
                             os.rmdir(type_path)
                             cleaned_count += 1
-                            print(
-                                f"Dossier vide supprimé: {game_name}/{file_name}/{backup_type}")
+                            print(f"Dossier vide supprimé: {game_name}/{file_name}/{backup_type}")
 
                     # Supprimer le dossier fichier s'il est vide
                     if os.path.isdir(file_path) and not os.listdir(file_path):
                         os.rmdir(file_path)
                         cleaned_count += 1
-                        print(
-                            f"Dossier fichier vide supprimé: {game_name}/{file_name}")
+                        print(f"Dossier fichier vide supprimé: {game_name}/{file_name}")
 
                 # Supprimer le dossier jeu s'il est vide
                 if os.path.isdir(game_path) and not os.listdir(game_path):

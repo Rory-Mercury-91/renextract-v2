@@ -1,13 +1,12 @@
 // src/stores/coherence.ts
 // Store pour gérer l'état de la vérification de cohérence
 
-import { apiService, type CoherenceResult, type SelectionInfo } from '$lib/api';
-import { derived, get, writable } from 'svelte/store';
-import { appSettings } from './app';
+import { apiService, type CoherenceResultSvelte } from '$lib/api';
+import { derived, writable } from 'svelte/store';
 
 // Interfaces pour la cohérence (utilise celles de l'API)
-export type CoherenceIssue = CoherenceResult['issues'][0];
-export type CoherenceStats = CoherenceResult['stats'];
+export type CoherenceIssue = CoherenceResultSvelte['issues_by_file'][string][0];
+export type CoherenceStats = CoherenceResultSvelte['stats'];
 
 export interface CoherenceOptions {
   check_variables: boolean;
@@ -51,7 +50,7 @@ const initialCoherenceState = {
   } as CoherenceOptions,
 
   // Résultats
-  lastResult: null as CoherenceResult | null,
+  lastResult: null as CoherenceResultSvelte | null,
   lastError: null as string | null,
 
   // Statistiques
@@ -61,7 +60,7 @@ const initialCoherenceState = {
 
   // Fichier en cours de vérification
   currentTarget: null as string | null,
-  selectionInfo: null as SelectionInfo | null,
+  // selectionInfo supprimé car plus utilisé
 };
 
 // Store principal
@@ -157,8 +156,8 @@ export const coherenceActions = {
 
       console.debug(`🔍 Vérification rapide: ${filePath}`);
 
-      // Lancer la vérification
-      const response = await apiService.checkCoherence(filePath, true);
+      // Lancer la vérification avec le nouveau système Svelte
+      const response = await apiService.checkCoherenceSvelte(filePath);
 
       if (response.success && response.result) {
         // Succès
@@ -166,7 +165,7 @@ export const coherenceActions = {
           ...state,
           isChecking: false,
           checkProgress: 'Vérification terminée',
-          lastResult: response.result || null,
+          lastResult: response.result || null, // Utilise maintenant le nouveau format Svelte
           lastError: null,
           totalChecks: state.totalChecks + 1,
           successfulChecks: state.successfulChecks + 1,
@@ -187,13 +186,6 @@ export const coherenceActions = {
           console.warn(
             `⚠️ ${totalIssues} erreur(s) détectée(s) sur ${distinctTypes} type(s)`
           );
-        }
-
-        // Ouverture automatique du rapport si activée
-        const settings = get(appSettings);
-        if (settings.autoOpenings.reports && response.result.rapport_path) {
-          console.info('📄 Ouverture automatique du rapport de cohérence...');
-          await apiService.openCoherenceReport(response.result.rapport_path);
         }
 
         return true;
@@ -232,10 +224,7 @@ export const coherenceActions = {
   /**
    * Lance une analyse complète de cohérence (onglet Cohérence)
    */
-  async analyzeCoherence(
-    targetPath: string,
-    selectionInfo?: SelectionInfo
-  ): Promise<boolean> {
+  async analyzeCoherence(targetPath: string): Promise<boolean> {
     if (!targetPath || !targetPath.trim()) {
       console.error("❌ Chemin cible manquant pour l'analyse");
       return false;
@@ -248,18 +237,13 @@ export const coherenceActions = {
         isChecking: true,
         checkProgress: 'Analyse de cohérence en cours...',
         currentTarget: targetPath,
-        selectionInfo: selectionInfo || null,
         lastError: null,
       }));
 
       console.debug(`🔍 Analyse cohérence: ${targetPath}`);
 
-      // Lancer l'analyse
-      const response = await apiService.checkCoherence(
-        targetPath,
-        true,
-        selectionInfo
-      );
+      // Lancer l'analyse avec la nouvelle API Svelte
+      const response = await apiService.checkCoherenceSvelte(targetPath);
 
       if (response.success && response.result) {
         // Succès
@@ -291,13 +275,6 @@ export const coherenceActions = {
           console.warn(
             `⚠️ Analyse terminée - ${filesAnalyzed} fichier(s), ${totalIssues} problème(s), ${distinctTypes} type(s)`
           );
-        }
-
-        // Ouverture automatique du rapport si activée
-        const settings = get(appSettings);
-        if (settings.autoOpenings.reports && response.result.rapport_path) {
-          console.info('📄 Ouverture automatique du rapport de cohérence...');
-          await apiService.openCoherenceReport(response.result.rapport_path);
         }
 
         return true;
@@ -333,42 +310,8 @@ export const coherenceActions = {
     }
   },
 
-  /**
-   * Ouvre le rapport détaillé de cohérence
-   */
-  async openDetailedReport(): Promise<void> {
-    const currentState = get(coherenceStore);
-    if (currentState.lastResult?.rapport_path) {
-      try {
-        const response = await apiService.openCoherenceReport(
-          currentState.lastResult.rapport_path
-        );
-        if (response.success) {
-          console.info('✅ Rapport détaillé ouvert');
-        } else {
-          console.error('❌ Erreur ouverture rapport:', response.error);
-        }
-      } catch (error) {
-        console.error('Erreur ouverture rapport:', error);
-      }
-    }
-  },
-
-  /**
-   * Ouvre le dossier des rapports
-   */
-  async openReportsFolder(): Promise<void> {
-    try {
-      const response = await apiService.openCoherenceFolder();
-      if (response.success) {
-        console.info('✅ Dossier des rapports ouvert');
-      } else {
-        console.error('❌ Erreur ouverture dossier:', response.error);
-      }
-    } catch (error) {
-      console.error('Erreur ouverture dossier rapports:', error);
-    }
-  },
+  // Les fonctions openDetailedReport et openReportsFolder ont été supprimées
+  // car le nouveau système Svelte affiche les résultats directement dans l'interface
 
   /**
    * Réinitialise l'état de cohérence

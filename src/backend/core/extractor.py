@@ -1,5 +1,7 @@
-# src/backend/optimized_extraction.py
+# src/backend/extractor.py
 # Version optimisée de l'extraction avec cache et streaming
+
+"""Module de l'extraction avec cache et streaming"""
 
 import hashlib
 import logging
@@ -14,11 +16,11 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-class OptimizedTextExtractor:
-    """Version optimisée de l'extracteur avec cache et streaming"""
+class TextExtractor:
+    """Extracteur avec cache et streaming"""
 
     def __init__(self, cache_size: int = 1000):
-        """Initialise l'extracteur optimisé"""
+        """Initialise l'extracteur"""
         self.cache_size = cache_size
         self._cache = {}
         self._file_hash_cache = {}
@@ -75,7 +77,9 @@ class OptimizedTextExtractor:
         return None
 
     def extract_texts_streaming(
-        self, filepath: str, batch_size: int = 1000,
+        self,
+        filepath: str,
+        batch_size: int = 1000,
     ) -> Generator[dict[str, Any], None, None]:
         """Extraction avec streaming pour les gros fichiers"""
         try:
@@ -123,7 +127,9 @@ class OptimizedTextExtractor:
             yield {"success": False, "error": str(e)}
 
     def _process_batch(
-        self, batch: list[str], start_line: int,
+        self,
+        batch: list[str],
+        start_line: int,
     ) -> Generator[dict[str, Any], None, None]:
         """Traite un lot de lignes"""
         try:
@@ -139,12 +145,12 @@ class OptimizedTextExtractor:
                             yield dialogue_result
 
                     # Extraction optimisée des astérisques
-                    asterisk_result = self._extract_asterisks_optimized(line, line_num)
+                    asterisk_result = self._extract_asterisks(line, line_num)
                     if asterisk_result:
                         yield asterisk_result
 
                     # Extraction optimisée des tildes
-                    tilde_result = self._extract_tildes_optimized(line, line_num)
+                    tilde_result = self._extract_tildes(line, line_num)
                     if tilde_result:
                         yield tilde_result
 
@@ -198,8 +204,8 @@ class OptimizedTextExtractor:
 
         return None
 
-    def _extract_asterisks_optimized(self, line: str, line_num: int) -> dict[str, Any] | None:
-        """Extraction optimisée des astérisques"""
+    def _extract_asterisks(self, line: str, line_num: int) -> dict[str, Any] | None:
+        """Extraction des astérisques"""
         try:
             # Pattern optimisé pour les astérisques
             asterisk_pattern = r"\*+([^*]+)\*+"
@@ -220,8 +226,8 @@ class OptimizedTextExtractor:
 
         return None
 
-    def _extract_tildes_optimized(self, line: str, line_num: int) -> dict[str, Any] | None:
-        """Extraction optimisée des tildes"""
+    def _extract_tildes(self, line: str, line_num: int) -> dict[str, Any] | None:
+        """Extraction des tildes"""
         try:
             # Pattern optimisé pour les tildes
             tilde_pattern = r"~+([^~]+)~+"
@@ -347,4 +353,4 @@ class DuplicateManager:
 
 
 # Instance globale optimisée
-optimized_extractor = OptimizedTextExtractor(cache_size=1000)
+optimized_extractor = TextExtractor(cache_size=1000)

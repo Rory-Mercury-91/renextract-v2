@@ -5,6 +5,7 @@ Gère la validation, le scan et le chargement des projets et fichiers
 
 import os
 from pathlib import Path
+from typing import Optional
 
 
 class ProjectManager:
@@ -66,7 +67,7 @@ class ProjectManager:
                 "message": "Projet Ren'Py valide" if is_valid else "Pas un projet Ren'Py valide",
             }
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             return {"valid": False, "message": f"Erreur lors de la validation: {e!s}"}
 
     def find_project_root(self, subdir_path: str, max_levels: int = 10) -> str | None:
@@ -97,7 +98,7 @@ class ProjectManager:
 
             return None
 
-        except Exception:
+        except (OSError, ValueError, TypeError):
             return None
 
     def scan_languages(self, project_path: str) -> list[dict[str, any]]:
@@ -135,7 +136,7 @@ class ProjectManager:
                         for file in files:
                             if file.lower().endswith(".rpy"):
                                 rpy_files.append(os.path.join(root, file))
-                except Exception:
+                except (OSError, ValueError, TypeError):
                     continue
 
                 if rpy_files:
@@ -150,11 +151,14 @@ class ProjectManager:
 
             return languages
 
-        except Exception:
+        except (OSError, ValueError, TypeError):
             return languages
 
     def scan_language_files(
-        self, project_path: str, language: str, exclusions: list[str] | None = None,
+        self,
+        project_path: str,
+        language: str,
+        exclusions: list[str] | None = None,
     ) -> list[dict[str, any]]:
         """Scanne les fichiers .rpy d'une langue spécifique
 
@@ -190,7 +194,7 @@ class ProjectManager:
                     for file in files_in_dir:
                         if file.lower().endswith(".rpy"):
                             rpy_files.append(os.path.join(root, file))
-            except Exception:
+            except (OSError, ValueError, TypeError):
                 return files
 
             for file_path in rpy_files:
@@ -229,7 +233,7 @@ class ProjectManager:
 
             return files
 
-        except Exception:
+        except (OSError, ValueError, TypeError):
             return files
 
     def load_file_content(self, filepath: str) -> dict[str, any]:
@@ -272,7 +276,7 @@ class ProjectManager:
                 "content": [],
                 "line_count": 0,
             }
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             return {
                 "success": False,
                 "error": f"Erreur lors du chargement: {e!s}",
@@ -348,7 +352,7 @@ class ProjectManager:
                 "summary": summary,
             }
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError) as e:
             return {
                 "project_name": os.path.basename(project_path) if project_path else "Unknown",
                 "rpa_count": 0,
@@ -356,27 +360,6 @@ class ProjectManager:
                 "languages": [],
                 "summary": f"Erreur: {e!s}",
             }
-
-    def set_current_project(self, project_path: str, mode: str = "project") -> dict[str, any]:
-        """Définit le projet actuel et initialise l'état
-
-        Args:
-            project_path: Chemin vers le projet
-            mode: Mode de fonctionnement ("project" ou "single_file")
-
-        Returns:
-            Dict avec le statut
-
-        """
-        self.current_project_path = project_path
-        self.current_mode = mode
-        self.current_language = None
-        self.current_file = None
-        self.file_content = []
-        self.available_languages = []
-        self.available_files = []
-
-        return {"success": True, "project_path": project_path, "mode": mode}
 
     def get_state(self) -> dict[str, any]:
         """Retourne l'état actuel du gestionnaire
@@ -394,6 +377,131 @@ class ProjectManager:
             "available_languages": self.available_languages,
             "available_files": self.available_files,
         }
+
+    def get_project_files(
+        self, project_path: str, file_type: str = "all", language: Optional[str] = None
+    ) -> list[dict[str, any]]:
+        """Obtient la liste des fichiers du projet selon le type demandé
+
+        Args:
+            project_path: Chemin vers le projet
+            file_type: Type de fichiers ("all", "rpy", "rpa", "languages")
+            language: Langue spécifique pour filtrer les fichiers de traduction
+
+        Returns:
+            Liste de dicts avec les informations des fichiers
+
+        """
+        try:
+            if not project_path or not os.path.exists(project_path):
+                return []
+
+            files = []
+
+            if file_type in ["all", "rpy"]:
+                # Fichiers .rpy dans game/
+                game_dir = os.path.join(project_path, "game")
+                if os.path.exists(game_dir):
+                    for root, _dirs, filenames in os.walk(game_dir):
+                        for filename in filenames:
+                            if filename.endswith(".rpy"):
+                                file_path = os.path.join(root, filename)
+                                try:
+                                    file_size = os.path.getsize(file_path)
+                                    files.append(
+                                        {
+                                            "name": filename,
+                                            "path": file_path,
+                                            "size": file_size,
+                                            "type": "rpy",
+                                            "relative_path": os.path.relpath(
+                                                file_path, project_path
+                                            ),
+                                        }
+                                    )
+                                except OSError:
+                                    continue
+
+            if file_type in ["all", "rpa"]:
+                # Fichiers .rpa dans game/
+                game_dir = os.path.join(project_path, "game")
+                if os.path.exists(game_dir):
+                    for filename in os.listdir(game_dir):
+                        if filename.endswith(".rpa"):
+                            file_path = os.path.join(game_dir, filename)
+                            try:
+                                file_size = os.path.getsize(file_path)
+                                files.append(
+                                    {
+                                        "name": filename,
+                                        "path": file_path,
+                                        "size": file_size,
+                                        "type": "rpa",
+                                        "relative_path": os.path.relpath(file_path, project_path),
+                                    }
+                                )
+                            except OSError:
+                                continue
+
+            if file_type in ["all", "languages"]:
+                # Fichiers de traduction
+                if language:
+                    # Seulement la langue spécifiée
+                    lang_files = self.scan_language_files(project_path, language)
+                    for file_info in lang_files:
+                        file_info["type"] = "translation"
+                        file_info["language"] = language
+                        files.append(file_info)
+                else:
+                    # Toutes les langues
+                    languages = self.scan_languages(project_path)
+                    for lang in languages:
+                        lang_files = self.scan_language_files(project_path, lang["name"])
+                        for file_info in lang_files:
+                            file_info["type"] = "translation"
+                            file_info["language"] = lang["name"]
+                            files.append(file_info)
+
+            # Trier par nom
+            files.sort(key=lambda x: x["name"].lower())
+
+            return files
+
+        except (OSError, ValueError, TypeError):
+            return []
+
+    def set_current_project(self, project_path: str) -> bool:
+        """Définit le projet courant (version simplifiée pour l'API)
+
+        Args:
+            project_path: Chemin vers le projet
+
+        Returns:
+            True si succès, False sinon
+
+        """
+        try:
+            if not project_path or not os.path.exists(project_path):
+                return False
+
+            # Valider que c'est un projet Ren'Py
+            validation = self.validate_project(project_path)
+            if not validation["valid"]:
+                return False
+
+            # Définir le projet courant
+            self.current_project_path = project_path
+            self.current_mode = "project"
+            self.current_language = None
+            self.current_file = None
+            self.file_content = []
+            self.available_languages = self.scan_languages(project_path)
+            self.available_files = []
+
+            return True
+
+        except (OSError, ValueError, TypeError):
+            return False
 
 
 # Instance globale

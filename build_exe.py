@@ -2,6 +2,7 @@
 """
 Build script to create an executable of the PyWebView + Svelte application
 """
+
 import json
 import platform
 import shutil
@@ -66,18 +67,11 @@ def build_executable():
 
     try:
         # PyInstaller command via Python
-        cmd = [
-            python_cmd,
-            "-m", "PyInstaller",
-            "--clean",
-            "--noconfirm",
-            "app.spec"
-        ]
+        cmd = [python_cmd, "-m", "PyInstaller", "--clean", "--noconfirm", "app.spec"]
 
         print(f"Execution: {' '.join(cmd)}")
         result = subprocess.run(
-            cmd, capture_output=True, text=True,
-            encoding='utf-8', errors='replace', check=False
+            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
         )
 
         if result.returncode != 0:
@@ -103,30 +97,30 @@ def rename_executable():
 
     # Get version from package.json
     try:
-        with open('package.json', 'r', encoding='utf-8') as f:
+        with open("package.json", encoding="utf-8") as f:
             data = json.load(f)
-            version = data.get('version', '1.0.0')
+            version = data.get("version", "1.0.0")
     except (OSError, json.JSONDecodeError, KeyError):
-        version = '1.0.0'
+        version = "1.0.0"
 
     # Get OS name
     system = platform.system().lower()
-    if system == 'windows':
-        os_name = 'windows'
-        old_name = 'app-temp.exe'
-        new_name = f'app-{os_name}-v{version}.exe'
-    elif system == 'linux':
-        os_name = 'linux'
-        old_name = 'app-temp'
-        new_name = f'app-{os_name}-v{version}'
-    elif system == 'darwin':
-        os_name = 'macos'
-        old_name = 'app-temp'
-        new_name = f'app-{os_name}-v{version}'
+    if system == "windows":
+        os_name = "windows"
+        old_name = "app-temp.exe"
+        new_name = f"app-{os_name}-v{version}.exe"
+    elif system == "linux":
+        os_name = "linux"
+        old_name = "app-temp"
+        new_name = f"app-{os_name}-v{version}"
+    elif system == "darwin":
+        os_name = "macos"
+        old_name = "app-temp"
+        new_name = f"app-{os_name}-v{version}"
     else:
-        os_name = 'unknown'
-        old_name = 'app-temp'
-        new_name = f'app-{os_name}-v{version}'
+        os_name = "unknown"
+        old_name = "app-temp"
+        new_name = f"app-{os_name}-v{version}"
 
     old_path = Path(f"dist/{old_name}")
     new_path = Path(f"dist/{new_name}")
@@ -215,8 +209,7 @@ def main():
         print("\nERROR: Build verification failed")
         sys.exit(1)
 
-    # Clean external files (as they are integrated into the executable)
-    clean_external_files()
+    # Note: External files are kept as they are needed by the executable
 
     print("\n" + "=" * 60)
     print("BUILD COMPLETED SUCCESSFULLY!")

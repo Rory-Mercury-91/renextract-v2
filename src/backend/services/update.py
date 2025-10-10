@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Gestionnaire de mise à jour automatique pour l'application
-"""
+"""Gestionnaire de mise à jour automatique pour l'application"""
 
 import json
 import os
@@ -202,7 +201,10 @@ class UpdateManager:
             return True
 
     def download_update(
-        self, download_url: str, latest_version: Optional[str] = None, progress_callback=None,
+        self,
+        download_url: str,
+        latest_version: Optional[str] = None,
+        progress_callback=None,
     ) -> dict:
         """Télécharge la mise à jour
 
