@@ -7,7 +7,6 @@
   import { appSettings, appSettingsActions } from '../stores/app';
   import AboutModal from './AboutModal.svelte';
   import EditorSetup from './EditorSetup.svelte';
-  import UpdateManager from './UpdateManager.svelte';
 
   let showAboutModal = $state(false);
   let inputSelected = $state(false);
@@ -78,9 +77,6 @@
 
   <!-- Right: Controls -->
   <div class="flex items-center gap-4">
-    <!-- Gestionnaire de mise à jour -->
-    <UpdateManager showSettings={true} autoCheck={true} />
-
     <button
       class="flex items-center gap-1 px-2 py-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       onclick={showHelp}

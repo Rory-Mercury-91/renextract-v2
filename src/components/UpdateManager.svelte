@@ -29,10 +29,11 @@
   interface Props {
     showSettings?: boolean;
     autoCheck?: boolean;
+    inSettings?: boolean;
   }
 
   // Props
-  const { showSettings = false, autoCheck = $bindable(true) }: Props = $props();
+  const { showSettings = false, autoCheck = $bindable(true), inSettings = false }: Props = $props();
 
   // State
   let updateInfo: UpdateInfo | null = $state(null);

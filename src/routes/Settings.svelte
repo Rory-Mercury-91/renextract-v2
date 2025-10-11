@@ -4,6 +4,7 @@
   import SettingsAccess from '$components/SettingsAccess.svelte';
   import SettingsApp from '$components/SettingsApp.svelte';
   import SettingsExtract from '$components/SettingsExtract.svelte';
+  import UpdateManagerSettings from '$components/UpdateManagerSettings.svelte';
   import type { Component } from 'svelte';
   import { _ } from 'svelte-i18n';
   import { appSettingsActions } from '../stores/app';
@@ -31,6 +32,11 @@
       id: 'access_paths',
       label: "Chemins d'accès",
       component: SettingsAccess,
+    },
+    {
+      id: 'updates',
+      label: 'Mises à jour',
+      component: UpdateManagerSettings,
     },
   ];
 
