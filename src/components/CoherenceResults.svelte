@@ -10,9 +10,10 @@
   interface Props {
     result: CoherenceResultSvelte;
     onOpenInEditor?: (filePath: string, lineNumber: number) => void;
+    selectedLanguage: string;
   }
 
-  const { result, onOpenInEditor = () => {} }: Props = $props();
+  const { result, onOpenInEditor = () => {}, selectedLanguage = 'Inconnue' }: Props = $props();
   
   console.log('🔍 CoherenceResults - Composant monté avec result:', result);
 
@@ -222,7 +223,7 @@
       </div>
       <div class="flex items-center gap-2 text-sm text-gray-300">
         <Icon icon="hugeicons:globe" class="h-4 w-4" />
-        <span>Langue: Inconnue</span>
+        <span>Langue: {selectedLanguage}</span>
       </div>
       <div class="flex items-center gap-2 text-sm text-gray-300">
         <Icon icon="hugeicons:calendar" class="h-4 w-4" />

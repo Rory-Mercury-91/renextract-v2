@@ -433,6 +433,7 @@
         console.info("Ouvrir dans l'éditeur:", filePath, 'ligne:', lineNumber);
         // TODO: Implémenter l'ouverture dans l'éditeur
       }}
+      {selectedLanguage}
     />
   {/if}
 
