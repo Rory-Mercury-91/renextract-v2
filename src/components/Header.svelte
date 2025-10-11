@@ -4,8 +4,9 @@
   import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
-  import { editorPath } from '../stores/app';
+  import { appSettings, appSettingsActions } from '../stores/app';
   import AboutModal from './AboutModal.svelte';
+  import EditorSetup from './EditorSetup.svelte';
   import UpdateManager from './UpdateManager.svelte';
 
   let showAboutModal = $state(false);
@@ -19,6 +20,8 @@
 {#if showAboutModal}
   <AboutModal bind:showAboutModal />
 {/if}
+
+<EditorSetup />
 
 <header
   class="flex h-20 items-center justify-between gap-4 text-nowrap border-b border-gray-200 bg-white p-4 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
@@ -44,19 +47,19 @@
     <Icon icon="hugeicons:folder-01" class="h-6 w-6 min-w-6 text-yellow-500" />
     <input
       class="w-full max-w-64 rounded-lg bg-gray-100 px-2 py-1 text-sm text-gray-900 dark:bg-slate-100 dark:text-gray-700"
-      style:direction={$editorPath === '' || inputSelected ? 'ltr' : 'rtl'}
-      value={$editorPath}
-      oninput={e => ($editorPath = e.currentTarget.value)}
+      style:direction={$appSettings.paths.editor === '' || inputSelected ? 'ltr' : 'rtl'}
+      value={$appSettings.paths.editor}
+      oninput={e => (appSettingsActions.setSetting('paths', { ...$appSettings.paths, editor: e.currentTarget.value }))}
       onfocus={() => (inputSelected = true)}
       onblur={() => (inputSelected = false)}
-      placeholder={$editorPath || 'Aucun projet chargé'}
+      placeholder={$appSettings.paths.editor || 'Aucun projet chargé'}
     />
     <button
       class="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
       onclick={() =>
         apiService.openDialog(
           {
-            path: $editorPath,
+            path: $appSettings.paths.editor,
             dialog_type: 'folder',
             title: 'Sélectionner le dossier du jeu',
             initialdir: 'C:\\',
@@ -64,7 +67,7 @@
           },
           {
             setPath: (path: string) => {
-              $editorPath = path;
+              appSettingsActions.setSetting('paths', { ...$appSettings.paths, editor: path });
             },
           }
         )}

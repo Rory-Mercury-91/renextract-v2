@@ -184,8 +184,8 @@ const appSettingsActions = {
   },
   setSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     appSettings.update(setting => ({ ...setting, [key]: value }));
-    // Sauvegarde immédiate pour éviter la perte en cas de refresh rapide
-    void appSettingsActions._syncNow();
+    // Utiliser la synchronisation différée pour éviter les appels trop fréquents
+    appSettingsActions._scheduleSync();
   },
 
   resetSettings: () => {
@@ -236,5 +236,3 @@ appSettings.subscribe(() => {
     appSettingsActions._scheduleSync();
   }
 });
-
-export const editorPath = writable<string>('');

@@ -1,9 +1,9 @@
 <script lang="ts">
   import RouteHeader from '$components/RouteHeader.svelte';
+  import { appSettings } from '$stores/app';
   import Icon from '@iconify/svelte';
   import axios from 'axios';
   import { _ } from 'svelte-i18n';
-  import { editorPath } from '../stores/app';
 
   let recursive = $state(true);
   let modelPath = $state('virusf/nllb-renpy-rory-v4');
@@ -32,7 +32,7 @@
   }
 
   async function runTranslation() {
-    if ($editorPath === '') return;
+    if (!$appSettings.paths.editor || $appSettings.paths.editor.trim() === '') return;
     running = true;
     logs = '';
     try {
@@ -148,7 +148,7 @@
     <div>
       <button
         class="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-400 disabled:opacity-50"
-        disabled={running || $editorPath === ''}
+        disabled={running || !$appSettings.paths.editor || $appSettings.paths.editor.trim() === ''}
         onclick={runTranslation}
       >
         {#if running}En cours…{:else}Lancer la traduction{/if}

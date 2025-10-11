@@ -1,6 +1,6 @@
 import { apiService } from '$lib/api';
 import { derived, get, writable } from 'svelte/store';
-import { appSettings, appSettingsActions, editorPath } from './app';
+import { appSettings, appSettingsActions } from './app';
 
 // Types pour le projet
 export interface LanguageInfo {
@@ -172,8 +172,14 @@ export const projectActions = {
         mode: 'project',
       });
 
-      // 7. Mettre à jour le chemin dans le header
-      editorPath.set(projectPath);
+      // 7. Mettre à jour le chemin dans les paramètres seulement si différent
+      const currentSettings = get(appSettings);
+      if (currentSettings.paths.editor !== projectPath) {
+        appSettingsActions.setSetting('paths', {
+          ...currentSettings.paths,
+          editor: projectPath
+        });
+      }
 
       // 8. Si une seule langue, la sélectionner automatiquement
       if (languages.length === 1) {
@@ -320,8 +326,14 @@ export const projectActions = {
           mode: 'single_file',
         });
 
-        // Mettre à jour le chemin dans le header
-        editorPath.set(filepath);
+        // Mettre à jour le chemin dans les paramètres seulement si différent
+        const currentSettings = get(appSettings);
+        if (currentSettings.paths.editor !== filepath) {
+          appSettingsActions.setSetting('paths', {
+            ...currentSettings.paths,
+            editor: filepath
+          });
+        }
 
         return true;
       } else {
@@ -417,29 +429,17 @@ export const projectActions = {
   },
 };
 
-// Synchroniser automatiquement avec le projet du header
+// Charger le projet initial au démarrage
 if (typeof window !== 'undefined') {
-  // Écouter les changements de editorPath (header)
-  editorPath.subscribe(async path => {
-    if (path && path.trim() !== '') {
-      console.debug('Header project changed:', path);
-      // Charger le projet automatiquement quand il change dans le header
-      await projectActions.loadProject(path);
-    } else {
-      // Réinitialiser si le chemin est vide
-      projectActions.reset();
-    }
-  });
-
-  // Charger le projet initial si editorPath est déjà défini
   setTimeout(() => {
-    const initialPath = get(editorPath);
+    const initialSettings = get(appSettings);
+    const initialPath = initialSettings.paths.editor;
     if (initialPath && initialPath.trim() !== '') {
-      console.info('Loading initial project from header:', initialPath);
+      console.info('Loading initial project from settings:', initialPath);
       void projectActions.loadProject(initialPath);
     } else {
       // Sinon charger le dernier projet sauvegardé
       void projectActions.loadLastProject();
     }
-  }, 500);
+  }, 1000);
 }

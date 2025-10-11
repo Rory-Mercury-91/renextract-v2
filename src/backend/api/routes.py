@@ -665,6 +665,57 @@ def download_update():
 # ============================================================================
 
 
+def is_wsl_environment():
+    """Détecte si on est dans un environnement WSL"""
+    try:
+        # Vérifier la présence de fichiers spécifiques à WSL
+        return (
+            os.path.exists("/proc/version")
+            and "microsoft" in open("/proc/version", encoding="utf-8").read().lower()
+        ) or os.environ.get("WSL_DISTRO_NAME") is not None
+    except OSError:
+        return False
+
+
+def get_wsl_fallback_path(dialog_type, title, initialdir, filetypes):
+    """Fallback pour WSL - utilise une interface en ligne de commande"""
+
+    try:
+        # Essayer d'utiliser zenity si disponible (interface graphique légère)
+        if dialog_type == "folder":
+            cmd = ["zenity", "--file-selection", "--directory", "--title", title]
+        else:
+            # Construire le filtre pour zenity
+            file_filter = "|".join([f"*.{ext.replace('*.', '')}" for _, ext in filetypes])
+            cmd = ["zenity", "--file-selection", "--title", title, "--file-filter", file_filter]
+
+        if initialdir:
+            cmd.extend(["--filename", initialdir])
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=False)
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        pass
+
+    # Si zenity n'est pas disponible, utiliser une interface texte simple
+    print(f"\n=== {title} ===")
+    print("Environnement WSL détecté - Interface texte")
+
+    if dialog_type == "folder":
+        print("Veuillez entrer le chemin du dossier:")
+    else:
+        print("Veuillez entrer le chemin du fichier:")
+        print("Types acceptés:", ", ".join([f"{desc} ({ext})" for desc, ext in filetypes]))
+
+    if initialdir:
+        print(f"Dossier initial: {initialdir}")
+
+    # En mode serveur, on ne peut pas utiliser input() directement
+    # On retourne un chemin par défaut ou on demande au frontend de gérer
+    return None
+
+
 @API.route("/api/file-dialog/open", methods=["POST"])
 def open_dialog():
     """Ouvre un dialogue de sélection de fichier ou dossier"""
@@ -678,36 +729,89 @@ def open_dialog():
             "filetypes", [("Fichiers Ren'Py", "*.rpy"), ("Tous les fichiers", "*.*")]
         )
 
-        # Créer une fenêtre tkinter cachée
-        root = tk.Tk()
-        root.withdraw()  # Cacher la fenêtre principale
+        # Détecter l'environnement WSL
+        if is_wsl_environment():
+            logger.info("Environnement WSL détecté, utilisation du fallback")
 
-        selected_path = None
+            # Essayer zenity d'abord
+            selected_path = get_wsl_fallback_path(dialog_type, title, initialdir, filetypes)
 
-        if dialog_type == "folder":
-            # Ouvrir le dialogue de dossier
-            selected_path = filedialog.askdirectory(title=title, initialdir=initialdir)
-        else:
-            # Ouvrir le dialogue de fichier
-            selected_path = filedialog.askopenfilename(
-                title=title,
-                initialdir=initialdir,
-                filetypes=filetypes,
-            )
+            if selected_path:
+                return jsonify(
+                    {
+                        "success": True,
+                        "path": selected_path,
+                        "message": "Sélectionné: " + selected_path,
+                    }
+                )
+            else:
+                # Si zenity n'est pas disponible, retourner une erreur avec instructions
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": "Interface graphique non disponible en WSL",
+                        "message": "Pour utiliser les dialogues de fichier en WSL, \
+                          installez zenity: sudo apt install zenity",
+                        "wsl_mode": True,
+                        "suggested_path": initialdir or os.path.expanduser("~"),
+                    }
+                )
 
-        # Fermer la fenêtre tkinter
-        root.destroy()
+        # Mode normal avec tkinter
+        try:
+            # Créer une fenêtre tkinter cachée
+            root = tk.Tk()
+            root.withdraw()  # Cacher la fenêtre principale
 
-        if selected_path:
-            return jsonify(
-                {
-                    "success": True,
-                    "path": selected_path,
-                    "message": "Sélectionné: " + selected_path,
-                }
-            )
-        else:
-            return jsonify({"success": False, "message": "Aucune sélection"})
+            selected_path = None
+
+            if dialog_type == "folder":
+                # Ouvrir le dialogue de dossier
+                selected_path = filedialog.askdirectory(title=title, initialdir=initialdir)
+            else:
+                # Ouvrir le dialogue de fichier
+                selected_path = filedialog.askopenfilename(
+                    title=title,
+                    initialdir=initialdir,
+                    filetypes=filetypes,
+                )
+
+            # Fermer la fenêtre tkinter
+            root.destroy()
+
+            if selected_path:
+                return jsonify(
+                    {
+                        "success": True,
+                        "path": selected_path,
+                        "message": "Sélectionné: " + selected_path,
+                    }
+                )
+            else:
+                return jsonify({"success": False, "message": "Aucune sélection"})
+
+        except (OSError, RuntimeError) as tk_error:
+            logger.warning("Erreur tkinter: %s", tk_error)
+            # Fallback vers l'interface WSL
+            selected_path = get_wsl_fallback_path(dialog_type, title, initialdir, filetypes)
+
+            if selected_path:
+                return jsonify(
+                    {
+                        "success": True,
+                        "path": selected_path,
+                        "message": "Sélectionné: " + selected_path,
+                    }
+                )
+            else:
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": "tkinter non disponible sur ce système",
+                        "message": "Veuillez installer tkinter ou zenity \
+                          pour utiliser les dialogues de fichier",
+                    }
+                )
 
     except ImportError:
         # Fallback si tkinter n'est pas disponible
@@ -735,6 +839,70 @@ def save_dialog():
 
     except (OSError, ValueError, TypeError) as e:
         logger.error("Erreur dialogue sauvegarde: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/system/check-zenity", methods=["GET"])
+def check_zenity():
+    """Vérifie si zenity est disponible sur le système"""
+    try:
+        result = subprocess.run(
+            ["zenity", "--version"], capture_output=True, text=True, timeout=5, check=False
+        )
+        if result.returncode == 0:
+            return jsonify(
+                {
+                    "success": True,
+                    "available": True,
+                    "version": result.stdout.strip(),
+                    "message": "zenity est disponible",
+                }
+            )
+        else:
+            return jsonify(
+                {"success": True, "available": False, "message": "zenity n'est pas installé"}
+            )
+    except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+        return jsonify(
+            {"success": True, "available": False, "message": "zenity n'est pas installé"}
+        )
+    except OSError as e:
+        logger.error("Erreur vérification zenity: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/system/wsl-info", methods=["GET"])
+def wsl_info():
+    """Retourne des informations sur l'environnement WSL"""
+    try:
+        is_wsl = is_wsl_environment()
+        info = {
+            "is_wsl": is_wsl,
+            "distro": os.environ.get("WSL_DISTRO_NAME", "Unknown"),
+            "version": os.environ.get("WSL_VERSION", "Unknown"),
+        }
+
+        if is_wsl:
+            # Vérifier zenity
+            zenity_available = False
+            try:
+                result = subprocess.run(
+                    ["zenity", "--version"], capture_output=True, text=True, timeout=5, check=False
+                )
+                zenity_available = result.returncode == 0
+            except (OSError, subprocess.SubprocessError):
+                pass
+
+            info["zenity_available"] = zenity_available
+            info["recommendations"] = [
+                "Installer zenity pour les dialogues graphiques: sudo apt install zenity",
+                "Ou utiliser les chemins manuels via les prompts",
+                "Les chemins Windows sont accessibles via /mnt/c/, /mnt/d/, etc.",
+            ]
+
+        return jsonify({"success": True, "info": info})
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur info WSL: %s", e)
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 

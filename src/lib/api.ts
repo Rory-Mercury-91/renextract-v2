@@ -112,6 +112,12 @@ export const apiService = {
   ): Promise<{success: boolean, path?: string, error?: string}> {
     try {
       const response = await api.post('/file-dialog/open', params, { timeout: 60000 });
+      
+      // Vérifier si c'est le mode WSL
+      if (!response.data.success && response.data.wsl_mode) {
+        return await this.handleWslDialog(params, response.data, options);
+      }
+      
       const result = {
         success: Boolean(response.data.success),
         path: response.data.path as string | undefined
@@ -122,25 +128,13 @@ export const apiService = {
       return result;
     } catch (error) {
       // Si le backend renvoie 400 avec WSL_MODE, gérer le fallback utilisateur
-      const anyErr = error as unknown as { response?: { data?: { error?: string } } };
-      const isWslMode = anyErr?.response?.data?.error === 'WSL_MODE';
-      if (isWslMode && !params.path) {
-        const promptText = params.dialog_type === 'folder'
-          ? "En mode WSL, le dialogue natif n'est pas disponible.\n\nVeuillez saisir le chemin complet du dossier :\nExemple: C:\\Users\\Public\\Documents"
-          : "En mode WSL, le dialogue natif n'est pas disponible.\n\nVeuillez saisir le chemin complet du fichier :\nExemple: C:\\Program Files\\Software\\file.exe";
-        const userPath = window.prompt(promptText);
-        if (!userPath) {
-          return { success: false, error: 'Aucun chemin saisi' };
-        }
-        const postResp = await api.post('/file-dialog/open', { ...params, path: userPath });
-        const result = {
-          success: Boolean(postResp.data.success),
-          path: postResp.data.path as string | undefined
-        } as { success: boolean, path?: string };
-        if (result.success && result.path && options?.setPath) {
-          options.setPath(result.path);
-        }
-        return result;
+      const anyErr = error as unknown as { response?: { data?: { error?: string, wsl_mode?: boolean } } };
+      const isWslMode = anyErr?.response?.data?.wsl_mode || anyErr?.response?.data?.error === 'WSL_MODE';
+      if (isWslMode && !params.path && anyErr.response?.data) {
+        return await this.handleWslDialog(params, { 
+          message: anyErr.response.data.error,
+          suggested_path: undefined 
+        }, options);
       }
        
       console.error('Open Dialog Error:', error);
@@ -149,6 +143,70 @@ export const apiService = {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  },
+
+  async handleWslDialog(
+    params: {
+      dialog_type: 'file' | 'folder' | 'save';
+      title?: string;
+      initialdir?: string;
+      filetypes?: [string, string][];
+    },
+    wslData: { message?: string; suggested_path?: string },
+    options?: { setPath?: (path: string) => void }
+  ): Promise<{success: boolean, path?: string, error?: string}> {
+    // Créer un message d'aide plus détaillé
+    const filetypesStr = (params.filetypes || [])
+      .map(([desc, ext]) => `${desc} (${ext})`).join(' | ') || 'Tous les fichiers (*.*)';
+    
+    const title = params.title || (params.dialog_type === 'folder' ? 'Sélectionner un dossier' : 'Sélectionner un fichier');
+    const suggestedPath = wslData.suggested_path || params.initialdir || '';
+    
+    let promptText = `🌐 Mode WSL détecté\n\n`;
+    promptText += `Titre: ${title}\n`;
+    promptText += `Type: ${params.dialog_type === 'folder' ? 'Dossier' : 'Fichier'}\n`;
+    
+    if (params.dialog_type === 'file') {
+      promptText += `Types acceptés: ${filetypesStr}\n`;
+    }
+    
+    if (suggestedPath) {
+      promptText += `Dossier suggéré: ${suggestedPath}\n`;
+    }
+    
+    promptText += `\n💡 Solutions recommandées:\n`;
+    promptText += `1. Installer zenity: sudo apt install zenity\n`;
+    promptText += `2. Ou saisir le chemin manuellement ci-dessous\n\n`;
+    
+    if (params.dialog_type === 'folder') {
+      promptText += `Veuillez saisir le chemin complet du dossier:\n`;
+      promptText += `Exemple: /mnt/c/Users/Public/Documents`;
+    } else {
+      promptText += `Veuillez saisir le chemin complet du fichier:\n`;
+      promptText += `Exemple: /mnt/c/Users/Public/Documents/mon_fichier.rpy`;
+    }
+    
+    const userPath = window.prompt(promptText);
+    if (!userPath) {
+      return { success: false, error: 'Aucun chemin saisi' };
+    }
+    
+    // Valider le chemin si une fonction de validation est fournie
+    if ('validate' in params && params.validate && !(params.validate as (path: string) => boolean)(userPath)) {
+      return { success: false, error: 'Chemin invalide' };
+    }
+    
+    // Retourner le chemin directement (pas besoin de le renvoyer au backend)
+    const result = {
+      success: true,
+      path: userPath
+    };
+    
+    if (result.success && result.path && options?.setPath) {
+      options.setPath(result.path);
+    }
+    
+    return result;
   },
   async healthCheck(): Promise<HealthResponse> {
     const response = await api.get('/health');
@@ -210,6 +268,33 @@ export const apiService = {
     } catch (error) {
        
       console.error('Save Dialog Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async checkZenity(): Promise<{success: boolean, available: boolean, version?: string, message: string}> {
+    try {
+      const response = await api.get('/system/check-zenity');
+      return response.data;
+    } catch (error) {
+      console.error('Check Zenity Error:', error);
+      return {
+        success: false,
+        available: false,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  },
+
+  async getWslInfo(): Promise<{success: boolean, info?: any, error?: string}> {
+    try {
+      const response = await api.get('/system/wsl-info');
+      return response.data;
+    } catch (error) {
+      console.error('WSL Info Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

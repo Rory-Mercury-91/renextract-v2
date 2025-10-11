@@ -11,7 +11,11 @@
     name: string;
     icon: string;
     color: string;
+    requiresEditor?: boolean;
   }
+
+  // Vérifier si l'éditeur est configuré
+  const isEditorConfigured = $derived($appSettings.paths.editor && $appSettings.paths.editor.trim() !== '');
 
   const sections: Section[] = [
     {
@@ -19,36 +23,42 @@
       name: $_('navigation.generator'),
       icon: 'hugeicons:magic-wand-04',
       color: 'text-yellow-300',
+      requiresEditor: true,
     },
     {
       link: '/extract',
       name: $_('navigation.extract'),
       icon: 'hugeicons:injection',
       color: 'text-blue-300',
+      requiresEditor: true,
     },
     {
       link: '/translator',
       name: $_('navigation.translator'),
       icon: 'hugeicons:translate',
       color: 'text-red-300',
+      requiresEditor: true,
     },
     {
       link: '/tools',
       name: $_('navigation.tools'),
       icon: 'hugeicons:tools',
       color: 'text-green-300',
+      requiresEditor: true,
     },
     {
       link: '/backups',
       name: $_('navigation.backup'),
       icon: 'hugeicons:floppy-disk',
       color: 'text-purple-300',
+      requiresEditor: false,
     },
     {
       link: '/settings',
       name: $_('navigation.settings'),
       icon: 'hugeicons:settings-01',
       color: 'text-gray-300',
+      requiresEditor: false, // Les paramètres sont toujours accessibles
     },
   ];
 </script>
@@ -63,34 +73,63 @@
   <div class="flex w-full flex-col gap-1">
     {#each sections as section}
       {#if section.link !== '/translator' || $appSettings.translatorFeature}
-        <Link to={section.link}>
-          {#snippet children(active)}
-            <div
-              class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left transition-all duration-300 hover:bg-gray-200 dark:hover:bg-gray-700 {section.color}"
-              class:bg-blue-600={active}
-              class:hover:bg-blue-700={active}
+        {#if section.requiresEditor === false || isEditorConfigured}
+          <Link to={section.link}>
+            {#snippet children(active)}
+              <div
+                class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left transition-all duration-300 hover:bg-gray-200 dark:hover:bg-gray-700 {section.color}"
+                class:bg-blue-600={active}
+                class:hover:bg-blue-700={active}
+              >
+                <span
+                  class="flex text-xl"
+                  class:w-min={!isClose}
+                  class:w-full={isClose}
+                >
+                  <Icon icon={section.icon} class="h-6 w-6" />
+                </span>
+                <span
+                  class="hidden flex-1 overflow-hidden font-bold"
+                  class:opacity-0={isClose}
+                  class:opacity-100={!isClose}
+                  class:max-w-0={isClose}
+                  class:max-w-full={!isClose}
+                  class:lg:block={!isClose}
+                  title={section.name}
+                >
+                  {section.name}
+                </span>
+              </div>
+            {/snippet}
+          </Link>
+        {:else}
+          <!-- Section désactivée -->
+          <div
+            class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left opacity-50 cursor-not-allowed"
+            title="Éditeur requis - Configurez un éditeur dans les paramètres"
+          >
+            <span
+              class="flex text-xl"
+              class:w-min={!isClose}
+              class:w-full={isClose}
             >
-              <span
-                class="flex text-xl"
-                class:w-min={!isClose}
-                class:w-full={isClose}
-              >
-                <Icon icon={section.icon} class="h-6 w-6" />
-              </span>
-              <span
-                class="hidden flex-1 overflow-hidden font-bold"
-                class:opacity-0={isClose}
-                class:opacity-100={!isClose}
-                class:max-w-0={isClose}
-                class:max-w-full={!isClose}
-                class:lg:block={!isClose}
-                title={section.name}
-              >
-                {section.name}
-              </span>
-            </div>
-          {/snippet}
-        </Link>
+              <Icon icon={section.icon} class="h-6 w-6" />
+            </span>
+            <span
+              class="hidden flex-1 overflow-hidden font-bold"
+              class:opacity-0={isClose}
+              class:opacity-100={!isClose}
+              class:max-w-0={isClose}
+              class:max-w-full={!isClose}
+              class:lg:block={!isClose}
+            >
+              {section.name}
+            </span>
+            {#if !isClose}
+              <Icon icon="hugeicons:lock" class="h-4 w-4 text-gray-400" />
+            {/if}
+          </div>
+        {/if}
       {/if}
     {/each}
   </div>
