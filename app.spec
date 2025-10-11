@@ -1,7 +1,36 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
+import json
+import platform
 from pathlib import Path
+
+# Récupérer automatiquement la version et la distribution
+def get_version():
+    """Récupère la version depuis package.json"""
+    try:
+        with open('package.json', 'r') as f:
+            data = json.load(f)
+            return data.get('version', '2.0.0')
+    except:
+        return '2.0.0'
+
+def get_distribution():
+    """Détecte automatiquement la distribution"""
+    system = platform.system().lower()
+    if system == 'windows':
+        return 'windows'
+    elif system == 'darwin':
+        return 'macos'
+    elif system == 'linux':
+        return 'linux'
+    else:
+        return 'unknown'
+
+# Générer le nom automatiquement
+version = get_version()
+distribution = get_distribution()
+app_name = f'renextract-{distribution}-v{version}'
 
 # Chemin vers le dossier dist
 dist_path = Path('dist')
@@ -25,6 +54,10 @@ a = Analysis(
         'flask',
         'flask_cors',
         'webview',
+        'webview.platforms.gtk',
+        'webview.platforms.qt',
+        'webview.platforms.cocoa',
+        'webview.platforms.winforms',
         'dotenv',
         'threading',
         'json',
@@ -46,7 +79,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='app-temp',
+    name=app_name,
     debug=True,
     bootloader_ignore_signals=False,
     strip=True,   # Stripper les symboles pour réduire la taille

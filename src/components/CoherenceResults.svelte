@@ -7,13 +7,14 @@
   // Types
   type CoherenceIssue = CoherenceResultSvelte['issues_by_file'][string][0];
 
-  // Props avec $props (Svelte 5)
   interface Props {
     result: CoherenceResultSvelte;
     onOpenInEditor?: (filePath: string, lineNumber: number) => void;
   }
 
   const { result, onOpenInEditor = () => {} }: Props = $props();
+  
+  console.log('🔍 CoherenceResults - Composant monté avec result:', result);
 
   // État local avec $state (Svelte 5)
   let expandedSections = $state<Set<string>>(new Set());
@@ -21,54 +22,85 @@
   let filterType = $state<string>('all');
   let searchTerm = $state<string>('');
 
-  // Données dérivées
+  // Calculs simplifiés avec $derived
   const issuesByType = $derived(() => {
+    console.log('🔍 Debug CoherenceResults - Début du calcul issuesByType');
+    
+    // Vérification de sécurité
+    if (!result || !result.issues_by_file || typeof result.issues_by_file !== 'object') {
+      console.warn('⚠️ issues_by_file is not valid:', result?.issues_by_file);
+      return {};
+    }
+    
     const grouped: Record<string, CoherenceIssue[]> = {};
+    const allIssues = Object.values(result.issues_by_file).flat();
 
-    Object.values(result.issues_by_file)
-      .flat()
-      .forEach((issue: CoherenceIssue) => {
+    console.log('🔍 Debug CoherenceResults:', {
+      totalIssues: result.stats.total_issues,
+      issuesByFileKeys: Object.keys(result.issues_by_file),
+      allIssuesLength: allIssues.length,
+      firstIssue: allIssues[0]
+    });
+
+    allIssues.forEach((issue: CoherenceIssue) => {
+      if (issue && issue.type) {
         if (!grouped[issue.type]) {
           grouped[issue.type] = [];
         }
         grouped[issue.type].push(issue);
-      });
-
-    return grouped;
-  });
-
-  const filteredIssuesByType = $derived(() => {
-    if (filterType === 'all') return issuesByType;
-
-    return Object.fromEntries(
-      Object.entries(issuesByType).filter(([type]) => type === filterType)
-    );
-  });
-
-  const searchFilteredIssues = $derived(() => {
-    if (!searchTerm.trim()) return filteredIssuesByType;
-
-    const filtered: Record<string, CoherenceIssue[]> = {};
-    const searchLower = searchTerm.toLowerCase();
-
-    Object.entries(filteredIssuesByType).forEach(([type, issues]) => {
-      const matchingIssues = issues.filter(
-        (issue: CoherenceIssue) =>
-          issue.message.toLowerCase().includes(searchLower) ||
-          issue.file.toLowerCase().includes(searchLower) ||
-          (issue.old_content &&
-            issue.old_content.toLowerCase().includes(searchLower)) ||
-          (issue.new_content &&
-            issue.new_content.toLowerCase().includes(searchLower))
-      );
-
-      if (matchingIssues.length > 0) {
-        filtered[type] = matchingIssues;
+      } else {
+        console.warn('⚠️ Issue invalide:', issue);
       }
     });
 
-    return filtered;
+    console.log('🔍 Grouped issues:', grouped);
+    return grouped;
   });
+
+         const filteredIssuesByType = $derived(() => {
+           console.log('🔍 Calcul filteredIssuesByType avec filterType:', filterType);
+           if (filterType === 'all') {
+             return issuesByType();
+           } else {
+             return Object.fromEntries(
+               Object.entries(issuesByType()).filter(([type]) => type === filterType)
+             );
+           }
+         });
+
+         const searchFilteredIssues = $derived(() => {
+           console.log('🔍 Calcul searchFilteredIssues avec searchTerm:', searchTerm);
+           if (!searchTerm.trim()) {
+             return filteredIssuesByType();
+           } else {
+             const filtered: Record<string, CoherenceIssue[]> = {};
+             const searchLower = searchTerm.toLowerCase();
+
+             Object.entries(filteredIssuesByType()).forEach(([type, issues]) => {
+               const matchingIssues = issues.filter(
+                 (issue: CoherenceIssue) =>
+                   issue.message.toLowerCase().includes(searchLower) ||
+                   issue.file.toLowerCase().includes(searchLower) ||
+                   (issue.old_content &&
+                     issue.old_content.toLowerCase().includes(searchLower)) ||
+                   (issue.new_content &&
+                     issue.new_content.toLowerCase().includes(searchLower))
+               );
+
+               if (matchingIssues.length > 0) {
+                 filtered[type] = matchingIssues;
+               }
+             });
+
+             return filtered;
+           }
+         });
+
+         const searchFilteredEntries = $derived(() => {
+           const entries = Object.entries(searchFilteredIssues());
+           console.log('🔍 searchFilteredEntries:', entries);
+           return entries;
+         });
 
   // Fonctions utilitaires
   function toggleSection(type: string) {
@@ -147,16 +179,30 @@
     return filePath.split('/').pop() || filePath;
   }
 
-  // Ouvrir automatiquement la première section s'il y a des erreurs
-  onMount(() => {
-    if (result.stats.total_issues > 0) {
-      const firstType = Object.keys(searchFilteredIssues)[0];
-      if (firstType) {
-        expandedSections.add(firstType);
-        expandedSections = new Set(expandedSections);
-      }
-    }
-  });
+         // Variables pour forcer l'exécution des $derived
+         let debugIssuesByType = $derived(issuesByType());
+         let debugFilteredIssuesByType = $derived(filteredIssuesByType());
+         let debugSearchFilteredIssues = $derived(searchFilteredIssues());
+         let debugSearchFilteredEntries = $derived(searchFilteredEntries());
+
+         // Forcer l'exécution avec $effect
+         $effect(() => {
+           console.log('🔍 $effect - issuesByType:', issuesByType());
+           console.log('🔍 $effect - filteredIssuesByType:', filteredIssuesByType());
+           console.log('🔍 $effect - searchFilteredIssues:', searchFilteredIssues());
+           console.log('🔍 $effect - searchFilteredEntries:', searchFilteredEntries());
+         });
+
+         // Ouvrir automatiquement la première section s'il y a des erreurs
+         onMount(() => {
+           if (result.stats.total_issues > 0) {
+             const firstType = searchFilteredEntries()[0]?.[0];
+             if (firstType) {
+               expandedSections.add(firstType);
+               expandedSections = new Set(expandedSections);
+             }
+           }
+         });
 </script>
 
 <div class="flex flex-col gap-6">
@@ -167,15 +213,6 @@
         <Icon icon="hugeicons:chart-bar" class="h-6 w-6" />
         Rapport de Cohérence
       </h2>
-      <div class="flex gap-2">
-        <button
-          onclick={() => window.print()}
-          class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
-        >
-          <Icon icon="hugeicons:printer" class="h-4 w-4" />
-          Imprimer
-        </button>
-      </div>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -267,8 +304,15 @@
       </div>
     </div>
 
+
+           <!-- Debug pour forcer l'exécution des $derived -->
+           {console.log('🔍 Template - debugIssuesByType:', debugIssuesByType)}
+           {console.log('🔍 Template - debugFilteredIssuesByType:', debugFilteredIssuesByType)}
+           {console.log('🔍 Template - debugSearchFilteredIssues:', debugSearchFilteredIssues)}
+           {console.log('🔍 Template - debugSearchFilteredEntries:', debugSearchFilteredEntries)}
+    
     <!-- Sections par type d'erreur -->
-    {#each Object.entries(searchFilteredIssues) as [type, issues]}
+    {#each debugSearchFilteredEntries as [type, issues]}
       {@const isExpanded = expandedSections.has(type)}
       {@const typeCount = issues.length}
       {@const percentage = (typeCount / result.stats.total_issues) * 100}
@@ -310,10 +354,10 @@
         {#if isExpanded}
           <div class="border-t border-gray-700">
             {#each Object.entries(issues.reduce((acc: Record<string, CoherenceIssue[]>, issue: CoherenceIssue) => {
-                  if (!acc[issue.file]) acc[issue.file] = [];
-                  acc[issue.file].push(issue);
-                  return acc;
-                }, {} as Record<string, CoherenceIssue[]>)) as [filePath, fileIssues]}
+                if (!acc[issue.file]) acc[issue.file] = [];
+                acc[issue.file].push(issue);
+                return acc;
+              }, {} as Record<string, CoherenceIssue[]>)) as [filePath, fileIssues]}
               {@const isFileExpanded = expandedFiles.has(filePath)}
 
               <div class="border-b border-gray-700 last:border-b-0">

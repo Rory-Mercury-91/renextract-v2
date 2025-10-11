@@ -51,7 +51,7 @@ def initialize_application_folders():
 
         return base_dir
 
-    except (OSError, IOError) as e:
+    except OSError as e:
         print(f"❌ Erreur création dossiers: {e}")
         return None
 
@@ -98,7 +98,14 @@ app.register_blueprint(API)
 
 def start_flask():
     """Démarre le serveur Flask"""
-    app.run(host=AppConfig.FLASK_HOST, port=AppConfig.FLASK_PORT, debug=AppConfig.FLASK_DEBUG)
+    # Désactiver le reloader quand Flask est dans un thread (incompatible)
+    # mais garder le mode debug pour les logs détaillés
+    app.run(
+        host=AppConfig.FLASK_HOST,
+        port=AppConfig.FLASK_PORT,
+        debug=AppConfig.FLASK_DEBUG,
+        use_reloader=False,  # Désactiver le reloader pour éviter l'erreur de signal
+    )
 
 
 def main():

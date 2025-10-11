@@ -1,5 +1,5 @@
 # src/backend/extractor.py
-# Version optimisée de l'extraction avec cache et streaming
+# Extraction avec cache et streaming
 
 """Module de l'extraction avec cache et streaming"""
 

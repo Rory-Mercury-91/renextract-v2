@@ -3,8 +3,6 @@
 Build script to create an executable of the PyWebView + Svelte application
 """
 
-import json
-import platform
 import shutil
 import subprocess
 import sys
@@ -94,50 +92,22 @@ def build_executable():
 
 def rename_executable():
     """Rename executable with version and OS"""
-
-    # Get version from package.json
-    try:
-        with open("package.json", encoding="utf-8") as f:
-            data = json.load(f)
-            version = data.get("version", "1.0.0")
-    except (OSError, json.JSONDecodeError, KeyError):
-        version = "1.0.0"
-
-    # Get OS name
-    system = platform.system().lower()
-    if system == "windows":
-        os_name = "windows"
-        old_name = "app-temp.exe"
-        new_name = f"app-{os_name}-v{version}.exe"
-    elif system == "linux":
-        os_name = "linux"
-        old_name = "app-temp"
-        new_name = f"app-{os_name}-v{version}"
-    elif system == "darwin":
-        os_name = "macos"
-        old_name = "app-temp"
-        new_name = f"app-{os_name}-v{version}"
-    else:
-        os_name = "unknown"
-        old_name = "app-temp"
-        new_name = f"app-{os_name}-v{version}"
-
-    old_path = Path(f"dist/{old_name}")
-    new_path = Path(f"dist/{new_name}")
-
-    if old_path.exists():
-        old_path.rename(new_path)
-        print(f"OK: Renamed executable to {new_name}")
-    else:
-        print(f"WARNING: Executable {old_name} not found for renaming")
+    # Note: The executable is already named correctly by app.spec
+    # This function is kept for compatibility but does nothing
+    print("OK: Executable already named correctly by app.spec")
 
 
 def verify_build():
     """Verify that executable was created correctly"""
     print("Verifying build...")
 
-    # Look for renamed executables with version and OS
+    # Look for executables with version and OS (new naming convention)
     exe_paths = []
+    for file in Path("dist").glob("renextract-*-v*"):
+        exe_paths.append(file)
+    for file in Path("dist").glob("renextract-*-v*.exe"):
+        exe_paths.append(file)
+    # Also check old naming convention for compatibility
     for file in Path("dist").glob("app-*-v*"):
         exe_paths.append(file)
     for file in Path("dist").glob("app-*-v*.exe"):
@@ -216,7 +186,15 @@ def main():
     print("=" * 60)
 
     # Find correct executable name
-    exe_paths = [Path("dist/app.exe"), Path("dist/app")]
+    exe_paths = []
+    # Look for new naming convention first
+    for file in Path("dist").glob("renextract-*-v*"):
+        exe_paths.append(file)
+    for file in Path("dist").glob("renextract-*-v*.exe"):
+        exe_paths.append(file)
+    # Fallback to old naming convention
+    exe_paths.extend([Path("dist/app.exe"), Path("dist/app")])
+
     exe_name = "app"
     for path in exe_paths:
         if path.exists():

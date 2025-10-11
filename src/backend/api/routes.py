@@ -181,33 +181,27 @@ def check_coherence_svelte():
         # Extraire les données du résultat
         if isinstance(result, dict):
             all_issues = result.get("issues", [])
-            existing_stats = result.get("stats", {})
+            stats = result.get("stats", {})
         else:
             all_issues = result
-            existing_stats = {}
+            stats = {}
 
         # Calculer les statistiques si pas déjà calculées
-        if not existing_stats:
+        if not stats:
             unique_files = {issue["file"] for issue in all_issues}
             stats = checker.calculate_statistics(all_issues, len(unique_files))
-        else:
-            stats = existing_stats
 
+        # Grouper les problèmes par fichier
         issues_by_file = defaultdict(list)
         for issue in all_issues:
             issues_by_file[issue["file"]].append(issue)
-
-        # Grouper les problèmes par type pour les statistiques
-        issues_by_type = defaultdict(int)
-        for issue in all_issues:
-            issues_by_type[issue["type"]] += 1
 
         # Préparer la réponse structurée pour Svelte
         svelte_result = {
             "stats": {
                 "total_issues": stats.get("total_issues", 0),
                 "files_analyzed": stats.get("files_analyzed", 0),
-                "issues_by_type": dict(issues_by_type),
+                "issues_by_type": stats.get("issues_by_type", {}),
             },
             "issues_by_file": dict(issues_by_file),
             "target_path": target_path,

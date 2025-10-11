@@ -25,8 +25,6 @@
   const currentLanguage = $derived($projectStore.language);
   const checking = $derived($isChecking);
   const coherenceProgressText = $derived($checkProgress);
-  const lastCoherenceRes = $derived($lastCoherenceResult);
-  const lastCoherenceErr = $derived($lastCoherenceError);
   const options = $derived($coherenceOptions);
 
   // État local
@@ -427,9 +425,9 @@
   {/if}
 
   <!-- Résultats avec le nouveau composant Svelte -->
-  {#if lastCoherenceRes && !checking}
+  {#if $lastCoherenceResult && !checking}
     <CoherenceResults
-      result={lastCoherenceRes}
+      result={$lastCoherenceResult}
       onOpenInEditor={(filePath, lineNumber) => {
         // Fonction pour ouvrir dans l'éditeur
         console.info("Ouvrir dans l'éditeur:", filePath, 'ligne:', lineNumber);
@@ -439,13 +437,13 @@
   {/if}
 
   <!-- Erreur -->
-  {#if lastCoherenceErr && !checking}
+  {#if $lastCoherenceError && !checking}
     <div class="rounded-lg border border-red-700 bg-red-900/30 p-4">
       <div class="flex items-center gap-3">
         <Icon icon="hugeicons:close-circle" class="h-6 w-6 text-red-400" />
         <div>
           <p class="font-medium text-red-200">Erreur d'analyse</p>
-          <p class="text-sm text-red-400">{lastCoherenceErr}</p>
+          <p class="text-sm text-red-400">{$lastCoherenceError}</p>
         </div>
       </div>
     </div>

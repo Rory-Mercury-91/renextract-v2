@@ -2,6 +2,7 @@
 """
 Development script to launch the application in development mode
 """
+
 import subprocess
 import sys
 import threading
@@ -15,7 +16,7 @@ def start_flask_dev():
     """Start Flask in development mode"""
     print("🐍 Starting Flask server...")
     # Import and start Flask directly without pywebview
-    app.run(host='127.0.0.1', port=5000, debug=True, use_reloader=False)
+    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
 
 
 def start_vite_dev():
@@ -23,10 +24,10 @@ def start_vite_dev():
     print("⚡ Starting Vite server...")
     # Use subprocess for better control and ensure --host is used
     try:
-        subprocess.run(['pnpm', 'run', 'dev', '--', '--host'], check=True)
+        subprocess.run(["pnpm", "run", "dev", "--", "--host"], check=True)
     except subprocess.CalledProcessError:
         # Fallback if pnpm fails
-        subprocess.run(['npm', 'run', 'dev', '--', '--host'], check=True)
+        subprocess.run(["npm", "run", "dev", "--", "--host"], check=True)
 
 
 def main():
@@ -38,7 +39,7 @@ def main():
     # Check that dependencies are installed
     if not Path("node_modules").exists():
         print("📦 Installing frontend dependencies...")
-        subprocess.run(['pnpm', 'install'], check=True)
+        subprocess.run(["pnpm", "install"], check=True)
 
     if not Path("requirements.txt").exists():
         print("❌ requirements.txt file not found")
