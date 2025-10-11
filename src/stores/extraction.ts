@@ -2,6 +2,7 @@
 // Store pour gérer l'état de l'extraction des textes
 
 import { apiService } from '$lib/api';
+import { openFile, openMultipleFiles } from '$lib/editorUtils';
 import { derived, get, writable } from 'svelte/store';
 import { appSettings } from './app';
 
@@ -284,29 +285,26 @@ export const extractionActions = {
    */
   async openExtractionFiles(result: ExtractionResult): Promise<void> {
     try {
-      const filesToOpen: string[] = [];
+      const filesToOpen: Array<{ filePath: string; lineNumber?: number }> = [];
 
       // Ajouter les fichiers générés
       if (result.dialogue_file) {
-        filesToOpen.push(result.dialogue_file);
+        filesToOpen.push({ filePath: result.dialogue_file });
       }
       if (result.doublons_file) {
-        filesToOpen.push(result.doublons_file);
+        filesToOpen.push({ filePath: result.doublons_file });
       }
       if (result.asterix_file) {
-        filesToOpen.push(result.asterix_file);
+        filesToOpen.push({ filePath: result.asterix_file });
       }
 
       // Ouvrir les fichiers
       if (filesToOpen.length > 0) {
-        console.info('📂 Ouverture automatique des fichiers:', filesToOpen);
-
-        // Utiliser l'API backend pour ouvrir les fichiers
-        for (const file of filesToOpen) {
-          await apiService.openExtractionFile(file);
-          // Petit délai entre les ouvertures pour éviter de surcharger le système
-          await new Promise(resolve => setTimeout(resolve, 150));
-        }
+        console.info(
+          '📂 Ouverture automatique des fichiers:',
+          filesToOpen.map(f => f.filePath)
+        );
+        await openMultipleFiles(filesToOpen, 150);
       }
     } catch (error) {
       console.error('Erreur ouverture automatique des fichiers:', error);
@@ -336,14 +334,7 @@ export const extractionActions = {
    * Ouvre un fichier spécifique de l'extraction
    */
   async openExtractionFile(filePath: string): Promise<void> {
-    try {
-      const response = await apiService.openExtractionFile(filePath);
-      if (!response.success) {
-        console.error('Erreur ouverture fichier:', response.error);
-      }
-    } catch (error) {
-      console.error('Erreur ouverture fichier:', error);
-    }
+    await openFile(filePath);
   },
 
   /**

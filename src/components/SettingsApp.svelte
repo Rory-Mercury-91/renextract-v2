@@ -159,29 +159,6 @@
           <span class=""> Mode debug complet </span>
         </label>
       </div>
-
-      <!-- Colonne droite - Éditeur -->
-      <div class="space-y-4">
-        <div>
-          <label for="text-editor" class="mb-2 block text-sm font-medium"
-            >Éditeur externe :</label
-          >
-          <select
-            id="text-editor"
-            bind:value={$appSettings.externalTools.textEditor}
-            class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="VS Code">VS Code</option>
-            <option value="Notepad++">Notepad++</option>
-            <option value="Atom/Pulsar">Atom/Pulsar</option>
-            <option value="Sublime Text">Sublime Text</option>
-          </select>
-          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-            Éditeur pour ouvrir les fichiers depuis l'interface temps réel et
-            les rapports HTML.
-          </p>
-        </div>
-      </div>
     </div>
   </div>
 </section>

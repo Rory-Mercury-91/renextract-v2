@@ -142,12 +142,11 @@
 
   // Validation et lancement
   function canStartAnalysis(): boolean {
-    const basicChecks = (
+    const basicChecks =
       !checking &&
       !!selectedLanguage &&
       !!currentProject &&
-      !!currentProject.path
-    );
+      !!currentProject.path;
 
     // En mode fichier spécifique, vérifier qu'un fichier est sélectionné
     if (analysisMode === 'single_file') {
@@ -426,15 +425,7 @@
 
   <!-- Résultats avec le nouveau composant Svelte -->
   {#if $lastCoherenceResult && !checking}
-    <CoherenceResults
-      result={$lastCoherenceResult}
-      onOpenInEditor={(filePath, lineNumber) => {
-        // Fonction pour ouvrir dans l'éditeur
-        console.info("Ouvrir dans l'éditeur:", filePath, 'ligne:', lineNumber);
-        // TODO: Implémenter l'ouverture dans l'éditeur
-      }}
-      {selectedLanguage}
-    />
+    <CoherenceResults result={$lastCoherenceResult} {selectedLanguage} />
   {/if}
 
   <!-- Erreur -->

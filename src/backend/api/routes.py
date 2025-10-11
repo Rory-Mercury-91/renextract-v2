@@ -5,6 +5,8 @@ Toutes les routes sont regroupées dans ce fichier pour une meilleure organisati
 
 import logging
 import os
+import platform
+import subprocess
 import tkinter as tk
 from collections import defaultdict
 from tkinter import filedialog
@@ -147,6 +149,149 @@ def set_extraction_settings():
         return jsonify({"success": True, "message": "Paramètres d'extraction mis à jour"})
     except (OSError, ValueError, TypeError) as e:
         logger.error("Erreur mise à jour paramètres extraction: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/extraction/open-file", methods=["POST"])
+def open_extraction_file():
+    """Ouvre un fichier dans l'éditeur externe configuré"""
+    try:
+        data = request.get_json()
+        logger.info("🔍 open_extraction_file - Données reçues: %s", data)
+
+        if not data or "filepath" not in data:
+            logger.error("❌ open_extraction_file - Chemin de fichier manquant")
+            return jsonify({"success": False, "error": "Chemin de fichier requis"}), 400
+
+        filepath = data["filepath"]
+        line_number = data.get("line_number", None)
+
+        logger.info("🔍 open_extraction_file - Chemin: %s, Ligne: %s", filepath, line_number)
+
+        # Convertir le chemin Windows en chemin Linux si nécessaire
+        if filepath.startswith("B:\\"):
+            # Essayer différentes conversions WSL
+            possible_paths = [
+                # Conversion standard WSL
+                filepath.replace("B:\\", "/mnt/b/").replace("\\", "/"),
+                # Conversion alternative
+                filepath.replace("B:\\", "/mnt/c/").replace("\\", "/"),
+                # Chemin direct Windows (pour certains environnements)
+                filepath,
+            ]
+
+            logger.info("🔍 open_extraction_file - Tentative de conversion du chemin: %s", filepath)
+
+            # Tester chaque chemin possible
+            for test_path in possible_paths:
+                if os.path.exists(test_path):
+                    filepath = test_path
+                    logger.info("✅ open_extraction_file - Chemin trouvé: %s", filepath)
+                    break
+            else:
+                # Aucun chemin n'existe, utiliser le premier et laisser l'erreur se produire
+                filepath = possible_paths[0]
+                logger.warning(
+                    "⚠️ open_extraction_file - Aucun chemin valide trouvé, utilisation: %s",
+                    filepath,
+                )
+
+        # Vérifier que le fichier existe
+        if not os.path.exists(filepath):
+            logger.error("❌ open_extraction_file - Fichier introuvable: %s", filepath)
+            return jsonify({"success": False, "error": f"Fichier introuvable: {filepath}"}), 404
+
+        # Charger les paramètres pour récupérer le chemin de l'éditeur configuré
+        settings = AppConfig.load_settings_from_disk()
+        editor_path = settings.get("paths", {}).get("editor", "")
+        logger.info("🔍 open_extraction_file - Chemin éditeur configuré: %s", editor_path)
+
+        # Construire la commande selon l'éditeur configuré
+        system = platform.system()
+        cmd = None
+        editor_name = "éditeur par défaut"
+
+        if editor_path and os.path.exists(editor_path):
+            # Utiliser l'éditeur configuré
+            cmd = [editor_path, filepath]
+            editor_name = os.path.basename(editor_path)
+            logger.info(
+                "✅ open_extraction_file - Utilisation de l'éditeur configuré: %s", editor_path
+            )
+
+            # Ajouter le numéro de ligne si l'éditeur le supporte
+            if line_number:
+                # Détecter le type d'éditeur par le nom de l'exécutable
+                editor_basename = os.path.basename(editor_path).lower()
+                if "code" in editor_basename:  # VS Code
+                    cmd.extend(["--goto", f"{filepath}:{line_number}"])
+                elif "subl" in editor_basename or "sublime" in editor_basename:  # Sublime Text
+                    cmd.extend([f"{filepath}:{line_number}"])
+                # Pour les autres éditeurs, le numéro de ligne sera ignoré
+        else:
+            # Utiliser l'éditeur par défaut du système
+            logger.warning(
+                "⚠️ open_extraction_file - Aucun éditeur configuré ou chemin invalide, \
+                  utilisation de l'éditeur par défaut"
+            )
+            if system == "Windows":
+                cmd = ["notepad", filepath]
+            elif system == "Darwin":  # macOS
+                cmd = ["open", "-t", filepath]
+            else:  # Linux
+                cmd = ["xdg-open", filepath]
+
+        # Exécuter la commande
+        try:
+            subprocess.Popen(cmd, shell=False)
+            message = f"Fichier ouvert avec {editor_name}"
+            if line_number and editor_name not in ["code", "subl"]:
+                message += f" (numéro de ligne {line_number} ignoré)"
+            return jsonify({"success": True, "message": message})
+        except FileNotFoundError:
+            logger.warning(
+                "⚠️ Éditeur %s non trouvé, tentative avec l'éditeur par défaut", editor_name
+            )
+
+            # Fallback vers l'éditeur par défaut du système
+            try:
+                if system == "Windows":
+                    fallback_cmd = ["notepad", filepath]
+                elif system == "Darwin":  # macOS
+                    fallback_cmd = ["open", "-t", filepath]
+                else:  # Linux
+                    fallback_cmd = ["xdg-open", filepath]
+
+                subprocess.Popen(fallback_cmd, shell=False)
+                message = (
+                    f"Fichier ouvert avec l'éditeur par défaut du système "
+                    f"(éditeur {editor_name} non trouvé)"
+                )
+                if line_number:
+                    message += f" (numéro de ligne {line_number} ignoré)"
+                return jsonify({"success": True, "message": message})
+
+            except (OSError, subprocess.SubprocessError, RuntimeError) as fallback_error:
+                logger.error("❌ Échec du fallback: %s", fallback_error)
+                return jsonify(
+                    {
+                        "success": False,
+                        "error": (
+                            f"Éditeur {editor_name} non trouvé et fallback échoué: {fallback_error}"
+                        ),
+                    }
+                ), 400
+        except (OSError, subprocess.SubprocessError, RuntimeError) as e:
+            logger.error("❌ Erreur ouverture fichier: %s", e)
+            return jsonify(
+                {
+                    "success": False,
+                    "error": f"Erreur lors de l'ouverture du fichier: {e!s}",
+                }
+            ), 500
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur ouverture fichier: %s", e)
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 
@@ -529,6 +674,9 @@ def open_dialog():
         dialog_type = data.get("dialog_type", "file")
         title = data.get("title", "Sélectionner un fichier")
         initialdir = data.get("initialdir", "")
+        filetypes = data.get(
+            "filetypes", [("Fichiers Ren'Py", "*.rpy"), ("Tous les fichiers", "*.*")]
+        )
 
         # Créer une fenêtre tkinter cachée
         root = tk.Tk()
@@ -544,7 +692,7 @@ def open_dialog():
             selected_path = filedialog.askopenfilename(
                 title=title,
                 initialdir=initialdir,
-                filetypes=[("Fichiers Ren'Py", "*.rpy"), ("Tous les fichiers", "*.*")],
+                filetypes=filetypes,
             )
 
         # Fermer la fenêtre tkinter
@@ -685,50 +833,6 @@ def list_backups():
     except (OSError, ValueError, TypeError) as e:
         logger.error("Erreur liste backups: %s", e)
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
-
-
-# ============================================================================
-# ROUTES D'ITEMS (pour l'interface)
-# ============================================================================
-
-
-@API.route("/api/items")
-def get_items():
-    """Récupère les éléments de l'interface"""
-    return jsonify(
-        {
-            "items": [
-                {
-                    "id": "extraction",
-                    "title": "Extraction",
-                    "description": "Extraire les textes des fichiers Ren'Py",
-                    "icon": "extract",
-                    "enabled": True,
-                },
-                {
-                    "id": "coherence",
-                    "title": "Cohérence",
-                    "description": "Vérifier la cohérence des traductions",
-                    "icon": "check",
-                    "enabled": True,
-                },
-                {
-                    "id": "reconstruction",
-                    "title": "Reconstruction",
-                    "description": "Reconstruire les fichiers traduits",
-                    "icon": "rebuild",
-                    "enabled": True,
-                },
-                {
-                    "id": "project",
-                    "title": "Projet",
-                    "description": "Gérer les projets Ren'Py",
-                    "icon": "folder",
-                    "enabled": True,
-                },
-            ],
-        },
-    )
 
 
 # ============================================================================

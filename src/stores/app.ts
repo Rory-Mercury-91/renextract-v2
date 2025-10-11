@@ -35,7 +35,6 @@ interface AppSettings {
     outputField: boolean;
   };
   externalTools: {
-    textEditor: string;
     translator: string;
   };
   paths: {
@@ -100,7 +99,6 @@ const initialSettings: AppSettings = {
     outputField: false,
   },
   externalTools: {
-    textEditor: 'VS Code',
     translator: '',
   },
   paths: {
@@ -205,13 +203,13 @@ const appSettingsActions = {
 
   loadSettings: async () => {
     const response = await apiService.getSettings();
-    // Attendu: { success: boolean, data: {...} }
+    // Attendu: { success: boolean, settings: {...} }
     const payload = response as unknown as {
       success?: boolean;
-      data?: Partial<AppSettings>;
+      settings?: Partial<AppSettings>;
     };
-    if (payload && payload.success && payload.data) {
-      const fetched = payload.data;
+    if (payload && payload.success && payload.settings) {
+      const fetched = payload.settings;
 
       const nextSettings = {
         ...initialSettings,

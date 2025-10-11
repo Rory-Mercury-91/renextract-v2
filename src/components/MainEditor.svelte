@@ -1,22 +1,44 @@
 <script lang="ts">
   /* eslint-env browser */
   import { projectActions, projectStore, type FileInfo } from '$stores/project';
-  import Icon from '@iconify/svelte';
 
   // Variables locales pour l'affichage
-  let code = $state(
+  let code = $derived(
     $projectStore.fileContent.join('') ||
       'Chargez un projet ou un fichier pour commencer'
   );
 
-  const encoding = 'UTF-8';
-  const selectedFileDisplay = $state(
+  const selectedFileDisplay = $derived(
     $projectStore.currentFile
       ? $projectStore.availableFiles.find(
           (f: FileInfo) => f.path === $projectStore.currentFile
         )?.name || '— Aucun fichier —'
       : '— Aucun fichier —'
   );
+
+  // Variables pour la numérotation des lignes (virtualisée)
+  const lineCount = $derived($projectStore.fileContent.length || 1);
+  
+  // État de défilement pour la virtualisation
+  let scrollTop = $state(0);
+  let containerHeight = $state(0);
+  const lineHeight = 24; // 1.5rem = 24px
+  
+  // Virtualisation : calculer les lignes visibles basées sur le scroll
+  const visibleLineNumbers = $derived(
+    lineCount <= 50
+      ? Array.from({ length: lineCount }, (_, i) => i + 1)
+      : (() => {
+          const startLine = Math.floor(scrollTop / lineHeight) + 1;
+          const visibleLines = Math.ceil(containerHeight / lineHeight) + 2; // +2 pour le buffer
+          const endLine = Math.min(startLine + visibleLines, lineCount);
+          return Array.from({ length: endLine - startLine + 1 }, (_, i) => startLine + i);
+        })()
+  );
+
+  // Références pour synchroniser le défilement
+  let lineNumbersContainer: HTMLDivElement;
+  let textareaElement: HTMLTextAreaElement;
 
   // Gestion du changement de langue
   const handleLanguageChange = async (event: Event) => {
@@ -49,6 +71,28 @@
     // eslint-disable-next-line no-console
     console.log('Save file - to be implemented');
   };
+
+  // Synchroniser le défilement entre les numéros de lignes et le contenu
+  const handleScroll = () => {
+    if (lineNumbersContainer && textareaElement) {
+      lineNumbersContainer.scrollTop = textareaElement.scrollTop;
+      scrollTop = textareaElement.scrollTop;
+    }
+  };
+
+  // Mettre à jour la hauteur du conteneur
+  const updateContainerHeight = () => {
+    if (lineNumbersContainer) {
+      containerHeight = lineNumbersContainer.clientHeight;
+    }
+  };
+
+  // Initialiser la hauteur au montage
+  $effect(() => {
+    if (lineNumbersContainer) {
+      updateContainerHeight();
+    }
+  });
 </script>
 
 <div
@@ -81,7 +125,6 @@
             >Aucun fichier chargé</span
           >
         {/if}
-        <span>{encoding}</span>
       </div>
     </div>
 
@@ -139,21 +182,6 @@
         </div>
       {/if}
 
-      <!-- Action buttons -->
-      <div class="flex items-center gap-2">
-        <button
-          onclick={handleSaveFile}
-          disabled={!$projectStore.currentFile || $projectStore.isLoading}
-          class="rounded bg-gray-200 px-3 py-1 text-sm transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
-          title="Sauvegarder le fichier"
-        >
-          <Icon
-            icon="hugeicons:floppy-disk"
-            class="h-5 w-5 text-green-600 dark:text-green-500"
-          />
-        </button>
-      </div>
-
       <!-- Files count -->
       {#if $projectStore.mode === 'project'}
         <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">
@@ -169,17 +197,24 @@
       <div class="flex h-full">
         <!-- Line numbers -->
         <div
-          class="min-w-[60px] border-r border-gray-300 bg-gray-100 px-3 py-4 font-mono text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800"
+          bind:this={lineNumbersContainer}
+          onresize={updateContainerHeight}
+          class="min-w-[60px] border-r border-gray-300 bg-gray-100 px-3 py-4 font-mono text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto select-none pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
-          <div class="text-right">1</div>
+          {#each visibleLineNumbers as lineNumber}
+            <div class="text-right leading-6">{lineNumber}</div>
+          {/each}
         </div>
 
         <!-- Code area -->
         <div class="flex-1 p-4">
           <textarea
+            bind:this={textareaElement}
             bind:value={code}
-            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-700 outline-none dark:text-gray-300"
+            onscroll={handleScroll}
+            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-700 outline-none dark:text-gray-300 leading-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             placeholder="Glissez un fichier .py ici ou utilisez les contrôles ci-dessus"
+            readonly
           ></textarea>
         </div>
       </div>
@@ -190,7 +225,6 @@
   <div
     class="flex items-center justify-between border-t border-gray-300 bg-gray-100 px-4 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
   >
-    <span>Ligne 1, Colonne 1</span>
-    <span>1 lignes, 0 caractères</span>
+    <span>{lineCount} lignes, {code.length} caractères</span>
   </div>
 </div>

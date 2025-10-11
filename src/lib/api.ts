@@ -702,26 +702,48 @@ export const apiService = {
     }
   },
 
-  async openExtractionFile(filepath: string): Promise<{
+  async openExtractionFile(filepath: string, lineNumber?: number): Promise<{
     success: boolean;
     message?: string;
     error?: string;
   }> {
     try {
-      const response = await api.post('/extraction/open-file', {
+      const payload: { filepath: string; line_number?: number } = {
         filepath: filepath
-      });
+      };
+      
+      if (lineNumber !== undefined) {
+        payload.line_number = lineNumber;
+      }
+      
+      const response = await api.post('/extraction/open-file', payload);
       return response.data as {
         success: boolean;
         message?: string;
         error?: string;
       };
     } catch (error) {
-       
       console.error('Open Extraction File Error:', error);
+      
+      // Gestion d'erreur améliorée
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Essayer d'extraire le message d'erreur de la réponse
+        const anyError = error as any;
+        if (anyError.response?.data?.error) {
+          errorMessage = anyError.response.data.error;
+        } else if (anyError.response?.statusText) {
+          errorMessage = `HTTP ${anyError.response.status}: ${anyError.response.statusText}`;
+        } else if (anyError.message) {
+          errorMessage = anyError.message;
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       };
     }
   },

@@ -2,6 +2,7 @@
 // Store pour gérer l'état de la reconstruction des fichiers traduits
 
 import { apiService } from '$lib/api';
+import { openFile } from '$lib/editorUtils';
 import { derived, get, writable } from 'svelte/store';
 import { appSettings } from './app';
 import { coherenceActions } from './coherence';
@@ -315,16 +316,7 @@ export const reconstructionActions = {
   async openReconstructedFile(): Promise<void> {
     const currentState = get(reconstructionStore);
     if (currentState.lastResult?.save_path) {
-      try {
-        const response = await apiService.openExtractionFile(
-          currentState.lastResult.save_path
-        );
-        if (!response.success) {
-          console.error('Erreur ouverture fichier:', response.error);
-        }
-      } catch (error) {
-        console.error('Erreur ouverture fichier:', error);
-      }
+      await openFile(currentState.lastResult.save_path);
     }
   },
 

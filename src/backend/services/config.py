@@ -17,7 +17,7 @@ class AppConfig:
         "debugActive": False,  # false=Level 3, true=Level 4
         "translatorFeature": False,
         "autoOpenings": {"files": True, "folders": True, "reports": True, "outputField": False},
-        "externalTools": {"textEditor": "VS Code", "translator": ""},
+        "externalTools": {"translator": ""},
         "paths": {"renpySdk": "", "editor": ""},
         "folders": {
             "temporary": "01_Temporary/",
