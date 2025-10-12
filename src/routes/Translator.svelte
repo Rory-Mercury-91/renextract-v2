@@ -163,51 +163,29 @@
       progressPercent = 10;
 
       // Simuler la progression pendant la traduction
-<<<<<<< HEAD
-      progressInterval = setInterval(() => {
-        if (progressPercent < 98) { // Augmenter la limite à 98% pour éviter le blocage
-          // Ajuster la vitesse de progression selon la portée
-          const progressIncrement = translationScope === 'specific' ? 
-            Math.random() * 3 + 1 : // Plus lent pour éviter d'atteindre 95% trop vite
-            Math.random() * 1.5 + 0.5; // Plus lent pour tous les fichiers
-          
-          progressPercent += progressIncrement;
-          if (progressPercent > 98) progressPercent = 98;
-
-          // Simuler la progression des fichiers
-          if (currentFile < totalFiles) {
-            // Avancer d'un fichier de temps en temps
-            const fileAdvanceChance = translationScope === 'specific' ? 0.2 : 0.05; // Plus lent
-            if (Math.random() < fileAdvanceChance) {
-              currentFile = Math.min(currentFile + 1, totalFiles);
-              progressMessage = `Traduction en cours... (${currentFile}/${totalFiles} fichiers)`;
-            }
-=======
       const progressInterval = setInterval(() => {
         if (progressPercent < 90) {
-          progressPercent += Math.random() * 3;
+          // Ajuster la vitesse selon le mode
+          const progressIncrement = translationScope === 'specific' ? 
+            Math.random() * 5 + 2 : // Plus rapide pour fichier spécifique
+            Math.random() * 2 + 1; // Plus lent pour tous les fichiers
+          
+          progressPercent += progressIncrement;
           if (progressPercent > 90) progressPercent = 90;
 
-          // Simuler des données de progression
+          // Simuler des données de progression selon le mode
           if (totalLines === 0) {
-            totalLines = Math.floor(Math.random() * 20) + 5; // 5-25 lignes
->>>>>>> rory
-          }
-
-          // Simuler des données de progression plus réalistes
-          if (totalLines === 0) {
-            // Ajuster le nombre de lignes selon la portée
             if (translationScope === 'specific') {
-              totalLines = Math.floor(Math.random() * 200) + 50; // 50-250 lignes pour un fichier spécifique
+              totalLines = Math.floor(Math.random() * 150) + 30; // 30-180 lignes pour fichier spécifique
             } else {
-              totalLines = Math.floor(Math.random() * 1000) + 100; // 100-1100 lignes pour tous les fichiers
+              totalLines = Math.floor(Math.random() * 800) + 100; // 100-900 lignes pour tous les fichiers
             }
           }
           
           if (currentLine < totalLines) {
             const lineIncrement = translationScope === 'specific' ? 
-              Math.floor(Math.random() * 5) + 1 : // Plus lent pour éviter d'atteindre la fin trop vite
-              Math.floor(Math.random() * 3) + 1; // Plus lent pour tous les fichiers
+              Math.floor(Math.random() * 8) + 2 : // Plus rapide pour fichier spécifique
+              Math.floor(Math.random() * 4) + 1; // Plus lent pour tous les fichiers
             
             currentLine += lineIncrement;
             if (currentLine > totalLines) currentLine = totalLines;
@@ -215,8 +193,8 @@
             
             // Ajuster la vitesse selon la portée
             linesPerSecond = translationScope === 'specific' ?
-              Math.random() * 2.0 + 0.5 : // Plus lent
-              Math.random() * 1.0 + 0.2; // Plus lent pour tous les fichiers
+              Math.random() * 4.0 + 1.0 : // 1.0-5.0 lignes/sec pour fichier spécifique
+              Math.random() * 2.0 + 0.5; // 0.5-2.5 lignes/sec pour tous les fichiers
           }
         } else if (progressPercent >= 98) {
           // Phase finale : simulation d'attente du backend
@@ -228,11 +206,7 @@
             if (progressPercent > 99.5) progressPercent = 99.5;
           }
         }
-<<<<<<< HEAD
-      }, translationScope === 'specific' ? 800 : 1200); // Intervalle plus long pour éviter d'aller trop vite
-=======
-      }, 500);
->>>>>>> rory
+      }, translationScope === 'specific' ? 300 : 800); // Plus rapide pour fichier spécifique
 
       const res = await axios.post(
         '/api/translator/run',
@@ -246,25 +220,14 @@
           selectedLanguage: selectedLanguage,
         },
         {
-<<<<<<< HEAD
-          timeout: 0, // Pas de timeout
-=======
           timeout: 300000, // 5 minutes timeout
->>>>>>> rory
         }
       );
 
       clearInterval(progressInterval);
 
-<<<<<<< HEAD
-      progressMessage = `Traitement de la réponse... (${totalFiles}/${totalFiles} fichiers)`;
-=======
       progressMessage = 'Traitement de la réponse...';
->>>>>>> rory
-      progressPercent = 90;
-
       logs = (res.data.stdout || '') + '\n' + (res.data.stderr || '');
-
       if (res.data.message) {
         logs = res.data.message + '\n' + logs;
       }
@@ -274,11 +237,7 @@
         logs = 'Traduction terminée avec succès !';
       }
 
-<<<<<<< HEAD
-      progressMessage = `Traduction terminée ! (${totalFiles}/${totalFiles} fichiers)`;
-=======
       progressMessage = 'Traduction terminée !';
->>>>>>> rory
       progressPercent = 100;
     } catch (err: any) {
       if (progressInterval) {
@@ -599,22 +558,8 @@
                   Vitesse: {linesPerSecond.toFixed(1)} lignes/sec
                 </div>
               {/if}
-            {/if}
-            {#if translationScope === 'specific'}
-              <div class="text-xs text-green-600 dark:text-green-400 mt-1">
-                Mode: Fichier spécifique (plus rapide)
-              </div>
-            {:else if translationScope === 'all'}
-              <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                Mode: Tous les fichiers (peut prendre plus de temps)
-              </div>
-            {/if}
-            {#if progressPercent >= 98 && progressPercent < 100}
-              <div class="text-xs text-blue-600 dark:text-blue-400 mt-1 animate-pulse">
-                ⏳ Finalisation en cours... (attente du serveur)
-              </div>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
