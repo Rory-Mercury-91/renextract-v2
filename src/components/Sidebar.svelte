@@ -15,7 +15,9 @@
   }
 
   // Vérifier si l'éditeur est configuré
-  const isEditorConfigured = $derived($appSettings.paths.editor && $appSettings.paths.editor.trim() !== '');
+  const isEditorConfigured = $derived(
+    $appSettings.paths.editor && $appSettings.paths.editor.trim() !== ''
+  );
 
   const sections: Section[] = [
     {
@@ -105,7 +107,7 @@
         {:else}
           <!-- Section désactivée -->
           <div
-            class="px-4.5 relative flex w-full items-center justify-start gap-3 py-3 text-left opacity-50 cursor-not-allowed"
+            class="px-4.5 relative flex w-full cursor-not-allowed items-center justify-start gap-3 py-3 text-left opacity-50"
             title="Éditeur requis - Configurez un éditeur dans les paramètres"
           >
             <span

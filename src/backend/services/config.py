@@ -15,7 +15,7 @@ class AppConfig:
         "language": "fr",
         "theme": "auto",
         "debugActive": False,  # false=Level 3, true=Level 4
-        "translatorFeature": False,
+        "translatorFeature": True,
         "autoOpenings": {"files": True, "folders": True, "reports": True, "outputField": False},
         "externalTools": {"translator": ""},
         "paths": {"renpySdk": "", "editor": ""},

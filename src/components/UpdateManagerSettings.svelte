@@ -2,6 +2,8 @@
   import Icon from '@iconify/svelte';
   import axios from 'axios';
   import { onMount } from 'svelte';
+  import Dialog from './Dialog.svelte';
+  import DialogActions from './DialogActions.svelte';
 
   // Types
   interface UpdateInfo {
@@ -31,7 +33,7 @@
   let updateConfig: UpdateConfig | null = $state(null);
   let isChecking = $state(false);
   let isDownloading = $state(false);
-  let isInstalling = $state(false);
+  const isInstalling = $state(false);
   let downloadProgress = $state(0);
   let showUpdateDialog = $state(false);
   let showConfigDialog = $state(false);
@@ -64,10 +66,10 @@
     try {
       const response = await axios.get('/api/updates/check');
       updateInfo = response.data;
-      
+
       if (updateInfo?.success) {
-        successMessage = updateInfo.has_update 
-          ? 'Mise à jour disponible !' 
+        successMessage = updateInfo.has_update
+          ? 'Vérification terminée'
           : 'Application à jour';
       } else {
         errorMessage = updateInfo?.error || 'Erreur lors de la vérification';
@@ -89,7 +91,7 @@
 
     try {
       const response = await axios.post('/api/updates/download', {
-        download_url: updateInfo.download_url
+        download_url: updateInfo.download_url,
       });
 
       if (response.data.success) {
@@ -110,7 +112,7 @@
   const loadUpdateConfig = async () => {
     try {
       // Charger depuis localStorage
-      const savedConfig = localStorage.getItem('updateConfig');
+      const savedConfig = window.localStorage.getItem('updateConfig');
       if (savedConfig) {
         updateConfig = JSON.parse(savedConfig);
       } else {
@@ -119,7 +121,7 @@
           auto_check: true,
           auto_install: false,
           check_interval_hours: 24,
-          last_check: null
+          last_check: null,
         };
       }
     } catch (error) {
@@ -129,7 +131,7 @@
         auto_check: true,
         auto_install: false,
         check_interval_hours: 24,
-        last_check: null
+        last_check: null,
       };
     }
   };
@@ -139,7 +141,7 @@
 
     try {
       // Sauvegarde automatique dans localStorage
-      localStorage.setItem('updateConfig', JSON.stringify(updateConfig));
+      window.localStorage.setItem('updateConfig', JSON.stringify(updateConfig));
       successMessage = 'Configuration sauvegardée automatiquement';
       showConfigDialog = false;
     } catch (error) {
@@ -156,7 +158,7 @@
   // Sauvegarde automatique quand les valeurs changent
   const autoSaveConfig = () => {
     if (updateConfig) {
-      localStorage.setItem('updateConfig', JSON.stringify(updateConfig));
+      window.localStorage.setItem('updateConfig', JSON.stringify(updateConfig));
     }
   };
 
@@ -183,23 +185,42 @@
       onclick={checkForUpdates}
       disabled={isChecking}
     >
-      <Icon icon="hugeicons:refresh-01" class="h-4 w-4 {isChecking ? 'animate-spin' : ''}"  />
+      <Icon
+        icon="hugeicons:refresh-01"
+        class="h-4 w-4 {isChecking ? 'animate-spin' : ''}"
+      />
       {isChecking ? 'Vérification...' : 'Vérifier les mises à jour'}
     </button>
   </div>
 
   <!-- Informations de version -->
-  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+  <div
+    class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+  >
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div>
-        <label for="current-version" class="text-sm font-medium text-gray-700 dark:text-gray-300">Version actuelle</label>
-        <p id="current-version" class="text-lg font-semibold text-gray-900 dark:text-white">
+        <label
+          for="current-version"
+          class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >Version actuelle</label
+        >
+        <p
+          id="current-version"
+          class="text-lg font-semibold text-gray-900 dark:text-white"
+        >
           {updateInfo?.current_version || 'Chargement...'}
         </p>
       </div>
       <div>
-        <label for="latest-version" class="text-sm font-medium text-gray-700 dark:text-gray-300">Dernière version</label>
-        <p id="latest-version" class="text-lg font-semibold text-gray-900 dark:text-white">
+        <label
+          for="latest-version"
+          class="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >Dernière version</label
+        >
+        <p
+          id="latest-version"
+          class="text-lg font-semibold text-gray-900 dark:text-white"
+        >
           {updateInfo?.latest_version || 'Non vérifiée'}
         </p>
       </div>
@@ -209,16 +230,21 @@
   <!-- Statut de mise à jour -->
   {#if updateInfo}
     {#if updateInfo.has_update}
-      <div class="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20">
+      <div
+        class="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20"
+      >
         <div class="flex items-start gap-3">
-          <Icon icon="hugeicons:warning-triangle" class="mt-1 h-5 w-5 text-orange-600" />
+          <Icon
+            icon="hugeicons:warning-triangle"
+            class="mt-1 h-5 w-5 text-orange-600"
+          />
           <div class="flex-1">
             <h4 class="font-medium text-orange-800 dark:text-orange-200">
               Mise à jour disponible !
             </h4>
             <p class="mt-1 text-sm text-orange-700 dark:text-orange-300">
-              Version {updateInfo.latest_version} ({updateInfo.latest_version_name}) est disponible.
-              Taille: {formatFileSize(updateInfo.download_size)}
+              Version {updateInfo.latest_version} ({updateInfo.latest_version_name})
+              est disponible. Taille: {formatFileSize(updateInfo.download_size)}
             </p>
             <div class="mt-3 flex gap-2">
               <button
@@ -239,9 +265,14 @@
         </div>
       </div>
     {:else}
-      <div class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+      <div
+        class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+      >
         <div class="flex items-center gap-3">
-          <Icon icon="hugeicons:checkmark-circle" class="h-5 w-5 text-green-600" />
+          <Icon
+            icon="hugeicons:checkmark-circle"
+            class="h-5 w-5 text-green-600"
+          />
           <div>
             <h4 class="font-medium text-green-800 dark:text-green-200">
               Application à jour
@@ -256,10 +287,14 @@
   {/if}
 
   <!-- Configuration -->
-  <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+  <div
+    class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+  >
     <div class="flex items-center justify-between">
       <div>
-        <h4 class="font-medium text-gray-900 dark:text-white">Configuration automatique</h4>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Configuration automatique
+        </h4>
         <p class="text-sm text-gray-600 dark:text-gray-400">
           Gérer les vérifications automatiques de mises à jour
         </p>
@@ -275,7 +310,9 @@
 
   <!-- Messages d'erreur/succès -->
   {#if errorMessage}
-    <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+    <div
+      class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
+    >
       <div class="flex items-center gap-3">
         <Icon icon="hugeicons:error-circle" class="h-5 w-5 text-red-600" />
         <p class="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
@@ -284,74 +321,202 @@
   {/if}
 
   {#if successMessage}
-    <div class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+    <div
+      class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+    >
       <div class="flex items-center gap-3">
-        <Icon icon="hugeicons:checkmark-circle" class="h-5 w-5 text-green-600" />
-        <p class="text-sm text-green-700 dark:text-green-300">{successMessage}</p>
+        <Icon
+          icon="hugeicons:checkmark-circle"
+          class="h-5 w-5 text-green-600"
+        />
+        <p class="text-sm text-green-700 dark:text-green-300">
+          {successMessage}
+        </p>
       </div>
     </div>
   {/if}
 </div>
 
 <!-- Dialog de configuration -->
-{#if showConfigDialog && updateConfig}
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-      <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-        Configuration des mises à jour
-      </h3>
-      
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <label for="auto-check" class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Vérification automatique
-          </label>
-            <input
-              id="auto-check"
-              type="checkbox"
-              bind:checked={updateConfig.auto_check}
-              onchange={autoSaveConfig}
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-        </div>
-        
-        <div class="flex items-center justify-between">
-          <label for="auto-install" class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Installation automatique
-          </label>
-            <input
-              id="auto-install"
-              type="checkbox"
-              bind:checked={updateConfig.auto_install}
-              onchange={autoSaveConfig}
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-        </div>
-        
-        <div>
-          <label for="check-interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Intervalle de vérification (heures)
-          </label>
-            <input
-              id="check-interval"
-              type="number"
-              bind:value={updateConfig.check_interval_hours}
-              onchange={autoSaveConfig}
-              min="1"
-              max="168"
-              class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            />
-        </div>
-      </div>
+<Dialog
+  isOpen={showConfigDialog && !!updateConfig}
+  title="Configuration des mises à jour"
+  size="md"
+  onClose={closeConfigDialog}
+>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <label
+        for="auto-check"
+        class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Vérification automatique
+      </label>
+      <input
+        id="auto-check"
+        type="checkbox"
+        checked={updateConfig?.auto_check || false}
+        onchange={e => {
+          if (updateConfig) {
+            updateConfig.auto_check = e.currentTarget.checked;
+            autoSaveConfig();
+          }
+        }}
+        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+      />
+    </div>
 
-      <div class="mt-6 flex justify-end">
-        <button
-          class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
-          onclick={closeConfigDialog}
-        >
-          Fermer
-        </button>
-      </div>
+    <div class="flex items-center justify-between">
+      <label
+        for="auto-install"
+        class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Installation automatique
+      </label>
+      <input
+        id="auto-install"
+        type="checkbox"
+        checked={updateConfig?.auto_install || false}
+        onchange={e => {
+          if (updateConfig) {
+            updateConfig.auto_install = e.currentTarget.checked;
+            autoSaveConfig();
+          }
+        }}
+        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+      />
+    </div>
+
+    <div>
+      <label
+        for="check-interval"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Intervalle de vérification (heures)
+      </label>
+      <input
+        id="check-interval"
+        type="number"
+        value={updateConfig?.check_interval_hours || 24}
+        onchange={e => {
+          if (updateConfig) {
+            updateConfig.check_interval_hours = parseInt(e.currentTarget.value);
+            autoSaveConfig();
+          }
+        }}
+        min="1"
+        max="168"
+        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+      />
     </div>
   </div>
-{/if}
+
+  <DialogActions>
+    <button
+      class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+      onclick={closeConfigDialog}
+    >
+      Fermer
+    </button>
+  </DialogActions>
+</Dialog>
+
+<!-- Modal de détails de mise à jour -->
+<Dialog
+  isOpen={showUpdateDialog && !!updateInfo}
+  title="Détails de la mise à jour"
+  size="xl"
+  onClose={() => (showUpdateDialog = false)}
+>
+  <div class="space-y-4">
+    <!-- Informations de version -->
+    <div
+      class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <h4 class="mb-3 font-medium text-gray-900 dark:text-white">
+        Informations de version
+      </h4>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Version actuelle :</span
+          >
+          <p class="font-medium text-gray-900 dark:text-white">
+            {updateInfo?.current_version}
+          </p>
+        </div>
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Nouvelle version :</span
+          >
+          <p class="font-medium text-gray-900 dark:text-white">
+            {updateInfo?.latest_version}
+          </p>
+        </div>
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Nom de la version :</span
+          >
+          <p class="font-medium text-gray-900 dark:text-white">
+            {updateInfo?.latest_version_name}
+          </p>
+        </div>
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Taille :</span>
+          <p class="font-medium text-gray-900 dark:text-white">
+            {formatFileSize(updateInfo?.download_size || 0)}
+          </p>
+        </div>
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Date de publication :</span
+          >
+          <p class="font-medium text-gray-900 dark:text-white">
+            {formatDate(updateInfo?.published_at || '')}
+          </p>
+        </div>
+        <div>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Fichier :</span
+          >
+          <p class="font-medium text-gray-900 dark:text-white">
+            {updateInfo?.asset_name}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes de version -->
+    {#if updateInfo?.release_notes}
+      <div
+        class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <h4 class="mb-3 font-medium text-gray-900 dark:text-white">
+          Notes de version
+        </h4>
+        <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
+          <pre
+            class="whitespace-pre-wrap font-sans text-sm">{updateInfo.release_notes}</pre>
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <DialogActions>
+    <button
+      class="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+      onclick={() => (showUpdateDialog = false)}
+    >
+      Fermer
+    </button>
+    <button
+      class="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+      onclick={() => {
+        showUpdateDialog = false;
+        downloadUpdate();
+      }}
+      disabled={isDownloading || isInstalling}
+    >
+      {isDownloading ? 'Téléchargement...' : 'Télécharger la mise à jour'}
+    </button>
+  </DialogActions>
+</Dialog>

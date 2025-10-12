@@ -33,7 +33,11 @@
   }
 
   // Props
-  const { showSettings = false, autoCheck = $bindable(true), inSettings = false }: Props = $props();
+  const {
+    showSettings = false,
+    autoCheck = $bindable(true),
+    inSettings = false,
+  }: Props = $props();
 
   // State
   let updateInfo: UpdateInfo | null = $state(null);

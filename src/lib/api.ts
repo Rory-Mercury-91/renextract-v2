@@ -289,7 +289,7 @@ export const apiService = {
     }
   },
 
-  async getWslInfo(): Promise<{success: boolean, info?: any, error?: string}> {
+  async getWslInfo(): Promise<{success: boolean, info?: unknown, error?: string}> {
     try {
       const response = await api.get('/system/wsl-info');
       return response.data;
@@ -816,7 +816,7 @@ export const apiService = {
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null) {
         // Essayer d'extraire le message d'erreur de la réponse
-        const anyError = error as any;
+        const anyError = error as { response?: { data?: { error?: string }, status?: number, statusText?: string }, message?: string };
         if (anyError.response?.data?.error) {
           errorMessage = anyError.response.data.error;
         } else if (anyError.response?.statusText) {

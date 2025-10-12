@@ -177,7 +177,7 @@ export const projectActions = {
       if (currentSettings.paths.editor !== projectPath) {
         appSettingsActions.setSetting('paths', {
           ...currentSettings.paths,
-          editor: projectPath
+          editor: projectPath,
         });
       }
 
@@ -331,7 +331,7 @@ export const projectActions = {
         if (currentSettings.paths.editor !== filepath) {
           appSettingsActions.setSetting('paths', {
             ...currentSettings.paths,
-            editor: filepath
+            editor: filepath,
           });
         }
 

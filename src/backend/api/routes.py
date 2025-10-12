@@ -3,6 +3,7 @@
 Toutes les routes sont regroupées dans ce fichier pour une meilleure organisation
 """
 
+import json
 import logging
 import os
 import platform
@@ -11,7 +12,7 @@ import tkinter as tk
 from collections import defaultdict
 from tkinter import filedialog
 
-from flask import Blueprint, current_app, jsonify, request, send_from_directory
+from flask import Blueprint, Response, current_app, jsonify, request, send_from_directory
 
 from src.backend.core.coherence import CoherenceChecker
 
@@ -21,6 +22,7 @@ from src.backend.core.project import ProjectManager
 from src.backend.core.reconstructor import FileReconstructor
 from src.backend.services.backup import BackupManager
 from src.backend.services.config import AppConfig
+from src.backend.services.translator import translator_service
 from src.backend.services.update import UpdateManager
 
 logger = logging.getLogger(__name__)
@@ -916,29 +918,98 @@ def wsl_info():
 # ============================================================================
 
 
+@API.route("/api/translator/health", methods=["GET"])
+def translator_health():
+    """Vérification de l'état du service de traduction"""
+    try:
+        health_status = translator_service.get_health_status()
+        return jsonify(health_status)
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur vérification traducteur: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/translator/run", methods=["POST"])
+def translator_run():
+    """Exécution de la traduction de fichiers"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "Données requises"}), 400
+
+        input_folder = data.get("inputFolder", "")
+        recursive = data.get("recursive", True)
+        source_lang = data.get("sourceLang", "auto")
+        target_lang = data.get("targetLang", "fra_Latn")
+        translation_scope = data.get("translationScope", "all")
+        selected_file = data.get("selectedFile", None)
+
+        logger.info("Traduction - scope: %s, fichier: %s", translation_scope, selected_file)
+
+        result = translator_service.translate_files(
+            input_folder=input_folder,
+            recursive=recursive,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            translation_scope=translation_scope,
+            selected_file=selected_file,
+        )
+
+        return jsonify(result)
+
+    except (OSError, ValueError, TypeError) as e:
+        logger.error("Erreur traduction fichiers: %s", e)
+        return jsonify(
+            {"success": False, "error": f"Erreur: {e!s}", "stdout": "", "stderr": str(e)}
+        ), 500
+
+
 @API.route("/api/translator/translate", methods=["POST"])
 def translate_text():
-    """Traduction de texte (fonctionnalité optionnelle)"""
+    """Traduction de texte"""
     try:
         data = request.get_json()
         if not data or "text" not in data:
             return jsonify({"success": False, "error": "Texte à traduire requis"}), 400
 
         text = data["text"]
-        target_language = data.get("target_language", "fr")
+        source_lang = data.get("source_language", "auto")
+        target_lang = data.get("target_language", "fra_Latn")
 
-        # Implémentation simplifiée (pas de vraie traduction)
-        return jsonify(
-            {
-                "success": True,
-                "original_text": text,
-                "translated_text": f"[Traduit en {target_language}] {text}",
-                "target_language": target_language,
-            },
+        result = translator_service.translate_text(
+            text=text, source_lang=source_lang, target_lang=target_lang
         )
 
-    except (OSError, ValueError, TypeError) as e:
+        return jsonify(result)
+
+    except OSError as e:
         logger.error("Erreur traduction: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/translator/install", methods=["POST"])
+def translator_install():
+    """Installation des dépendances de traduction"""
+    try:
+        result = translator_service.install_dependencies()
+        return jsonify(result)
+    except OSError as e:
+        logger.error("Erreur installation traducteur: %s", e)
+        return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
+
+
+@API.route("/api/translator/files", methods=["GET"])
+def translator_files():
+    """Récupération des fichiers de traduction disponibles"""
+    try:
+        # Récupérer le chemin du projet depuis les paramètres
+        settings = AppConfig.load_settings_from_disk()
+        project_path = settings.get("paths", {}).get("editor", "")
+
+        result = translator_service.get_available_files(project_path)
+        return jsonify(result)
+    except OSError as e:
+        logger.error("Erreur récupération fichiers traduction: %s", e)
         return jsonify({"success": False, "error": f"Erreur: {e!s}"}), 500
 
 

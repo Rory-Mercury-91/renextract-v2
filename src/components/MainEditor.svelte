@@ -18,12 +18,12 @@
 
   // Variables pour la numérotation des lignes (virtualisée)
   const lineCount = $derived($projectStore.fileContent.length || 1);
-  
+
   // État de défilement pour la virtualisation
   let scrollTop = $state(0);
   let containerHeight = $state(0);
   const lineHeight = 24; // 1.5rem = 24px
-  
+
   // Virtualisation : calculer les lignes visibles basées sur le scroll
   const visibleLineNumbers = $derived(
     lineCount <= 50
@@ -32,7 +32,10 @@
           const startLine = Math.floor(scrollTop / lineHeight) + 1;
           const visibleLines = Math.ceil(containerHeight / lineHeight) + 2; // +2 pour le buffer
           const endLine = Math.min(startLine + visibleLines, lineCount);
-          return Array.from({ length: endLine - startLine + 1 }, (_, i) => startLine + i);
+          return Array.from(
+            { length: endLine - startLine + 1 },
+            (_, i) => startLine + i
+          );
         })()
   );
 
@@ -199,7 +202,7 @@
         <div
           bind:this={lineNumbersContainer}
           onresize={updateContainerHeight}
-          class="min-w-[60px] border-r border-gray-300 bg-gray-100 px-3 py-4 font-mono text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto select-none pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          class="pointer-events-none min-w-[60px] select-none overflow-y-auto border-r border-gray-300 bg-gray-100 px-3 py-4 font-mono text-sm text-gray-500 [-ms-overflow-style:none] [scrollbar-width:none] dark:border-gray-700 dark:bg-gray-800 [&::-webkit-scrollbar]:hidden"
         >
           {#each visibleLineNumbers as lineNumber}
             <div class="text-right leading-6">{lineNumber}</div>
@@ -212,7 +215,7 @@
             bind:this={textareaElement}
             bind:value={code}
             onscroll={handleScroll}
-            class="h-full w-full resize-none bg-transparent font-mono text-sm text-gray-700 outline-none dark:text-gray-300 leading-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            class="h-full w-full resize-none bg-transparent font-mono text-sm leading-6 text-gray-700 outline-none [-ms-overflow-style:none] [scrollbar-width:none] dark:text-gray-300 [&::-webkit-scrollbar]:hidden"
             placeholder="Glissez un fichier .py ici ou utilisez les contrôles ci-dessus"
             readonly
           ></textarea>

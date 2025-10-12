@@ -46,9 +46,15 @@
     <Icon icon="hugeicons:folder-01" class="h-6 w-6 min-w-6 text-yellow-500" />
     <input
       class="w-full max-w-64 rounded-lg bg-gray-100 px-2 py-1 text-sm text-gray-900 dark:bg-slate-100 dark:text-gray-700"
-      style:direction={$appSettings.paths.editor === '' || inputSelected ? 'ltr' : 'rtl'}
+      style:direction={$appSettings.paths.editor === '' || inputSelected
+        ? 'ltr'
+        : 'rtl'}
       value={$appSettings.paths.editor}
-      oninput={e => (appSettingsActions.setSetting('paths', { ...$appSettings.paths, editor: e.currentTarget.value }))}
+      oninput={e =>
+        appSettingsActions.setSetting('paths', {
+          ...$appSettings.paths,
+          editor: e.currentTarget.value,
+        })}
       onfocus={() => (inputSelected = true)}
       onblur={() => (inputSelected = false)}
       placeholder={$appSettings.paths.editor || 'Aucun projet chargé'}
@@ -66,7 +72,10 @@
           },
           {
             setPath: (path: string) => {
-              appSettingsActions.setSetting('paths', { ...$appSettings.paths, editor: path });
+              appSettingsActions.setSetting('paths', {
+                ...$appSettings.paths,
+                editor: path,
+              });
             },
           }
         )}

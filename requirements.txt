@@ -4,3 +4,10 @@ flask-cors==4.0.0
 python-dotenv==1.0.0
 pyinstaller==6.16.0
 requests==2.31.0
+
+# Dépendances pour le service de traduction intégré
+torch>=2.0.0
+transformers>=4.30.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+accelerate>=0.20.0
