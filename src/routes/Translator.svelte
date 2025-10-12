@@ -16,6 +16,8 @@
   let totalLines = $state(0);
   let remainingLines = $state(0);
   let linesPerSecond = $state(0.0);
+  let currentFile = $state(0);
+  let totalFiles = $state(0);
 
   // Correspondance entre les noms de dossiers tl/ et les codes de langue NLLB
   // Utilise le même mapping que le service de traduction backend
@@ -67,11 +69,11 @@
       availableLanguages = $projectStore.availableLanguages.map(
         lang => lang.name
       );
-      
+
       // Sélectionner automatiquement la première langue si aucune n'est sélectionnée
       if (!selectedLanguage && availableLanguages.length > 0) {
         selectedLanguage = availableLanguages[0];
-        console.log('Auto-selected language:', selectedLanguage);
+        console.info('Auto-selected language:', selectedLanguage);
       }
     }
   }
@@ -101,16 +103,16 @@
   }
 
   async function runTranslation() {
-    
     if (!$appSettings.paths.editor || $appSettings.paths.editor.trim() === '') {
       return;
     }
-    
+
     if (!selectedLanguage) {
-      logs = 'Erreur: Veuillez sélectionner une langue avant de lancer la traduction.';
+      logs =
+        'Erreur: Veuillez sélectionner une langue avant de lancer la traduction.';
       return;
     }
-    
+
     running = true;
     logs = '';
     progressMessage = 'Initialisation de la traduction...';
@@ -119,6 +121,11 @@
     totalLines = 0;
     remainingLines = 0;
     linesPerSecond = 0.0;
+    currentFile = 0;
+    totalFiles = 0;
+    
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
+    
     try {
       let inputFolder = '';
 
@@ -140,60 +147,119 @@
         ? languageMapping[selectedLanguage] || 'auto'
         : 'auto';
 
-      progressMessage = 'Envoi de la requête au serveur...';
+      // Calculer le nombre total de fichiers à traiter
+      if (translationScope === 'specific' && selectedFile) {
+        totalFiles = 1;
+        console.log('Mode fichier spécifique:', selectedFile, 'Total fichiers:', totalFiles);
+      } else if (translationScope === 'all' && selectedLanguage) {
+        totalFiles = availableFiles.length;
+        console.log('Mode tous les fichiers:', selectedLanguage, 'Total fichiers:', totalFiles);
+      } else {
+        // Mode par défaut - estimation basée sur les fichiers disponibles
+        totalFiles = availableFiles.length > 0 ? availableFiles.length : 1;
+        console.log('Mode par défaut, Total fichiers:', totalFiles);
+      }
+
+      progressMessage = `Traduction en cours... (0/${totalFiles} fichiers)`;
       progressPercent = 10;
-      
+
       // Simuler la progression pendant la traduction
-      const progressInterval = setInterval(() => {
-        if (progressPercent < 90) {
-          progressPercent += Math.random() * 3;
-          if (progressPercent > 90) progressPercent = 90;
+      progressInterval = setInterval(() => {
+        if (progressPercent < 98) { // Augmenter la limite à 98% pour éviter le blocage
+          // Ajuster la vitesse de progression selon la portée
+          const progressIncrement = translationScope === 'specific' ? 
+            Math.random() * 3 + 1 : // Plus lent pour éviter d'atteindre 95% trop vite
+            Math.random() * 1.5 + 0.5; // Plus lent pour tous les fichiers
           
-          // Simuler des données de progression
-          if (totalLines === 0) {
-            totalLines = Math.floor(Math.random() * 20) + 5; // 5-25 lignes
+          progressPercent += progressIncrement;
+          if (progressPercent > 98) progressPercent = 98;
+
+          // Simuler la progression des fichiers
+          if (currentFile < totalFiles) {
+            // Avancer d'un fichier de temps en temps
+            const fileAdvanceChance = translationScope === 'specific' ? 0.2 : 0.05; // Plus lent
+            if (Math.random() < fileAdvanceChance) {
+              currentFile = Math.min(currentFile + 1, totalFiles);
+              progressMessage = `Traduction en cours... (${currentFile}/${totalFiles} fichiers)`;
+            }
           }
+
+          // Simuler des données de progression plus réalistes
+          if (totalLines === 0) {
+            // Ajuster le nombre de lignes selon la portée
+            if (translationScope === 'specific') {
+              totalLines = Math.floor(Math.random() * 200) + 50; // 50-250 lignes pour un fichier spécifique
+            } else {
+              totalLines = Math.floor(Math.random() * 1000) + 100; // 100-1100 lignes pour tous les fichiers
+            }
+          }
+          
           if (currentLine < totalLines) {
-            currentLine += Math.floor(Math.random() * 2) + 1;
+            const lineIncrement = translationScope === 'specific' ? 
+              Math.floor(Math.random() * 5) + 1 : // Plus lent pour éviter d'atteindre la fin trop vite
+              Math.floor(Math.random() * 3) + 1; // Plus lent pour tous les fichiers
+            
+            currentLine += lineIncrement;
             if (currentLine > totalLines) currentLine = totalLines;
             remainingLines = totalLines - currentLine;
-            linesPerSecond = Math.random() * 2 + 0.5; // 0.5-2.5 lignes/sec
+            
+            // Ajuster la vitesse selon la portée
+            linesPerSecond = translationScope === 'specific' ?
+              Math.random() * 2.0 + 0.5 : // Plus lent
+              Math.random() * 1.0 + 0.2; // Plus lent pour tous les fichiers
+          }
+        } else if (progressPercent >= 98) {
+          // Phase finale : simulation d'attente du backend
+          progressMessage = `Finalisation... (${currentFile}/${totalFiles} fichiers)`;
+          
+          // Simuler une progression très lente pour indiquer qu'on attend le backend
+          if (Math.random() < 0.1) { // 10% de chance
+            progressPercent += 0.1;
+            if (progressPercent > 99.5) progressPercent = 99.5;
           }
         }
-      }, 500);
-      
-      const res = await axios.post('/api/translator/run', {
-        inputFolder,
-        recursive: true,
-        sourceLang: sourceLangCode,
-        targetLang,
-        translationScope,
-        selectedFile: translationScope === 'specific' ? selectedFile : null,
-        selectedLanguage: selectedLanguage,
-      }, {
-        timeout: 300000 // 5 minutes timeout
-      });
-      
+      }, translationScope === 'specific' ? 800 : 1200); // Intervalle plus long pour éviter d'aller trop vite
+
+      const res = await axios.post(
+        '/api/translator/run',
+        {
+          inputFolder,
+          recursive: true,
+          sourceLang: sourceLangCode,
+          targetLang,
+          translationScope,
+          selectedFile: translationScope === 'specific' ? selectedFile : null,
+          selectedLanguage: selectedLanguage,
+        },
+        {
+          timeout: 0, // Pas de timeout
+        }
+      );
+
       clearInterval(progressInterval);
-      
-      progressMessage = 'Traitement de la réponse...';
+
+      progressMessage = `Traitement de la réponse... (${totalFiles}/${totalFiles} fichiers)`;
       progressPercent = 90;
-      
+
       logs = (res.data.stdout || '') + '\n' + (res.data.stderr || '');
-      
+
       if (res.data.message) {
         logs = res.data.message + '\n' + logs;
       }
-      
+
       // Si pas de logs, afficher au moins un message de confirmation
       if (!logs.trim()) {
         logs = 'Traduction terminée avec succès !';
       }
-      
-      progressMessage = 'Traduction terminée !';
+
+      progressMessage = `Traduction terminée ! (${totalFiles}/${totalFiles} fichiers)`;
       progressPercent = 100;
     } catch (err: any) {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       const data = err?.response?.data;
+      
       logs =
         (data?.stdout || '') +
         '\n' +
@@ -209,6 +275,8 @@
       totalLines = 0;
       remainingLines = 0;
       linesPerSecond = 0.0;
+      currentFile = 0;
+      totalFiles = 0;
     }
   }
 
@@ -472,24 +540,58 @@
           Lancer la traduction
         {/if}
       </button>
-      
+
+      <!-- Message d'information pour les gros fichiers -->
+      {#if !running}
+        <div
+          class="max-w-md rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+        >
+          <div class="flex items-start gap-2">
+            <Icon icon="hugeicons:info" class="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div>
+                <p class="font-bold">Note importante :</p>
+                
+                <p class="ml-1">
+                  Les gros fichiers peuvent prendre plusieurs minutes à traduire.
+                  La progression peut sembler lente mais c'est normal pour les
+                  fichiers volumineux.
+                </p>
+              </div>
+          </div>
+        </div>
+      {/if}
+
       <!-- Barre de progression -->
       {#if running}
         <div class="w-full max-w-md">
-          <div class="mb-2 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div
+            class="mb-2 flex justify-between text-sm text-gray-600 dark:text-gray-400"
+          >
             <span>{progressMessage}</span>
             <span>{progressPercent.toFixed(2)}%</span>
           </div>
           <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-            <div 
+            <div
               class="h-2 rounded-full bg-blue-600 transition-all duration-300 ease-out"
-              style="width: {progressPercent}%"
+              style:width="{progressPercent}%"
             ></div>
           </div>
-          
-          <!-- Détails des lignes traduites -->
-          {#if totalLines > 0}
-            <div class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+
+          <!-- Détails des fichiers et lignes traduites -->
+          <div
+            class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400"
+          >
+            {#if totalFiles > 0}
+              <div class="font-medium text-blue-600 dark:text-blue-400">
+                {translationScope === 'specific' ? 'Fichier' : 'Fichiers'}: {currentFile} / {totalFiles}
+                {#if translationScope === 'specific' && selectedFile}
+                  <div class="text-xs text-gray-400 mt-1">
+                    ({selectedFile})
+                  </div>
+                {/if}
+              </div>
+            {/if}
+            {#if totalLines > 0}
               <div class="font-medium">
                 Lignes traduites: {currentLine} / {totalLines}
               </div>
@@ -497,12 +599,26 @@
                 Restantes: {remainingLines}
               </div>
               {#if linesPerSecond > 0}
-                <div class="text-blue-500 font-medium">
+                <div class="font-medium text-blue-500">
                   Vitesse: {linesPerSecond.toFixed(1)} lignes/sec
                 </div>
               {/if}
-            </div>
-          {/if}
+            {/if}
+            {#if translationScope === 'specific'}
+              <div class="text-xs text-green-600 dark:text-green-400 mt-1">
+                Mode: Fichier spécifique (plus rapide)
+              </div>
+            {:else if translationScope === 'all'}
+              <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                Mode: Tous les fichiers (peut prendre plus de temps)
+              </div>
+            {/if}
+            {#if progressPercent >= 98 && progressPercent < 100}
+              <div class="text-xs text-blue-600 dark:text-blue-400 mt-1 animate-pulse">
+                ⏳ Finalisation en cours... (attente du serveur)
+              </div>
+            {/if}
+          </div>
         </div>
       {/if}
     </div>

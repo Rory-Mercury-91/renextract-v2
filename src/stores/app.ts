@@ -33,6 +33,7 @@ interface AppSettings {
     folders: boolean;
     reports: boolean;
     outputField: boolean;
+    lastProject: boolean;
   };
   externalTools: {
     translator: string;
@@ -83,7 +84,6 @@ interface AppSettings {
   lastProject: {
     path: string;
     language: string;
-    mode: 'project' | 'single_file';
   };
 }
 
@@ -97,6 +97,7 @@ const initialSettings: AppSettings = {
     folders: true,
     reports: true,
     outputField: false,
+    lastProject: true,
   },
   externalTools: {
     translator: '',
@@ -157,7 +158,6 @@ const initialSettings: AppSettings = {
   lastProject: {
     path: '',
     language: '',
-    mode: 'project',
   },
 };
 

@@ -64,6 +64,17 @@
         />
         <span class=""> Fonctionnalité de traduction par GPU</span>
       </label>
+
+      <label
+        class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
+      >
+        <input
+          type="checkbox"
+          bind:checked={$appSettings.debugActive}
+          class="mr-3 h-4 w-4"
+        />
+        <span class=""> Mode debug complet </span>
+      </label>
     </div>
   </div>
 
@@ -105,58 +116,21 @@
         >
           <input
             type="checkbox"
-            bind:checked={$appSettings.autoOpenings.reports}
-            class="mr-3 h-4 w-4"
-          />
-          <span class=""> Ouverture automatique du rapport </span>
-        </label>
-
-        <label
-          class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
-        >
-          <input
-            type="checkbox"
             bind:checked={$appSettings.autoOpenings.outputField}
             class="mr-3 h-4 w-4"
           />
           <span class=""> Affichage du champ de chemin de sortie </span>
         </label>
-      </div>
-    </div>
-  </div>
-
-  <!-- Apparence et notifications -->
-  <div class="space-y-4">
-    <h3 class="flex items-center text-lg font-semibold">
-      🔔 Apparence et notifications
-    </h3>
-
-    <div class="grid grid-cols-2 gap-8">
-      <!-- Colonne gauche -->
-      <div class="space-y-4">
-        <div>
-          <label for="notification-mode" class="mb-2 block text-sm font-medium"
-            >Mode de notification des résultats :</label
-          >
-          <select
-            id="notification-mode"
-            class="rounded-lg bg-gray-100 px-2 py-1 text-gray-900 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="status">Statut seulement</option>
-            <option value="dialog">Dialogue complet</option>
-            <option value="none">Aucune notification</option>
-          </select>
-        </div>
 
         <label
           class="flex cursor-pointer items-center rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-800"
         >
           <input
             type="checkbox"
-            bind:checked={$appSettings.debugActive}
+            bind:checked={$appSettings.autoOpenings.lastProject}
             class="mr-3 h-4 w-4"
           />
-          <span class=""> Mode debug complet </span>
+          <span class=""> Ouverture automatique du dernier projet </span>
         </label>
       </div>
     </div>

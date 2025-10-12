@@ -1,6 +1,6 @@
 <script lang="ts">
   import { apiService } from '$lib/api';
-  import { appSettings, appSettingsActions } from '$stores/app';
+  import { projectActions, projectStore } from '$stores/project';
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
   import Dialog from './Dialog.svelte';
@@ -10,13 +10,34 @@
   let isDragging = $state(false);
   let zenityInfo = $state<any>(null);
   let wslInfo = $state<any>(null);
-  let editorPath = $state('');
-  let isLoading = $state(false);
+  const isLoading = $state(false);
 
-  // Vérifier si l'éditeur est configuré
-  const isEditorConfigured = $derived(
-    $appSettings.paths.editor && $appSettings.paths.editor.trim() !== ''
+  // Vérifier si le projet est configuré et chargé
+  const isProjectConfigured = $derived(
+    $projectStore.projectPath && 
+    $projectStore.projectPath.trim() !== '' &&
+    $projectStore.availableLanguages.length > 0 &&
+    !$projectStore.isLoading
   );
+
+  // Debug: surveiller les changements d'état
+  $effect(() => {
+    console.log('ProjectSetup Debug:', {
+      projectPath: $projectStore.projectPath,
+      availableLanguages: $projectStore.availableLanguages.length,
+      isLoading: $projectStore.isLoading,
+      isProjectConfigured: isProjectConfigured,
+      showSetup: showSetup
+    });
+  });
+
+  // Fermer automatiquement le setup quand le projet est configuré
+  $effect(() => {
+    if (isProjectConfigured && showSetup) {
+      console.log('Projet configuré, fermeture du setup');
+      showSetup = false;
+    }
+  });
 
   onMount(async () => {
     // Charger les informations WSL et zenity
@@ -32,9 +53,15 @@
       zenityInfo = zenityResult;
     }
 
-    // Afficher le setup si l'éditeur n'est pas configuré
-    if (!isEditorConfigured) {
+    // Attendre un peu pour que le chargement automatique du projet commence
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Afficher le setup si le projet n'est pas configuré
+    if (!isProjectConfigured) {
+      console.log('Projet non configuré, affichage du setup');
       showSetup = true;
+    } else {
+      console.log('Projet déjà configuré, pas de setup nécessaire');
     }
   });
 
@@ -66,8 +93,9 @@
         filePath.endsWith('.app') ||
         !filePath.includes('.')
       ) {
-        editorPath = filePath;
-        await saveEditorPath();
+        $projectStore.projectPath = filePath;
+        await projectActions.loadProject(filePath);
+        showSetup = false;
       } else {
         window.alert(
           "Veuillez sélectionner un exécutable d'éditeur (fichier .exe, .app ou sans extension)"
@@ -79,42 +107,20 @@
   const openFileDialog = async () => {
     try {
       const result = await apiService.openDialog({
-        dialog_type: 'file',
-        title: "Sélectionner l'éditeur",
-        filetypes: [
-          ['Exécutables', '*.exe'],
-          ['Applications', '*.app'],
-          ['Tous les fichiers', '*.*'],
-        ],
+        dialog_type: 'folder',
+        title: 'Sélectionner le dossier du jeu',
+        filetypes: [],
+        initialdir: 'C:\\',
+        must_exist: true,
       });
 
       if (result.success && result.path) {
-        editorPath = result.path;
-        await saveEditorPath();
+        $projectStore.projectPath = result.path;
+        await projectActions.loadProject(result.path);
+        showSetup = false;
       }
     } catch (error) {
       console.error("Erreur lors de la sélection de l'éditeur:", error);
-    }
-  };
-
-  const saveEditorPath = async () => {
-    if (!editorPath.trim()) return;
-
-    isLoading = true;
-    try {
-      appSettingsActions.setSetting('paths', {
-        ...$appSettings.paths,
-        editor: editorPath,
-      });
-
-      // Attendre un peu pour que la sauvegarde se fasse
-      await new Promise(resolve => setTimeout(resolve, 500));
-      showSetup = false;
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      window.alert("Erreur lors de la sauvegarde du chemin de l'éditeur");
-    } finally {
-      isLoading = false;
     }
   };
 
@@ -151,30 +157,48 @@
       class="mx-auto mb-4 h-16 w-16 text-blue-600"
     />
     <h2 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-      Configuration de l'éditeur
+      Configuration du projet
     </h2>
     <p class="text-gray-600 dark:text-gray-400">
-      RenExtract a besoin d'un éditeur configuré pour fonctionner correctement.
+      RenExtract a besoin d'un projet configuré pour fonctionner correctement.
     </p>
   </div>
 
+  <!-- Indicateur de chargement du projet -->
+  {#if $projectStore.projectPath && $projectStore.projectPath.trim() !== '' && $projectStore.isLoading}
+    <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+      <div class="flex items-center gap-3">
+        <div class="animate-spin">
+          <Icon icon="hugeicons:loading-01" class="h-6 w-6 text-blue-600" />
+        </div>
+        <div>
+          <p class="font-medium text-blue-800 dark:text-blue-200">Chargement du projet...</p>
+          <p class="text-sm text-blue-600 dark:text-blue-400">
+            Analyse en cours de {$projectStore.projectPath}
+          </p>
+        </div>
+      </div>
+    </div>
+  {/if}
+
   <!-- Zone de drag and drop -->
-  <div
-    class="mb-6 rounded-lg border-2 border-dashed p-8 text-center transition-colors {isDragging
-      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-      : 'border-gray-300 dark:border-gray-600'}"
-    role="button"
-    tabindex="0"
-    ondragover={handleDragOver}
-    ondragleave={handleDragLeave}
-    ondrop={handleDrop}
-  >
+  {#if !($projectStore.projectPath && $projectStore.projectPath.trim() !== '' && $projectStore.isLoading)}
+    <div
+      class="mb-6 rounded-lg border-2 border-dashed p-8 text-center transition-colors {isDragging
+        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+        : 'border-gray-300 dark:border-gray-600'}"
+      role="button"
+      tabindex="0"
+      ondragover={handleDragOver}
+      ondragleave={handleDragLeave}
+      ondrop={handleDrop}
+    >
     <Icon
       icon="hugeicons:upload-01"
       class="mx-auto mb-4 h-12 w-12 text-gray-400"
     />
     <p class="mb-2 text-lg font-medium text-gray-700 dark:text-gray-300">
-      Glissez-déposez votre éditeur ici
+      Glissez-déposez votre jeu Ren'Py ici
     </p>
     <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
       Ou cliquez sur le bouton ci-dessous pour le sélectionner
@@ -184,36 +208,9 @@
       disabled={isLoading}
       class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      {isLoading ? 'Chargement...' : 'Sélectionner un éditeur'}
+      {isLoading ? 'Chargement...' : "Sélectionner un jeu Ren'Py"}
     </button>
   </div>
-
-  <!-- Chemin de l'éditeur -->
-  {#if editorPath}
-    <div class="mb-6 rounded-lg bg-gray-100 p-4 dark:bg-gray-700">
-      <label
-        for="editor-path"
-        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
-        Chemin de l'éditeur :
-      </label>
-      <div class="flex items-center gap-2">
-        <input
-          id="editor-path"
-          type="text"
-          bind:value={editorPath}
-          class="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-          placeholder="Chemin vers l'exécutable de l'éditeur"
-        />
-        <button
-          onclick={saveEditorPath}
-          disabled={isLoading || !editorPath.trim()}
-          class="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
-        </button>
-      </div>
-    </div>
   {/if}
 
   <!-- Section WSL/Zenity -->
@@ -228,7 +225,7 @@
         />
         <div class="flex-1">
           <h3 class="mb-2 font-medium text-orange-800 dark:text-orange-200">
-            Environnement WSL détecté
+            Environnement WSL
           </h3>
           <p class="mb-3 text-sm text-orange-700 dark:text-orange-300">
             Pour une meilleure expérience avec les dialogues de fichier,
@@ -252,14 +249,5 @@
     >
       Passer pour l'instant
     </button>
-    {#if editorPath.trim()}
-      <button
-        onclick={saveEditorPath}
-        disabled={isLoading}
-        class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isLoading ? 'Configuration...' : 'Continuer'}
-      </button>
-    {/if}
   </DialogActions>
 </Dialog>

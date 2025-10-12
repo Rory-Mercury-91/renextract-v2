@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { projectStore } from '$stores/project';
   import Icon from '@iconify/svelte';
   import { _ } from 'svelte-i18n';
   import { Link } from 'svelte5-router';
@@ -13,11 +14,6 @@
     color: string;
     requiresEditor?: boolean;
   }
-
-  // Vérifier si l'éditeur est configuré
-  const isEditorConfigured = $derived(
-    $appSettings.paths.editor && $appSettings.paths.editor.trim() !== ''
-  );
 
   const sections: Section[] = [
     {
@@ -75,7 +71,7 @@
   <div class="flex w-full flex-col gap-1">
     {#each sections as section}
       {#if section.link !== '/translator' || $appSettings.translatorFeature}
-        {#if section.requiresEditor === false || isEditorConfigured}
+        {#if !section.requiresEditor || $projectStore.projectPath}
           <Link to={section.link}>
             {#snippet children(active)}
               <div

@@ -132,65 +132,50 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <!-- Mode indicator -->
-      <div
-        class="flex items-center gap-2 rounded bg-gray-200 px-3 py-1 dark:bg-gray-700"
-      >
-        <span class="text-xs text-gray-600 dark:text-gray-400">
-          {$projectStore.mode === 'project'
-            ? '🎮 Projet du header'
-            : '📄 Fichier unique'}
-        </span>
+      <!-- Language selector -->
+      <div class="flex items-center gap-2">
+        <label for="language-select" class="text-sm">Langue:</label>
+        <select
+          id="language-select"
+          value={$projectStore.language || ''}
+          onchange={handleLanguageChange}
+          disabled={!$projectStore.projectPath ||
+            $projectStore.availableLanguages.length === 0 ||
+            $projectStore.isLoading}
+          class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">— Sélectionner une langue —</option>
+          {#each $projectStore.availableLanguages as lang}
+            <option value={lang.name}
+              >{lang.name} ({lang.file_count} fichiers)</option
+            >
+          {/each}
+        </select>
       </div>
 
-      <!-- Language selector -->
-      {#if $projectStore.mode === 'project'}
-        <div class="flex items-center gap-2">
-          <label for="language-select" class="text-sm">Langue:</label>
-          <select
-            id="language-select"
-            value={$projectStore.language || ''}
-            onchange={handleLanguageChange}
-            disabled={!$projectStore.projectPath ||
-              $projectStore.availableLanguages.length === 0 ||
-              $projectStore.isLoading}
-            class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">— Sélectionner une langue —</option>
-            {#each $projectStore.availableLanguages as lang}
-              <option value={lang.name}
-                >{lang.name} ({lang.file_count} fichiers)</option
-              >
-            {/each}
-          </select>
-        </div>
-
-        <!-- File selector -->
-        <div class="flex items-center gap-2">
-          <label for="file-select" class="text-sm">Fichier:</label>
-          <select
-            id="file-select"
-            value={selectedFileDisplay}
-            onchange={handleFileChange}
-            disabled={!$projectStore.language ||
-              $projectStore.availableFiles.length === 0 ||
-              $projectStore.isLoading}
-            class="min-w-[200px] rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="— Aucun fichier —">— Aucun fichier —</option>
-            {#each $projectStore.availableFiles as file}
-              <option value={file.name}>{file.name}</option>
-            {/each}
-          </select>
-        </div>
-      {/if}
+      <!-- File selector -->
+      <div class="flex items-center gap-2">
+        <label for="file-select" class="text-sm">Fichier:</label>
+        <select
+          id="file-select"
+          value={selectedFileDisplay}
+          onchange={handleFileChange}
+          disabled={!$projectStore.language ||
+            $projectStore.availableFiles.length === 0 ||
+            $projectStore.isLoading}
+          class="min-w-[200px] rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="— Aucun fichier —">— Aucun fichier —</option>
+          {#each $projectStore.availableFiles as file}
+            <option value={file.name}>{file.name}</option>
+          {/each}
+        </select>
+      </div>
 
       <!-- Files count -->
-      {#if $projectStore.mode === 'project'}
-        <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">
-          {$projectStore.availableFiles.length} fichier(s) disponible(s)
-        </div>
-      {/if}
+      <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">
+        {$projectStore.availableFiles.length} fichier(s) disponible(s)
+      </div>
     </div>
   </div>
 

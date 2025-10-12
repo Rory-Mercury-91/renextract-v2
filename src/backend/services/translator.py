@@ -247,7 +247,7 @@ class TranslatorService:
                     # Extraire les chaînes de dialogue (lignes qui commencent par des guillemets)
                     lines = content.split("\n")
                     translated_lines = []
-                    translations_made = 0
+                    trans_made = 0
 
                     for line in lines:
                         stripped = line.strip()
@@ -277,7 +277,7 @@ class TranslatorService:
                                     outputs[0], skip_special_tokens=True
                                 )
                                 translated_lines.append(f'    "{translated_text}"')
-                                translations_made += 1
+                                trans_made += 1
                             else:
                                 translated_lines.append(line)
                         else:
@@ -290,8 +290,7 @@ class TranslatorService:
 
                     files_translated += 1
                     stdout_messages.append(
-                        f"  ✓ {rpy_file.name} → {output_file.name} "
-                        f"({translations_made} traductions)"
+                        f"  ✓ {rpy_file.name} → {output_file.name} ({trans_made} traductions)"
                     )
 
                 except (OSError, ImportError, RuntimeError, ValueError) as e:
@@ -407,7 +406,7 @@ class TranslatorService:
                     lines = content.split("\n")
                     translated_lines = []
                     translations_made = 0
-                    total_dialogue_lines = 0
+                    total_lines = 0
 
                     # Compter d'abord le nombre total de lignes de dialogue
                     for line in lines:
@@ -417,19 +416,19 @@ class TranslatorService:
                             and stripped.endswith('"')
                             and stripped[1:-1].strip()
                         ):
-                            total_dialogue_lines += 1
+                            total_lines += 1
 
                     if progress_callback:
                         progress_callback(
                             f"Traduction de {rpy_file.name}...",
                             file_progress,
                             0,
-                            total_dialogue_lines,
-                            total_dialogue_lines,
+                            total_lines,
+                            total_lines,
                             0.0,
                         )
 
-                    for line_idx, line in enumerate(lines):
+                    for line in lines:
                         stripped = line.strip()
                         # Détecter les lignes de dialogue (commencent par des guillemets)
                         if stripped.startswith('"') and stripped.endswith('"'):
@@ -461,7 +460,7 @@ class TranslatorService:
                                 total_translations += 1
 
                                 # Mettre à jour la progression
-                                remaining_lines = total_dialogue_lines - translations_made
+                                remaining_lines = total_lines - translations_made
                                 current_time = time.time()
                                 elapsed_time = current_time - start_time
                                 lines_per_second = (
@@ -470,14 +469,14 @@ class TranslatorService:
 
                                 if progress_callback:
                                     progress_callback(
-                                        f"Traduction ligne {translations_made}/{total_dialogue_lines}",
+                                        f"Traduction ligne {translations_made}/{total_lines}",
                                         file_progress
                                         + int(
-                                            (translations_made / total_dialogue_lines)
+                                            (translations_made / total_lines)
                                             * (100 / len(rpy_files))
                                         ),
                                         translations_made,
-                                        total_dialogue_lines,
+                                        total_lines,
                                         remaining_lines,
                                         lines_per_second,
                                     )

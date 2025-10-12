@@ -25,8 +25,7 @@ export interface ProjectSummary {
 }
 
 export interface ProjectState {
-  mode: 'project' | 'single_file';
-  projectPath: string | null;
+  projectPath: string;
   language: string | null;
   currentFile: string | null;
   fileContent: string[];
@@ -39,8 +38,7 @@ export interface ProjectState {
 
 // État initial
 const initialState: ProjectState = {
-  mode: 'project',
-  projectPath: null,
+  projectPath: '',
   language: null,
   currentFile: null,
   fileContent: [],
@@ -153,7 +151,6 @@ export const projectActions = {
       // 5. Mettre à jour l'état
       projectStore.update(state => ({
         ...state,
-        mode: 'project',
         projectPath,
         projectSummary: summary || null,
         availableLanguages: languages,
@@ -169,7 +166,6 @@ export const projectActions = {
       appSettingsActions.setSetting('lastProject', {
         path: projectPath,
         language: '',
-        mode: 'project',
       });
 
       // 7. Mettre à jour le chemin dans les paramètres seulement si différent
@@ -293,70 +289,6 @@ export const projectActions = {
   },
 
   /**
-   * Charge un fichier unique (mode single_file)
-   */
-  async loadSingleFile(filepath: string): Promise<boolean> {
-    projectStore.update(s => ({ ...s, isLoading: true, error: null }));
-
-    try {
-      // Définir le mode single_file
-      await apiService.setCurrentProject(filepath, 'single_file');
-
-      // Charger le contenu
-      const result = await apiService.loadFileContent(filepath);
-
-      if (result.success && result.content) {
-        projectStore.update(s => ({
-          ...s,
-          mode: 'single_file',
-          projectPath: filepath,
-          currentFile: filepath,
-          fileContent: result.content || [],
-          availableLanguages: [],
-          availableFiles: [],
-          language: null,
-          isLoading: false,
-          error: null,
-        }));
-
-        // Sauvegarder le dernier fichier unique
-        appSettingsActions.setSetting('lastProject', {
-          path: filepath,
-          language: '',
-          mode: 'single_file',
-        });
-
-        // Mettre à jour le chemin dans les paramètres seulement si différent
-        const currentSettings = get(appSettings);
-        if (currentSettings.paths.editor !== filepath) {
-          appSettingsActions.setSetting('paths', {
-            ...currentSettings.paths,
-            editor: filepath,
-          });
-        }
-
-        return true;
-      } else {
-        projectStore.update(s => ({
-          ...s,
-          isLoading: false,
-          error: result.error || 'Erreur lors du chargement du fichier',
-        }));
-        return false;
-      }
-    } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : 'Erreur inconnue';
-      projectStore.update(s => ({
-        ...s,
-        isLoading: false,
-        error: errorMsg,
-      }));
-      return false;
-    }
-  },
-
-  /**
    * Réinitialise l'état du projet
    */
   reset() {
@@ -380,8 +312,7 @@ export const projectActions = {
         const state = result.state;
         projectStore.update(s => ({
           ...s,
-          mode: state.mode || 'project',
-          projectPath: state.project_path || null,
+          projectPath: state.project_path || '',
           language: state.language || null,
           currentFile: state.current_file || null,
           fileContent: state.file_content || [],
@@ -412,16 +343,11 @@ export const projectActions = {
 
       console.info('Loading last project:', lastProject);
 
-      // Charger selon le mode
-      if (lastProject.mode === 'single_file') {
-        await this.loadSingleFile(lastProject.path);
-      } else {
-        const success = await this.loadProject(lastProject.path);
+      const success = await this.loadProject(lastProject.path);
 
-        // Si une langue était sélectionnée, la recharger
-        if (success && lastProject.language) {
-          await this.selectLanguage(lastProject.language);
-        }
+      // Si une langue était sélectionnée, la recharger
+      if (success && lastProject.language) {
+        await this.selectLanguage(lastProject.language);
       }
     } catch (error) {
       console.error('Error loading last project:', error);
@@ -433,6 +359,13 @@ export const projectActions = {
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     const initialSettings = get(appSettings);
+    
+    // Vérifier si l'ouverture automatique du dernier projet est activée
+    if (!initialSettings.autoOpenings.lastProject) {
+      console.info('Auto-opening of last project is disabled');
+      return;
+    }
+    
     const initialPath = initialSettings.paths.editor;
     if (initialPath && initialPath.trim() !== '') {
       console.info('Loading initial project from settings:', initialPath);

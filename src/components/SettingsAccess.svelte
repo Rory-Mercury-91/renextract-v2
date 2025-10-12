@@ -93,8 +93,7 @@
               id="path"
               bind:value={$appSettings.paths.editor}
               placeholder="Ex: C:\Program Files\Notepad++\notepad++.exe"
-              class="w-full rounded-lg border-2 border-gray-300 p-2 text-sm text-gray-900 placeholder-gray-500 shadow-sm transition-colors duration-200 hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
-              readonly
+              class="w-full rounded-lg border-2 border-gray-300 p-2 text-sm text-slate-200 placeholder-gray-500 shadow-sm transition-colors duration-200 hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
             />
             <div class="flex flex-col gap-1">
               <button

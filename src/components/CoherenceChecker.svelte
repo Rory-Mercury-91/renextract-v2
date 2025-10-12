@@ -1,5 +1,6 @@
 <!-- src/components/CoherenceChecker.svelte -->
 <script lang="ts">
+  import type { ActiveTool } from '$routes/Tools.svelte';
   import {
     checkProgress,
     coherenceActions,
@@ -12,6 +13,12 @@
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
   import CoherenceResults from './CoherenceResults.svelte';
+
+  interface Props {
+    active: ActiveTool;
+  }
+
+  let { active = $bindable() }: Props = $props();
 
   // État réactif
   const currentProject = $derived(
@@ -215,241 +222,243 @@
         </p>
       </div>
       <button
-        class="rounded-lg bg-white/20 px-4 py-2 transition-colors hover:bg-white/30"
+        class="rounded-lg bg-white/20 px-2 py-1 transition-colors hover:bg-white/30"
         title="À quoi ça sert ?"
       >
-        <Icon icon="hugeicons:question-mark-circle" class="h-6 w-6" />
+        <Icon icon={active === 'coherence' ? 'hugeicons:toggle-on' : 'hugeicons:toggle-off'} class="h-6 w-6" onclick={() => active = (!active ? 'coherence' : null)} />
       </button>
     </div>
   </div>
 
-  <!-- Sélection Projet/Langue -->
-  <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
-    <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-      <Icon icon="hugeicons:folder-open" class="h-5 w-5" />
-      Sélection de l'analyse
-    </h3>
+  {#if active === 'coherence'}
+    <!-- Sélection Projet/Langue -->
+    <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
+      <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+        <Icon icon="hugeicons:folder-open" class="h-5 w-5" />
+        Sélection de l'analyse
+      </h3>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <!-- Langue -->
-      <div>
-        <label
-          for="language-select"
-          class="mb-2 block text-sm font-medium text-gray-300"
-        >
-          Langue à analyser
-        </label>
-        <select
-          id="language-select"
-          bind:value={selectedLanguage}
-          class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
-          disabled={checking}
-        >
-          <option value="">Sélectionner une langue...</option>
-          {#if currentProject && currentProject.languages}
-            {#each currentProject.languages as lang}
-              <option value={lang.name}>{lang.name}</option>
-            {/each}
-          {/if}
-        </select>
-      </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <!-- Langue -->
+        <div>
+          <label
+            for="language-select"
+            class="mb-2 block text-sm font-medium text-gray-300"
+          >
+            Langue à analyser
+          </label>
+          <select
+            id="language-select"
+            bind:value={selectedLanguage}
+            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
+            disabled={checking}
+          >
+            <option value="">Sélectionner une langue...</option>
+            {#if currentProject && currentProject.languages}
+              {#each currentProject.languages as lang}
+                <option value={lang.name}>{lang.name}</option>
+              {/each}
+            {/if}
+          </select>
+        </div>
 
-      <!-- Mode d'analyse -->
-      <div>
-        <label
-          for="mode-single"
-          class="mb-2 block text-sm font-medium text-gray-300"
-        >
-          Mode d'analyse
-        </label>
-        <div class="space-y-2">
-          <label for="mode-single" class="flex items-center">
-            <input
-              id="mode-single"
-              type="radio"
-              bind:group={analysisMode}
-              value="single_file"
-              class="mr-2 text-teal-600 focus:ring-teal-500"
-              disabled={checking}
-            />
-            <span class="text-sm text-white">Fichier spécifique</span>
+        <!-- Mode d'analyse -->
+        <div>
+          <label
+            for="mode-single"
+            class="mb-2 block text-sm font-medium text-gray-300"
+          >
+            Mode d'analyse
           </label>
-          <label for="mode-all" class="flex items-center">
-            <input
-              id="mode-all"
-              type="radio"
-              bind:group={analysisMode}
-              value="all_files"
-              class="mr-2 text-teal-600 focus:ring-teal-500"
-              disabled={checking}
-            />
-            <span class="text-sm text-white"
-              >Tous les fichiers de la langue</span
-            >
-          </label>
+          <div class="space-y-2">
+            <label for="mode-single" class="flex items-center">
+              <input
+                id="mode-single"
+                type="radio"
+                bind:group={analysisMode}
+                value="single_file"
+                class="mr-2 text-teal-600 focus:ring-teal-500"
+                disabled={checking}
+              />
+              <span class="text-sm text-white">Fichier spécifique</span>
+            </label>
+            <label for="mode-all" class="flex items-center">
+              <input
+                id="mode-all"
+                type="radio"
+                bind:group={analysisMode}
+                value="all_files"
+                class="mr-2 text-teal-600 focus:ring-teal-500"
+                disabled={checking}
+              />
+              <span class="text-sm text-white"
+                >Tous les fichiers de la langue</span
+              >
+            </label>
+          </div>
         </div>
       </div>
+
+      <!-- Sélection de fichier (seulement en mode fichier spécifique) -->
+      {#if analysisMode === 'single_file' && selectedLanguage}
+        <div class="mt-4">
+          <label
+            for="file-select"
+            class="mb-2 block text-sm font-medium text-gray-300"
+          >
+            Fichier à analyser
+          </label>
+          <select
+            id="file-select"
+            bind:value={selectedFile}
+            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
+            disabled={checking}
+          >
+            <option value="">Sélectionner un fichier...</option>
+            {#if $projectStore.availableFiles}
+              {#each $projectStore.availableFiles as file}
+                <option value={file.path}>{file.name}</option>
+              {/each}
+            {/if}
+          </select>
+        </div>
+      {/if}
     </div>
 
-    <!-- Sélection de fichier (seulement en mode fichier spécifique) -->
-    {#if analysisMode === 'single_file' && selectedLanguage}
-      <div class="mt-4">
-        <label
-          for="file-select"
-          class="mb-2 block text-sm font-medium text-gray-300"
-        >
-          Fichier à analyser
-        </label>
-        <select
-          id="file-select"
-          bind:value={selectedFile}
-          class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
-          disabled={checking}
-        >
-          <option value="">Sélectionner un fichier...</option>
-          {#if $projectStore.availableFiles}
-            {#each $projectStore.availableFiles as file}
-              <option value={file.path}>{file.name}</option>
-            {/each}
-          {/if}
-        </select>
+    <!-- Options de vérification -->
+    <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="flex items-center gap-2 text-lg font-semibold text-white">
+          <Icon icon="hugeicons:settings-02" class="h-5 w-5" />
+          Options de vérification
+        </h3>
+        <div class="flex gap-2">
+          <button
+            onclick={() => selectAllOptions(true)}
+            class="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
+            disabled={checking}
+          >
+            Tout sélectionner
+          </button>
+          <button
+            onclick={() => selectAllOptions(false)}
+            class="rounded bg-gray-600 px-3 py-1 text-sm text-white transition-colors hover:bg-gray-700"
+            disabled={checking}
+          >
+            Tout désélectionner
+          </button>
+        </div>
       </div>
-    {/if}
-  </div>
 
-  <!-- Options de vérification -->
-  <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="flex items-center gap-2 text-lg font-semibold text-white">
-        <Icon icon="hugeicons:settings-02" class="h-5 w-5" />
-        Options de vérification
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {#each checkOptions as option}
+          <label
+            class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-600 bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
+          >
+            <input
+              type="checkbox"
+              checked={(options as any)[option.key]}
+              onchange={() => toggleOption(option.key as keyof typeof options)}
+              class="mt-1 h-5 w-5 rounded border-gray-600 bg-gray-800 text-teal-600 focus:ring-2 focus:ring-teal-500"
+              disabled={checking}
+            />
+            <div class="flex-1">
+              <div class="text-sm font-medium text-white">{option.label}</div>
+              <div class="mt-1 text-xs text-gray-400">{option.description}</div>
+            </div>
+          </label>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Exclusions -->
+    <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
+      <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+        <Icon icon="hugeicons:filter-remove" class="h-5 w-5" />
+        Exclusions
       </h3>
-      <div class="flex gap-2">
-        <button
-          onclick={() => selectAllOptions(true)}
-          class="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
-          disabled={checking}
-        >
-          Tout sélectionner
-        </button>
-        <button
-          onclick={() => selectAllOptions(false)}
-          class="rounded bg-gray-600 px-3 py-1 text-sm text-white transition-colors hover:bg-gray-700"
-          disabled={checking}
-        >
-          Tout désélectionner
-        </button>
-      </div>
-    </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {#each checkOptions as option}
-        <label
-          class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-600 bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
-        >
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <label
+            for="excluded-files"
+            class="mb-2 block text-sm font-medium text-gray-300"
+          >
+            Fichiers à exclure (séparés par des virgules)
+          </label>
           <input
-            type="checkbox"
-            checked={(options as any)[option.key]}
-            onchange={() => toggleOption(option.key as keyof typeof options)}
-            class="mt-1 h-5 w-5 rounded border-gray-600 bg-gray-800 text-teal-600 focus:ring-2 focus:ring-teal-500"
+            id="excluded-files"
+            type="text"
+            bind:value={excludedFiles}
+            oninput={updateExclusions}
+            placeholder="Ex: OK, Menu, Continue"
+            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
             disabled={checking}
           />
-          <div class="flex-1">
-            <div class="text-sm font-medium text-white">{option.label}</div>
-            <div class="mt-1 text-xs text-gray-400">{option.description}</div>
-          </div>
-        </label>
-      {/each}
-    </div>
-  </div>
-
-  <!-- Exclusions -->
-  <div class="rounded-lg border border-gray-700 bg-gray-800 p-6">
-    <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-      <Icon icon="hugeicons:filter-remove" class="h-5 w-5" />
-      Exclusions
-    </h3>
-
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <label
-          for="excluded-files"
-          class="mb-2 block text-sm font-medium text-gray-300"
-        >
-          Fichiers à exclure (séparés par des virgules)
-        </label>
-        <input
-          id="excluded-files"
-          type="text"
-          bind:value={excludedFiles}
-          oninput={updateExclusions}
-          placeholder="Ex: OK, Menu, Continue"
-          class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
-          disabled={checking}
-        />
-      </div>
-
-      <div>
-        <label
-          for="excluded-lines"
-          class="mb-2 block text-sm font-medium text-gray-300"
-        >
-          Lignes à exclure (séparées par des virgules)
-        </label>
-        <input
-          id="excluded-lines"
-          type="text"
-          bind:value={excludedLines}
-          placeholder="Ex: Yes, No, Back"
-          class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
-          disabled={checking}
-        />
-      </div>
-    </div>
-  </div>
-
-  <!-- Indicateur de progression -->
-  {#if checking}
-    <div class="rounded-lg border border-orange-700 bg-orange-900/30 p-4">
-      <div class="flex items-center gap-3">
-        <div class="animate-spin">
-          <Icon icon="hugeicons:loading-01" class="h-6 w-6 text-orange-400" />
         </div>
-        <div class="flex-1">
-          <p class="font-medium text-orange-200">Analyse en cours...</p>
-          <p class="text-sm text-orange-400">{coherenceProgressText}</p>
-        </div>
-      </div>
-    </div>
-  {/if}
 
-  <!-- Résultats avec le nouveau composant Svelte -->
-  {#if $lastCoherenceResult && !checking}
-    <CoherenceResults result={$lastCoherenceResult} {selectedLanguage} />
-  {/if}
-
-  <!-- Erreur -->
-  {#if $lastCoherenceError && !checking}
-    <div class="rounded-lg border border-red-700 bg-red-900/30 p-4">
-      <div class="flex items-center gap-3">
-        <Icon icon="hugeicons:close-circle" class="h-6 w-6 text-red-400" />
         <div>
-          <p class="font-medium text-red-200">Erreur d'analyse</p>
-          <p class="text-sm text-red-400">{$lastCoherenceError}</p>
+          <label
+            for="excluded-lines"
+            class="mb-2 block text-sm font-medium text-gray-300"
+          >
+            Lignes à exclure (séparées par des virgules)
+          </label>
+          <input
+            id="excluded-lines"
+            type="text"
+            bind:value={excludedLines}
+            placeholder="Ex: Yes, No, Back"
+            class="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-teal-500"
+            disabled={checking}
+          />
         </div>
       </div>
     </div>
-  {/if}
 
-  <!-- Bouton de lancement -->
-  <div class="flex justify-center">
-    <button
-      onclick={startAnalysis}
-      disabled={!canStartAnalysis()}
-      class="flex items-center gap-2 rounded-lg bg-teal-600 px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-600"
-    >
-      <Icon icon="hugeicons:play" class="h-5 w-5" />
-      {checking ? 'Analyse en cours...' : "Démarrer l'analyse"}
-    </button>
-  </div>
+    <!-- Indicateur de progression -->
+    {#if checking}
+      <div class="rounded-lg border border-orange-700 bg-orange-900/30 p-4">
+        <div class="flex items-center gap-3">
+          <div class="animate-spin">
+            <Icon icon="hugeicons:loading-01" class="h-6 w-6 text-orange-400" />
+          </div>
+          <div class="flex-1">
+            <p class="font-medium text-orange-200">Analyse en cours...</p>
+            <p class="text-sm text-orange-400">{coherenceProgressText}</p>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Résultats avec le nouveau composant Svelte -->
+    {#if $lastCoherenceResult && !checking}
+      <CoherenceResults result={$lastCoherenceResult} {selectedLanguage} />
+    {/if}
+
+    <!-- Erreur -->
+    {#if $lastCoherenceError && !checking}
+      <div class="rounded-lg border border-red-700 bg-red-900/30 p-4">
+        <div class="flex items-center gap-3">
+          <Icon icon="hugeicons:close-circle" class="h-6 w-6 text-red-400" />
+          <div>
+            <p class="font-medium text-red-200">Erreur d'analyse</p>
+            <p class="text-sm text-red-400">{$lastCoherenceError}</p>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Bouton de lancement -->
+    <div class="flex justify-center">
+      <button
+        onclick={startAnalysis}
+        disabled={!canStartAnalysis()}
+        class="flex items-center gap-2 rounded-lg bg-teal-600 px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-600"
+      >
+        <Icon icon="hugeicons:play" class="h-5 w-5" />
+        {checking ? 'Analyse en cours...' : "Démarrer l'analyse"}
+      </button>
+    </div>
+  {/if}
 </div>
