@@ -428,7 +428,7 @@ class TranslatorService:
                             0.0,
                         )
 
-                    for line in lines:
+                    for line in enumerate(lines):
                         stripped = line.strip()
                         # Détecter les lignes de dialogue (commencent par des guillemets)
                         if stripped.startswith('"') and stripped.endswith('"'):
@@ -470,8 +470,8 @@ class TranslatorService:
                                 if progress_callback:
                                     progress_callback(
                                         f"Traduction ligne {translations_made}/{total_lines}",
-                                        file_progress
-                                        + int(
+                                        file_progress,
+                                        +int(
                                             (translations_made / total_lines)
                                             * (100 / len(rpy_files))
                                         ),

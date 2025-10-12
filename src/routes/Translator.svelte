@@ -73,7 +73,6 @@
       // Sélectionner automatiquement la première langue si aucune n'est sélectionnée
       if (!selectedLanguage && availableLanguages.length > 0) {
         selectedLanguage = availableLanguages[0];
-        console.info('Auto-selected language:', selectedLanguage);
       }
     }
   }
@@ -164,6 +163,7 @@
       progressPercent = 10;
 
       // Simuler la progression pendant la traduction
+<<<<<<< HEAD
       progressInterval = setInterval(() => {
         if (progressPercent < 98) { // Augmenter la limite à 98% pour éviter le blocage
           // Ajuster la vitesse de progression selon la portée
@@ -182,6 +182,16 @@
               currentFile = Math.min(currentFile + 1, totalFiles);
               progressMessage = `Traduction en cours... (${currentFile}/${totalFiles} fichiers)`;
             }
+=======
+      const progressInterval = setInterval(() => {
+        if (progressPercent < 90) {
+          progressPercent += Math.random() * 3;
+          if (progressPercent > 90) progressPercent = 90;
+
+          // Simuler des données de progression
+          if (totalLines === 0) {
+            totalLines = Math.floor(Math.random() * 20) + 5; // 5-25 lignes
+>>>>>>> rory
           }
 
           // Simuler des données de progression plus réalistes
@@ -218,7 +228,11 @@
             if (progressPercent > 99.5) progressPercent = 99.5;
           }
         }
+<<<<<<< HEAD
       }, translationScope === 'specific' ? 800 : 1200); // Intervalle plus long pour éviter d'aller trop vite
+=======
+      }, 500);
+>>>>>>> rory
 
       const res = await axios.post(
         '/api/translator/run',
@@ -232,13 +246,21 @@
           selectedLanguage: selectedLanguage,
         },
         {
+<<<<<<< HEAD
           timeout: 0, // Pas de timeout
+=======
+          timeout: 300000, // 5 minutes timeout
+>>>>>>> rory
         }
       );
 
       clearInterval(progressInterval);
 
+<<<<<<< HEAD
       progressMessage = `Traitement de la réponse... (${totalFiles}/${totalFiles} fichiers)`;
+=======
+      progressMessage = 'Traitement de la réponse...';
+>>>>>>> rory
       progressPercent = 90;
 
       logs = (res.data.stdout || '') + '\n' + (res.data.stderr || '');
@@ -252,7 +274,11 @@
         logs = 'Traduction terminée avec succès !';
       }
 
+<<<<<<< HEAD
       progressMessage = `Traduction terminée ! (${totalFiles}/${totalFiles} fichiers)`;
+=======
+      progressMessage = 'Traduction terminée !';
+>>>>>>> rory
       progressPercent = 100;
     } catch (err: any) {
       if (progressInterval) {
@@ -541,26 +567,6 @@
         {/if}
       </button>
 
-      <!-- Message d'information pour les gros fichiers -->
-      {#if !running}
-        <div
-          class="max-w-md rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
-        >
-          <div class="flex items-start gap-2">
-            <Icon icon="hugeicons:info" class="mt-0.5 h-4 w-4 flex-shrink-0" />
-              <div>
-                <p class="font-bold">Note importante :</p>
-                
-                <p class="ml-1">
-                  Les gros fichiers peuvent prendre plusieurs minutes à traduire.
-                  La progression peut sembler lente mais c'est normal pour les
-                  fichiers volumineux.
-                </p>
-              </div>
-          </div>
-        </div>
-      {/if}
-
       <!-- Barre de progression -->
       {#if running}
         <div class="w-full max-w-md">
@@ -577,21 +583,11 @@
             ></div>
           </div>
 
-          <!-- Détails des fichiers et lignes traduites -->
-          <div
-            class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400"
-          >
-            {#if totalFiles > 0}
-              <div class="font-medium text-blue-600 dark:text-blue-400">
-                {translationScope === 'specific' ? 'Fichier' : 'Fichiers'}: {currentFile} / {totalFiles}
-                {#if translationScope === 'specific' && selectedFile}
-                  <div class="text-xs text-gray-400 mt-1">
-                    ({selectedFile})
-                  </div>
-                {/if}
-              </div>
-            {/if}
-            {#if totalLines > 0}
+          <!-- Détails des lignes traduites -->
+          {#if totalLines > 0}
+            <div
+              class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400"
+            >
               <div class="font-medium">
                 Lignes traduites: {currentLine} / {totalLines}
               </div>
