@@ -67,11 +67,10 @@
       availableLanguages = $projectStore.availableLanguages.map(
         lang => lang.name
       );
-      
+
       // Sélectionner automatiquement la première langue si aucune n'est sélectionnée
       if (!selectedLanguage && availableLanguages.length > 0) {
         selectedLanguage = availableLanguages[0];
-        console.log('Auto-selected language:', selectedLanguage);
       }
     }
   }
@@ -101,16 +100,16 @@
   }
 
   async function runTranslation() {
-    
     if (!$appSettings.paths.editor || $appSettings.paths.editor.trim() === '') {
       return;
     }
-    
+
     if (!selectedLanguage) {
-      logs = 'Erreur: Veuillez sélectionner une langue avant de lancer la traduction.';
+      logs =
+        'Erreur: Veuillez sélectionner une langue avant de lancer la traduction.';
       return;
     }
-    
+
     running = true;
     logs = '';
     progressMessage = 'Initialisation de la traduction...';
@@ -142,13 +141,13 @@
 
       progressMessage = 'Envoi de la requête au serveur...';
       progressPercent = 10;
-      
+
       // Simuler la progression pendant la traduction
       const progressInterval = setInterval(() => {
         if (progressPercent < 90) {
           progressPercent += Math.random() * 3;
           if (progressPercent > 90) progressPercent = 90;
-          
+
           // Simuler des données de progression
           if (totalLines === 0) {
             totalLines = Math.floor(Math.random() * 20) + 5; // 5-25 lignes
@@ -161,35 +160,39 @@
           }
         }
       }, 500);
-      
-      const res = await axios.post('/api/translator/run', {
-        inputFolder,
-        recursive: true,
-        sourceLang: sourceLangCode,
-        targetLang,
-        translationScope,
-        selectedFile: translationScope === 'specific' ? selectedFile : null,
-        selectedLanguage: selectedLanguage,
-      }, {
-        timeout: 300000 // 5 minutes timeout
-      });
-      
+
+      const res = await axios.post(
+        '/api/translator/run',
+        {
+          inputFolder,
+          recursive: true,
+          sourceLang: sourceLangCode,
+          targetLang,
+          translationScope,
+          selectedFile: translationScope === 'specific' ? selectedFile : null,
+          selectedLanguage: selectedLanguage,
+        },
+        {
+          timeout: 300000, // 5 minutes timeout
+        }
+      );
+
       clearInterval(progressInterval);
-      
+
       progressMessage = 'Traitement de la réponse...';
       progressPercent = 90;
-      
+
       logs = (res.data.stdout || '') + '\n' + (res.data.stderr || '');
-      
+
       if (res.data.message) {
         logs = res.data.message + '\n' + logs;
       }
-      
+
       // Si pas de logs, afficher au moins un message de confirmation
       if (!logs.trim()) {
         logs = 'Traduction terminée avec succès !';
       }
-      
+
       progressMessage = 'Traduction terminée !';
       progressPercent = 100;
     } catch (err: any) {
@@ -472,24 +475,28 @@
           Lancer la traduction
         {/if}
       </button>
-      
+
       <!-- Barre de progression -->
       {#if running}
         <div class="w-full max-w-md">
-          <div class="mb-2 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div
+            class="mb-2 flex justify-between text-sm text-gray-600 dark:text-gray-400"
+          >
             <span>{progressMessage}</span>
             <span>{progressPercent.toFixed(2)}%</span>
           </div>
           <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-            <div 
+            <div
               class="h-2 rounded-full bg-blue-600 transition-all duration-300 ease-out"
-              style="width: {progressPercent}%"
+              style:width="{progressPercent}%"
             ></div>
           </div>
-          
+
           <!-- Détails des lignes traduites -->
           {#if totalLines > 0}
-            <div class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+            <div
+              class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400"
+            >
               <div class="font-medium">
                 Lignes traduites: {currentLine} / {totalLines}
               </div>
@@ -497,7 +504,7 @@
                 Restantes: {remainingLines}
               </div>
               {#if linesPerSecond > 0}
-                <div class="text-blue-500 font-medium">
+                <div class="font-medium text-blue-500">
                   Vitesse: {linesPerSecond.toFixed(1)} lignes/sec
                 </div>
               {/if}

@@ -3,7 +3,6 @@
 Toutes les routes sont regroupées dans ce fichier pour une meilleure organisation
 """
 
-import json
 import logging
 import os
 import platform
@@ -12,7 +11,7 @@ import tkinter as tk
 from collections import defaultdict
 from tkinter import filedialog
 
-from flask import Blueprint, Response, current_app, jsonify, request, send_from_directory
+from flask import Blueprint, current_app, jsonify, request, send_from_directory
 
 from src.backend.core.coherence import CoherenceChecker
 
