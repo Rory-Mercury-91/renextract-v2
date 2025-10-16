@@ -1,23 +1,15 @@
+# Dépendances principales
 pywebview==4.4.1
 flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
-pyinstaller==6.16.0
 requests==2.31.0
 
 # Dépendances pour le service de traduction intégré
-# Versions spécifiques du dev du traducteur
-torch==2.7.1
-torchvision==0.22.1
-torchaudio==2.7.1
-transformers
-tokenizers
-safetensors
-langdetect
-langid
-huggingface_hub
-hf_xet
-peft
-sentencepiece>=0.1.99
-protobuf>=3.20.0
-accelerate>=0.20.0
+# torch==2.7.1
+# transformers
+# sentencepiece>=0.1.99
+# protobuf>=3.20.0
+
+# Dépendances de build (optionnelles)
+pyinstaller==6.16.0  # Uncomment pour le build

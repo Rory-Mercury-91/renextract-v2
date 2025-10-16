@@ -18,7 +18,7 @@ A modern template for creating desktop applications with Python (backend) and Sv
 
 ### Backend
 
-- **Python 3.8+**
+- **Python 3.13+**
 - **pywebview** - Desktop window creation
 - **Flask** - Web framework
 - **Flask-CORS** - CORS handling
@@ -36,7 +36,7 @@ A modern template for creating desktop applications with Python (backend) and Sv
 
 ## 📋 Prerequisites
 
-- **Python 3.8+**
+- **Python 3.13+**
 - **Node.js 16+**
 - **pnpm**
 

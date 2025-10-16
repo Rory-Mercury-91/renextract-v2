@@ -24,10 +24,10 @@ def start_vite_dev():
     print("⚡ Starting Vite server...")
     # Use subprocess for better control and ensure --host is used
     try:
-        subprocess.run(["pnpm", "run", "dev", "--", "--host"], check=True)
+        subprocess.run(["pnpm", "run", "dev", "--"], check=True)
     except subprocess.CalledProcessError:
         # Fallback if pnpm fails
-        subprocess.run(["npm", "run", "dev", "--", "--host"], check=True)
+        subprocess.run(["npm", "run", "dev", "--"], check=True)
 
 
 def main():

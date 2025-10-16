@@ -224,8 +224,9 @@
       <button
         class="rounded-lg bg-white/20 px-2 py-1 transition-colors hover:bg-white/30"
         title="À quoi ça sert ?"
+        onclick={() => active = (!active ? 'coherence' : null)}
       >
-        <Icon icon={active === 'coherence' ? 'hugeicons:toggle-on' : 'hugeicons:toggle-off'} class="h-6 w-6" onclick={() => active = (!active ? 'coherence' : null)} />
+        <Icon icon={active === 'coherence' ? 'hugeicons:toggle-on' : 'hugeicons:toggle-off'} class="h-6 w-6" />
       </button>
     </div>
   </div>

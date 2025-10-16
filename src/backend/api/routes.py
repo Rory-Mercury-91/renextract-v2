@@ -457,7 +457,7 @@ def validate_project():
         project_manager = ProjectManager()
         result = project_manager.validate_project(project_path)
 
-        return jsonify({"success": True, "result": result})
+        return jsonify({"success": True, "validation": result})
 
     except (OSError, ValueError, TypeError) as e:
         logger.error("Erreur validation projet: %s", e)
@@ -745,18 +745,18 @@ def open_dialog():
                         "message": "Sélectionné: " + selected_path,
                     }
                 )
-            else:
-                # Si zenity n'est pas disponible, retourner une erreur avec instructions
-                return jsonify(
-                    {
-                        "success": False,
-                        "error": "Interface graphique non disponible en WSL",
-                        "message": "Pour utiliser les dialogues de fichier en WSL, \
-                          installez zenity: sudo apt install zenity",
-                        "wsl_mode": True,
-                        "suggested_path": initialdir or os.path.expanduser("~"),
-                    }
-                )
+
+            # Si zenity n'est pas disponible, retourner une erreur avec instructions
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "Interface graphique non disponible en WSL",
+                    "message": "Pour utiliser les dialogues de fichier en WSL, \
+                      installez zenity: sudo apt install zenity",
+                    "wsl_mode": True,
+                    "suggested_path": initialdir or os.path.expanduser("~"),
+                }
+            )
 
         # Mode normal avec tkinter
         try:

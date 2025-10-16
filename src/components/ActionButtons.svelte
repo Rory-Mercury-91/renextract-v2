@@ -330,7 +330,7 @@
 
   <!-- Résultat de la dernière vérification -->
   {#if lastCoherenceRes && !checking}
-    <div class="rounded-lg border border-teal-200 bg-teal-50 p-4">
+    <div class="rounded-lg border border-teal-200 bg-teal-50 p-4 mx-2">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           {#if lastCoherenceRes.stats.total_issues === 0}

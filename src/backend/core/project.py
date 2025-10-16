@@ -21,6 +21,37 @@ class ProjectManager:
         self.available_languages: list[dict] = []
         self.available_files: list[dict] = []
 
+    def _normalize_path(self, path: str) -> str:
+        """Normalise un chemin pour qu'il soit accessible sur le système actuel
+
+        Args:
+            path: Chemin à normaliser
+
+        Returns:
+            Chemin normalisé
+        """
+        if not path:
+            return path
+
+        # Convertir les chemins WSL Windows vers Linux
+        if path.startswith("\\\\wsl.localhost\\"):
+            # \\wsl.localhost\Arch\home\rory\projets\... -> /home/rory/projets/...
+            path = path.replace("\\\\wsl.localhost\\Arch\\", "/")
+            path = path.replace("\\", "/")
+
+        # Convertir les chemins Windows vers format Unix
+        if "\\" in path and not path.startswith("/"):
+            path = path.replace("\\", "/")
+
+        # Convertir les chemins Windows spécifiques (C:, D:, B:, etc.)
+        if len(path) >= 2 and path[1] == ":" and path[0].isalpha():
+            # C:\path\to\project -> /mnt/c/path/to/project
+            # B:/path/to/project -> /mnt/b/path/to/project
+            drive_letter = path[0].lower()
+            path = "/mnt/" + drive_letter + path[2:].replace("\\", "/")
+
+        return path
+
     def validate_project(self, project_path: str) -> dict[str, any]:
         """Valide qu'un chemin est un projet Ren'Py valide
 
@@ -32,21 +63,24 @@ class ProjectManager:
 
         """
         try:
-            if not project_path or not os.path.exists(project_path):
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(project_path)
+
+            if not normalized_path or not os.path.exists(normalized_path):
                 return {"valid": False, "message": "Le chemin n'existe pas"}
 
-            if not os.path.isdir(project_path):
+            if not os.path.isdir(normalized_path):
                 return {"valid": False, "message": "Le chemin n'est pas un dossier"}
 
             # Vérifier la présence d'un dossier game/
-            game_dir = os.path.join(project_path, "game")
+            game_dir = os.path.join(normalized_path, "game")
             has_game_folder = os.path.isdir(game_dir)
 
             # Chercher des fichiers .exe (indicateur Ren'Py)
             has_exe = any(
                 f.endswith(".exe")
-                for f in os.listdir(project_path)
-                if os.path.isfile(os.path.join(project_path, f))
+                for f in os.listdir(normalized_path)
+                if os.path.isfile(os.path.join(normalized_path, f))
             )
 
             # Chercher des fichiers .rpy ou .rpyc
@@ -82,7 +116,9 @@ class ProjectManager:
 
         """
         try:
-            current_path = Path(subdir_path).resolve()
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(subdir_path)
+            current_path = Path(normalized_path).resolve()
 
             for _ in range(max_levels):
                 # Vérifier si le chemin actuel est un projet valide
@@ -111,13 +147,15 @@ class ProjectManager:
             Liste de dicts avec 'name', 'file_count', 'path'
 
         """
+        # Normaliser le chemin pour Windows/WSL
+        normalized_path = self._normalize_path(project_path)
         languages = []
 
         try:
-            if not project_path or not os.path.exists(project_path):
+            if not normalized_path or not os.path.exists(normalized_path):
                 return languages
 
-            tl_path = os.path.join(project_path, "game", "tl")
+            tl_path = os.path.join(normalized_path, "game", "tl")
             if not os.path.exists(tl_path):
                 return languages
 
@@ -174,13 +212,16 @@ class ProjectManager:
         files = []
 
         try:
-            if not project_path or not language:
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(project_path)
+
+            if not normalized_path or not language:
                 return files
 
             if exclusions is None:
                 exclusions = []
 
-            language_path = os.path.join(project_path, "game", "tl", language)
+            language_path = os.path.join(normalized_path, "game", "tl", language)
             if not os.path.exists(language_path):
                 return files
 
@@ -295,7 +336,10 @@ class ProjectManager:
 
         """
         try:
-            if not project_path or not os.path.exists(project_path):
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(project_path)
+
+            if not normalized_path or not os.path.exists(normalized_path):
                 return {
                     "project_name": "Aucun projet",
                     "rpa_count": 0,
@@ -304,8 +348,8 @@ class ProjectManager:
                     "summary": "Aucun projet sélectionné",
                 }
 
-            project_name = os.path.basename(project_path)
-            game_dir = os.path.join(project_path, "game")
+            project_name = os.path.basename(normalized_path)
+            game_dir = os.path.join(normalized_path, "game")
 
             if not os.path.isdir(game_dir):
                 return {
@@ -327,7 +371,7 @@ class ProjectManager:
                     rpy_count += 1
 
             # Obtenir les langues
-            languages = self.scan_languages(project_path)
+            languages = self.scan_languages(normalized_path)
 
             # Construire le résumé
             info_parts = [f"Projet: {project_name}"]
@@ -354,7 +398,7 @@ class ProjectManager:
 
         except (OSError, ValueError, TypeError) as e:
             return {
-                "project_name": os.path.basename(project_path) if project_path else "Unknown",
+                "project_name": os.path.basename(normalized_path) if normalized_path else "Unknown",
                 "rpa_count": 0,
                 "rpy_count": 0,
                 "languages": [],
@@ -393,14 +437,17 @@ class ProjectManager:
 
         """
         try:
-            if not project_path or not os.path.exists(project_path):
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(project_path)
+
+            if not normalized_path or not os.path.exists(normalized_path):
                 return []
 
             files = []
 
             if file_type in ["all", "rpy"]:
                 # Fichiers .rpy dans game/
-                game_dir = os.path.join(project_path, "game")
+                game_dir = os.path.join(normalized_path, "game")
                 if os.path.exists(game_dir):
                     for root, _dirs, filenames in os.walk(game_dir):
                         for filename in filenames:
@@ -415,7 +462,7 @@ class ProjectManager:
                                             "size": file_size,
                                             "type": "rpy",
                                             "relative_path": os.path.relpath(
-                                                file_path, project_path
+                                                file_path, normalized_path
                                             ),
                                         }
                                     )
@@ -424,7 +471,7 @@ class ProjectManager:
 
             if file_type in ["all", "rpa"]:
                 # Fichiers .rpa dans game/
-                game_dir = os.path.join(project_path, "game")
+                game_dir = os.path.join(normalized_path, "game")
                 if os.path.exists(game_dir):
                     for filename in os.listdir(game_dir):
                         if filename.endswith(".rpa"):
@@ -437,7 +484,9 @@ class ProjectManager:
                                         "path": file_path,
                                         "size": file_size,
                                         "type": "rpa",
-                                        "relative_path": os.path.relpath(file_path, project_path),
+                                        "relative_path": os.path.relpath(
+                                            file_path, normalized_path
+                                        ),
                                     }
                                 )
                             except OSError:
@@ -447,16 +496,16 @@ class ProjectManager:
                 # Fichiers de traduction
                 if language:
                     # Seulement la langue spécifiée
-                    lang_files = self.scan_language_files(project_path, language)
+                    lang_files = self.scan_language_files(normalized_path, language)
                     for file_info in lang_files:
                         file_info["type"] = "translation"
                         file_info["language"] = language
                         files.append(file_info)
                 else:
                     # Toutes les langues
-                    languages = self.scan_languages(project_path)
+                    languages = self.scan_languages(normalized_path)
                     for lang in languages:
-                        lang_files = self.scan_language_files(project_path, lang["name"])
+                        lang_files = self.scan_language_files(normalized_path, lang["name"])
                         for file_info in lang_files:
                             file_info["type"] = "translation"
                             file_info["language"] = lang["name"]
@@ -481,21 +530,24 @@ class ProjectManager:
 
         """
         try:
-            if not project_path or not os.path.exists(project_path):
+            # Normaliser le chemin pour Windows/WSL
+            normalized_path = self._normalize_path(project_path)
+
+            if not normalized_path or not os.path.exists(normalized_path):
                 return False
 
             # Valider que c'est un projet Ren'Py
-            validation = self.validate_project(project_path)
+            validation = self.validate_project(normalized_path)
             if not validation["valid"]:
                 return False
 
             # Définir le projet courant
-            self.current_project_path = project_path
+            self.current_project_path = normalized_path
             self.current_mode = "project"
             self.current_language = None
             self.current_file = None
             self.file_content = []
-            self.available_languages = self.scan_languages(project_path)
+            self.available_languages = self.scan_languages(normalized_path)
             self.available_files = []
 
             return True

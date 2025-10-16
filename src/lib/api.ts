@@ -113,8 +113,8 @@ export const apiService = {
     try {
       const response = await api.post('/file-dialog/open', params, { timeout: 60000 });
       
-      // Vérifier si c'est le mode WSL
-      if (!response.data.success && response.data.wsl_mode) {
+      // Vérifier si c'est le mode WSL (même en cas de succès partiel)
+      if (response.data.wsl_mode) {
         return await this.handleWslDialog(params, response.data, options);
       }
       
@@ -127,10 +127,10 @@ export const apiService = {
       }
       return result;
     } catch (error) {
-      // Si le backend renvoie 400 avec WSL_MODE, gérer le fallback utilisateur
+      // Si le backend renvoie une erreur avec WSL_MODE, gérer le fallback utilisateur
       const anyErr = error as unknown as { response?: { data?: { error?: string, wsl_mode?: boolean } } };
       const isWslMode = anyErr?.response?.data?.wsl_mode || anyErr?.response?.data?.error === 'WSL_MODE';
-      if (isWslMode && !params.path && anyErr.response?.data) {
+      if (isWslMode && anyErr.response?.data) {
         return await this.handleWslDialog(params, { 
           message: anyErr.response.data.error,
           suggested_path: undefined 

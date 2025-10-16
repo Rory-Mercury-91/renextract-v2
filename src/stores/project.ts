@@ -74,41 +74,7 @@ export const availableFiles = derived(
 
 // Actions du store
 export const projectActions = {
-  /**
-   * Valide un chemin de projet
-   */
-  async validateProject(
-    projectPath: string
-  ): Promise<{ valid: boolean; message: string }> {
-    try {
-      const result = await apiService.validateProject(projectPath);
-      if (result.success && result.validation) {
-        return result.validation;
-      }
-      return { valid: false, message: result.error || 'Erreur de validation' };
-    } catch (error) {
-      return {
-        valid: false,
-        message: error instanceof Error ? error.message : 'Erreur inconnue',
-      };
-    }
-  },
 
-  /**
-   * Trouve la racine d'un projet à partir d'un sous-dossier
-   */
-  async findProjectRoot(subdirPath: string): Promise<string | null> {
-    try {
-      const result = await apiService.findProjectRoot(subdirPath);
-      if (result.success && result.root_path) {
-        return result.root_path;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error finding project root:', error);
-      return null;
-    }
-  },
 
   /**
    * Charge un projet complet
@@ -118,17 +84,17 @@ export const projectActions = {
 
     try {
       // 1. Valider le projet
-      const validation = await this.validateProject(projectPath);
-      if (!validation.valid) {
+      const validationResult = await apiService.validateProject(projectPath);
+      if (!validationResult.success || !validationResult.validation?.valid) {
         // Essayer de trouver la racine
-        const rootPath = await this.findProjectRoot(projectPath);
-        if (rootPath) {
-          projectPath = rootPath;
+        const rootResult = await apiService.findProjectRoot(projectPath);
+        if (rootResult.success && rootResult.root_path) {
+          projectPath = rootResult.root_path;
         } else {
           projectStore.update(state => ({
             ...state,
             isLoading: false,
-            error: validation.message,
+            error: validationResult.validation?.message || validationResult.error || 'Erreur de validation',
           }));
           return false;
         }

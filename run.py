@@ -2,6 +2,7 @@
 """
 Main launch script for PyWebView + Svelte application
 """
+
 import subprocess
 import sys
 from pathlib import Path
@@ -14,8 +15,8 @@ def check_dependencies():
     print("Checking dependencies...")
 
     # Check Python
-    if sys.version_info < (3, 8):
-        print("ERROR: Python 3.8+ required")
+    if sys.version_info < (3, 13):
+        print("ERROR: Python 3.13+ required")
         return False
 
     # Check Python dependencies
@@ -28,19 +29,15 @@ def check_dependencies():
 
     # Check Node.js and npm
     checks = [
-        (['node', '--version'], "Node.js"),
-        (['npm', '--version'], "npm"),
+        (["node", "--version"], "Node.js"),
+        (["npm", "--version"], "npm"),
     ]
 
     for cmd, name in checks:
         try:
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',
-                check=False)
+                cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
+            )
 
             if result.returncode == 0:
                 print(f"OK: {name} installed: {result.stdout.strip()}")
@@ -62,13 +59,14 @@ def install_frontend_dependencies():
 
         # Try pnpm first
         try:
-            result = subprocess.run(['pnpm',
-                                     'install'],
-                                    capture_output=True,
-                                    text=True,
-                                    encoding='utf-8',
-                                    errors='replace',
-                                    check=False)
+            result = subprocess.run(
+                ["pnpm", "install"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
             if result.returncode == 0:
                 print("OK: Frontend dependencies installed with pnpm")
                 return True
@@ -79,13 +77,14 @@ def install_frontend_dependencies():
 
         # Try npm as alternative
         try:
-            result = subprocess.run(['npm',
-                                     'install'],
-                                    capture_output=True,
-                                    text=True,
-                                    encoding='utf-8',
-                                    errors='replace',
-                                    check=False)
+            result = subprocess.run(
+                ["npm", "install"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
             if result.returncode == 0:
                 print("OK: Frontend dependencies installed with npm")
                 return True
@@ -117,14 +116,14 @@ def build_frontend():
     try:
         # Try pnpm first
         try:
-            result = subprocess.run(['pnpm',
-                                     'run',
-                                     'build'],
-                                    capture_output=True,
-                                    text=True,
-                                    encoding='utf-8',
-                                    errors='replace',
-                                    check=False)
+            result = subprocess.run(
+                ["pnpm", "run", "build"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
             if result.returncode == 0:
                 print("OK: Frontend built successfully (pnpm)")
                 return True
@@ -135,14 +134,14 @@ def build_frontend():
 
         # Try npm as alternative
         try:
-            result = subprocess.run(['npm',
-                                     'run',
-                                     'build'],
-                                    capture_output=True,
-                                    text=True,
-                                    encoding='utf-8',
-                                    errors='replace',
-                                    check=False)
+            result = subprocess.run(
+                ["npm", "run", "build"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+            )
             if result.returncode == 0:
                 print("OK: Frontend built successfully (npm)")
                 return True
@@ -167,8 +166,7 @@ def start_application():
     # Activate virtual environment if available
     venv_python = Path("venv/bin/python")
     if venv_python.exists():
-        subprocess.run(
-            [str(venv_python), "-c", "from app import main; main()"], check=False)
+        subprocess.run([str(venv_python), "-c", "from app import main; main()"], check=False)
     else:
         app_main()
 
@@ -176,7 +174,7 @@ def start_application():
 def main():
     """Main function"""
     # Check command line arguments
-    build_only = '--build-only' in sys.argv
+    build_only = "--build-only" in sys.argv
 
     print("=" * 50)
     print("PyWebView + Svelte 5 - Template")
