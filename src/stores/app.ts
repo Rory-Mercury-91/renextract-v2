@@ -1,4 +1,5 @@
 import { apiService } from '$lib/api';
+import { locale } from 'svelte-i18n';
 import { get, writable } from 'svelte/store';
 
 interface AppState {
@@ -230,9 +231,13 @@ export { appActions, appSettings, appSettingsActions };
 // Démarrer immédiatement le chargement
 void appSettingsActions.loadSettings();
 
-// Synchronisation automatique même pour les modifications directes via bindings
-appSettings.subscribe(() => {
+
+appSettings.subscribe((settings) => {
   if (appSettingsActions._settingsLoaded) {
     appSettingsActions._scheduleSync();
+  }
+
+  if (settings.language) {
+    locale.set(settings.language);
   }
 });
