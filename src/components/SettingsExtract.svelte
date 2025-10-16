@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte';
+  import { _ } from 'svelte-i18n';
   import { appSettings } from '../stores/app';
   import CoherenceSettingsModal from './CoherenceSettingsModal.svelte';
 
@@ -26,7 +27,7 @@
         return `${pattern} → ${pattern}_1 → ${pattern}_2`;
       }
     } catch {
-      return '⚠️ Pattern invalide';
+      return $_('settings_extract.help_invalid');
     }
   }
 
@@ -206,10 +207,10 @@
     <div class="flex items-center justify-between">
       <div>
         <h3 class="text-xl font-semibold text-white">
-          Extraction & Protection
+          {$_('settings_extract.title')}
         </h3>
         <p class="text-sm text-gray-400">
-          Configuration de la protection automatique du contenu
+          {$_('settings_extract.description')}
         </p>
       </div>
       <button
@@ -217,14 +218,14 @@
         class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
       >
         <Icon icon="hugeicons:question" class="h-5 w-5" />
-        <span>À quoi ça sert ?</span>
+        <span>{$_('coherence.what_is_this')}</span>
       </button>
     </div>
 
     <!-- Options de protection -->
     <div class="space-y-4">
       <h4 class="text-lg font-semibold text-blue-400">
-        🔧 Options de protection
+        🔧 {$_('settings_extract.protection_options')}
       </h4>
 
       <div class="flex flex-wrap gap-6">
@@ -234,7 +235,7 @@
             bind:checked={$appSettings.extraction.detectDuplicates}
             class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
           />
-          <span class="text-white">Détecter et gérer les doublons</span>
+          <span class="text-white">{$_('settings_extract.detect_duplicates')}</span>
         </label>
 
         <label class="flex items-center gap-3">
@@ -243,7 +244,7 @@
             bind:checked={$appSettings.extraction.projectProgressTracking}
             class="h-5 w-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-2 focus:ring-blue-500"
           />
-          <span class="text-white">📊 Suivi de progression des projets</span>
+          <span class="text-white">📊 {$_('settings_extract.project_progress')}</span>
         </label>
       </div>
     </div>
@@ -256,13 +257,13 @@
           class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
         >
           <Icon icon="hugeicons:settings-01" class="h-5 w-5" />
-          <span>⚙️ Configurer les contrôles après extraction</span>
+          <span>{$_('settings_extract.configure_controls')}</span>
         </button>
       </div>
 
       <div class="flex items-center gap-3">
         <label for="line-limit" class="text-white"
-          >📄 Limite par fichier :</label
+          >{$_('settings_extract.file_limit')}</label
         >
         <input
           id="line-limit"
@@ -276,7 +277,7 @@
           class:border-yellow-500={!lineLimitValidation.valid &&
             $appSettings.extraction.lineLimit > 10000}
         />
-        <span class="text-white">lignes</span>
+        <span class="text-white">{$_('settings_extract.lines')}</span>
       </div>
     </div>
 
@@ -293,28 +294,28 @@
     <!-- Mode de sauvegarde -->
     <div class="flex items-center gap-4">
       <label for="save-mode" class="text-white"
-        >💾 Mode de sauvegarde par défaut :</label
+        >{$_('settings_extract.save_mode_default')}</label
       >
       <select
         id="save-mode"
         bind:value={$appSettings.extraction.defaultSaveMode}
         class="rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
       >
-        <option value="new_file">Créer nouveau fichier</option>
-        <option value="overwrite">Écraser l'original</option>
+        <option value="new_file">{$_('settings_extract.create_new_file')}</option>
+        <option value="overwrite">{$_('settings_extract.overwrite_original')}</option>
       </select>
     </div>
 
     <!-- Patterns de protection -->
     <div class="space-y-6">
       <h4 class="text-lg font-semibold text-blue-400">
-        🔧 Patterns de protection personnalisés
+        {$_('settings_extract.custom_patterns')}
       </h4>
 
       <!-- Codes/Variables -->
       <div class="space-y-2">
         <label for="code-pattern" class="block font-medium text-white"
-          >🔤 Codes/Variables</label
+          >{$_('settings_extract.codes_variables')}</label
         >
         <div class="flex items-center gap-4">
           <input
@@ -327,7 +328,7 @@
           <div
             class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
           >
-            Aperçu: {codePreview}
+            {$_('settings_extract.preview')} {codePreview}
           </div>
         </div>
       </div>
@@ -335,7 +336,7 @@
       <!-- Astérisques -->
       <div class="space-y-2">
         <label for="asterisk-pattern" class="block font-medium text-white"
-          >⭐ Astérisques</label
+          >{$_('settings_extract.asterisks')}</label
         >
         <div class="flex items-center gap-4">
           <input
@@ -348,7 +349,7 @@
           <div
             class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
           >
-            Aperçu: {asteriskPreview}
+            {$_('settings_extract.preview')} {asteriskPreview}
           </div>
         </div>
       </div>
@@ -356,7 +357,7 @@
       <!-- Tildes -->
       <div class="space-y-2">
         <label for="tilde-pattern" class="block font-medium text-white"
-          >〰️ Tildes</label
+          >{$_('settings_extract.tildes')}</label
         >
         <div class="flex items-center gap-4">
           <input
@@ -369,7 +370,7 @@
           <div
             class="flex-1 rounded-lg bg-gray-700/50 px-4 py-2 font-mono text-sm text-gray-300"
           >
-            Aperçu: {tildePreview}
+            {$_('settings_extract.preview')} {tildePreview}
           </div>
         </div>
       </div>
@@ -381,14 +382,14 @@
           class="flex items-center gap-2 rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
         >
           <Icon icon="hugeicons:refresh" class="h-5 w-5" />
-          <span>🔄 Défaut</span>
+          <span>{$_('settings_extract.reset_patterns')}</span>
         </button>
         <button
           onclick={testPatterns}
           class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
         >
           <Icon icon="hugeicons:test-tube" class="h-5 w-5" />
-          <span>🧪 Tester</span>
+          <span>{$_('settings_extract.test_patterns')}</span>
         </button>
       </div>
     </div>

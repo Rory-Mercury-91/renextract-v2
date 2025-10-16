@@ -36,7 +36,7 @@
   <div class="flex min-w-40 items-center gap-4">
     <img
       src="/assets/logo.webp"
-      alt="Logo RenExtract"
+      alt="{$_('app.branding')}"
       class="h-12 w-12 rounded-xl object-contain"
     />
 
@@ -65,7 +65,7 @@
         }
       }}
       onfocus={() => (inputSelected = true)}
-      placeholder={$projectStore.projectPath || 'Aucun projet chargé'}
+      placeholder={$projectStore.projectPath || $_('app.no_project_loaded')}
     />
     <button
       class="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
@@ -74,7 +74,7 @@
           {
             path: $projectStore.projectPath,
             dialog_type: 'folder',
-            title: 'Sélectionner le dossier du jeu',
+            title: $_('settings.select_game_folder'),
             initialdir: 'C:\\',
             must_exist: true,
           },
@@ -95,7 +95,7 @@
     <button
       class="flex items-center gap-1 px-2 py-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       onclick={showHelp}
-      title="Aide et documentation"
+      title={$_('app.help')}
     >
       <Icon icon="hugeicons:help-square" class="h-6 w-6 text-blue-600" />
       {$_('app.help')}
@@ -104,7 +104,7 @@
     <button
       class="flex items-center gap-1 px-2 py-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       onclick={() => (showAboutModal = true)}
-      title="Informations sur RenExtract"
+      title={$_('app.about')}
     >
       <Icon icon="hugeicons:information-square" class="h-6 w-6 text-blue-600" />
       {$_('app.about')}

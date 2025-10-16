@@ -3,6 +3,7 @@
   import { projectActions, projectStore } from '$stores/project';
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import Dialog from './Dialog.svelte';
   import DialogActions from './DialogActions.svelte';
 
@@ -97,9 +98,7 @@
         await projectActions.loadProject(filePath);
         showSetup = false;
       } else {
-        window.alert(
-          "Veuillez sélectionner un exécutable d'éditeur (fichier .exe, .app ou sans extension)"
-        );
+        window.alert($_('project.select_executable'));
       }
     }
   };
@@ -120,7 +119,7 @@
         showSetup = false;
       }
     } catch (error) {
-      console.error("Erreur lors de la sélection de l'éditeur:", error);
+      console.error($_('project.editor_selection_error'), error);
     }
   };
 
@@ -157,7 +156,7 @@
       class="mx-auto mb-4 h-16 w-16 text-blue-600"
     />
     <h2 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-      Configuration du projet
+      {$_('project.setup_title')}
     </h2>
     <p class="text-gray-600 dark:text-gray-400">
       RenExtract a besoin d'un projet configuré pour fonctionner correctement.
@@ -198,17 +197,17 @@
       class="mx-auto mb-4 h-12 w-12 text-gray-400"
     />
     <p class="mb-2 text-lg font-medium text-gray-700 dark:text-gray-300">
-      Glissez-déposez votre jeu Ren'Py ici
+      {$_('project.drag_drop_instruction')}
     </p>
     <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-      Ou cliquez sur le bouton ci-dessous pour le sélectionner
+      {$_('project.or_click_browse')}
     </p>
     <button
       onclick={openFileDialog}
       disabled={isLoading}
       class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      {isLoading ? 'Chargement...' : "Sélectionner un jeu Ren'Py"}
+      {isLoading ? $_('project.loading') : $_('project.select_renpy_game')}
     </button>
   </div>
   {/if}

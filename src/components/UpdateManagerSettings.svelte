@@ -2,6 +2,7 @@
   import Icon from '@iconify/svelte';
   import axios from 'axios';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import Dialog from './Dialog.svelte';
   import DialogActions from './DialogActions.svelte';
 
@@ -99,11 +100,11 @@
         // Simuler le téléchargement pour l'instant
         downloadProgress = 100;
       } else {
-        errorMessage = response.data.error || 'Erreur lors du téléchargement';
+        errorMessage = response.data.error || $_('settings_updates.download_error');
       }
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
-      errorMessage = 'Impossible de télécharger la mise à jour';
+      errorMessage = $_('settings_updates.download_impossible');
     } finally {
       isDownloading = false;
     }
@@ -142,11 +143,11 @@
     try {
       // Sauvegarde automatique dans localStorage
       window.localStorage.setItem('updateConfig', JSON.stringify(updateConfig));
-      successMessage = 'Configuration sauvegardée automatiquement';
+      successMessage = $_('settings_updates.config_saved');
       showConfigDialog = false;
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      errorMessage = 'Impossible de sauvegarder la configuration';
+      errorMessage = $_('settings_updates.config_save_error');
     }
   };
 
@@ -174,10 +175,10 @@
   <div class="flex items-center justify-between">
     <div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Gestionnaire de mises à jour
+        {$_('settings_updates.update_manager')}
       </h3>
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Vérifiez et installez les mises à jour de RenExtract
+        {$_('settings_updates.update_manager_description')}
       </p>
     </div>
     <button
@@ -189,7 +190,7 @@
         icon="hugeicons:refresh-01"
         class="h-4 w-4 {isChecking ? 'animate-spin' : ''}"
       />
-      {isChecking ? 'Vérification...' : 'Vérifier les mises à jour'}
+      {isChecking ? $_('settings_updates.checking') : $_('settings_updates.check_updates')}
     </button>
   </div>
 

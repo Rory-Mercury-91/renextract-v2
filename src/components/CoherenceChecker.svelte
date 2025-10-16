@@ -12,6 +12,7 @@
   import { projectStore } from '$stores/project';
   import Icon from '@iconify/svelte';
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import CoherenceResults from './CoherenceResults.svelte';
 
   interface Props {
@@ -64,19 +65,18 @@
   const checkOptions = [
     {
       key: 'check_variables',
-      label: 'Variables [] incohérentes',
-      description:
-        'Vérifie que les variables [xxx] sont présentes et identiques',
+      label: $_('coherence.variables_inconsistent'),
+      description: $_('coherence.variables_description'),
     },
     {
       key: 'check_tags',
-      label: 'Balises {} incohérentes',
-      description: 'Vérifie que les balises {xxx} sont équilibrées',
+      label: $_('coherence.tags_inconsistent'),
+      description: $_('coherence.tags_description'),
     },
     {
       key: 'check_untranslated',
-      label: 'Lignes non traduites',
-      description: 'Détecte les lignes identiques (non traduites)',
+      label: $_('coherence.untranslated_lines'),
+      description: $_('coherence.untranslated_description'),
     },
     {
       key: 'check_ellipsis',

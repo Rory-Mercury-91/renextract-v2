@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { locales } from 'svelte-i18n';
+  import { _, locales } from 'svelte-i18n';
   import { appSettings } from '../stores/app';
 
   const language = {
@@ -11,18 +11,18 @@
 <section class="h-full w-full space-y-8 rounded-lg p-6">
   <div>
     <h2 class="mb-4 text-2xl font-bold text-blue-600 dark:text-blue-400">
-      Interface et applications
+      {$_('settings_app.title')}
     </h2>
     <p class="mb-6 text-gray-600 dark:text-gray-400">
-      Configuration générale de l'interface utilisateur.
+      {$_('settings_app.description')}
     </p>
   </div>
   <div class="space-y-4">
-    <h3 class="flex items-center text-lg font-semibold">Paramètres généraux</h3>
+    <h3 class="flex items-center text-lg font-semibold">{$_('settings_app.general_settings')}</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label for="language-select" class="mb-2 block text-sm font-medium"
-          >Langue de l'interface</label
+          >{$_('settings_app.interface_language')}</label
         >
         <select
           id="language-select"
@@ -41,7 +41,7 @@
       <!-- Theme Toggle -->
       <div>
         <label for="theme-select" class="mb-2 block text-sm font-medium">
-          Thème de l'interface
+          {$_('settings_app.interface_theme')}
         </label>
         <select
           id="theme-select"
@@ -62,7 +62,7 @@
           bind:checked={$appSettings.translatorFeature}
           class="mr-3 h-4 w-4"
         />
-        <span class=""> Fonctionnalité de traduction par GPU</span>
+        <span class=""> {$_('settings_app.translator_feature')}</span>
       </label>
 
       <label
@@ -73,7 +73,7 @@
           bind:checked={$appSettings.debugActive}
           class="mr-3 h-4 w-4"
         />
-        <span class=""> Mode debug complet </span>
+        <span class=""> {$_('settings_app.debug_mode')} </span>
       </label>
     </div>
   </div>
@@ -81,7 +81,7 @@
   <!-- Ouvertures automatiques -->
   <div class="space-y-4">
     <h3 class="flex items-center text-lg font-semibold">
-      🚀 Ouvertures automatiques
+      🚀 {$_('settings_app.auto_openings')}
     </h3>
 
     <!-- Layout 2 colonnes -->
@@ -95,7 +95,7 @@
             bind:checked={$appSettings.autoOpenings.files}
             class="mr-3 h-4 w-4"
           />
-          <span class=""> Ouverture automatique des fichiers </span>
+          <span class=""> {$_('settings_app.auto_files')} </span>
         </label>
 
         <label
@@ -106,7 +106,7 @@
             bind:checked={$appSettings.autoOpenings.folders}
             class="mr-3 h-4 w-4"
           />
-          <span class=""> Ouverture automatique des dossiers </span>
+          <span class=""> {$_('settings_app.auto_folders')} </span>
         </label>
       </div>
 
@@ -119,7 +119,7 @@
             bind:checked={$appSettings.autoOpenings.outputField}
             class="mr-3 h-4 w-4"
           />
-          <span class=""> Affichage du champ de chemin de sortie </span>
+          <span class=""> {$_('settings_app.auto_output_field')} </span>
         </label>
 
         <label
@@ -130,7 +130,7 @@
             bind:checked={$appSettings.autoOpenings.lastProject}
             class="mr-3 h-4 w-4"
           />
-          <span class=""> Ouverture automatique du dernier projet </span>
+          <span class=""> {$_('settings_app.auto_last_project')} </span>
         </label>
       </div>
     </div>

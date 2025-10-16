@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from 'svelte-i18n';
   import packageJson from '../../package.json' assert { type: 'json' };
   import Dialog from './Dialog.svelte';
   import DialogActions from './DialogActions.svelte';
@@ -20,22 +21,22 @@
       RE
     </div>
     <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-      RenExtract v2.0 - WebView Interface
+      {$_('about.title')}
     </h2>
     <p class="mb-6 text-gray-600 dark:text-gray-400">
-      Outils de traduction avancé pour scripts Ren'Py
+      {$_('about.description')}
     </p>
 
     <div class="space-y-2 text-left text-sm text-gray-700 dark:text-gray-300">
-      <p><strong>Version :</strong> v{packageJson.version}</p>
-      <p><strong>Développement :</strong> RoryMercury91 et Hunteraulo</p>
+      <p><strong>{$_('about.version')} :</strong> v{packageJson.version}</p>
+      <p><strong>{$_('about.development')} :</strong> RoryMercury91 et Hunteraulo</p>
       <p>
-        <strong>Technologies :</strong> Svelte 5 + Python Flask + PyWebView
+        <strong>{$_('about.technologies')} :</strong> Svelte 5 + Python Flask + PyWebView
       </p>
     </div>
 
     <p class="mt-6 text-xs text-gray-500 dark:text-gray-400">
-      © 2025 RenExtract Project
+      {$_('about.copyright')}
     </p>
   </div>
 
@@ -44,7 +45,7 @@
       class="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700"
       onclick={() => (showAboutModal = false)}
     >
-      OK
+      {$_('actions.ok')}
     </button>
   </DialogActions>
 </Dialog>

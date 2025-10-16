@@ -104,7 +104,7 @@
           <!-- Section désactivée -->
           <div
             class="px-4.5 relative flex w-full cursor-not-allowed items-center justify-start gap-3 py-3 text-left opacity-50"
-            title="Éditeur requis - Configurez un éditeur dans les paramètres"
+            title={$_('settings.editor_required')}
           >
             <span
               class="flex text-xl"

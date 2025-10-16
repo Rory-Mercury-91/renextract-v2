@@ -20,22 +20,22 @@
   const tabs: Tab[] = [
     {
       id: 'interface_applications',
-      label: 'Interface et applications',
+      label: $_('tabs.labels.interface_applications'),
       component: SettingsApp,
     },
     {
       id: 'extraction_protection',
-      label: 'Extraction et protection',
+      label: $_('tabs.labels.extraction_protection'),
       component: SettingsExtract,
     },
     {
       id: 'access_paths',
-      label: "Chemins d'accès",
+      label: $_('tabs.labels.access_paths'),
       component: SettingsAccess,
     },
     {
       id: 'updates',
-      label: 'Mises à jour',
+      label: $_('tabs.labels.updates'),
       component: UpdateManagerSettings,
     },
   ];
@@ -83,11 +83,9 @@
     <button
       class="flex items-center rounded-lg bg-orange-600 px-4 py-2 transition-colors hover:bg-orange-700"
       onclick={() =>
-        window.alert(
-          '🧹 Nettoyage des fichiers temporaires, backups et reports...'
-        )}
+        window.alert($_('settings_actions.clean_confirm'))}
     >
-      🧹 Nettoyer les fichiers temporaires
+      🧹 {$_('settings_actions.clean_temp_files')}
     </button>
 
     <!-- Bouton réinitialiser application -->
@@ -95,16 +93,14 @@
       class="flex items-center rounded-lg bg-red-600 px-4 py-2 transition-colors hover:bg-red-700"
       onclick={() => {
         if (
-          window.confirm(
-            "Êtes-vous sûr de vouloir réinitialiser TOUTE l'application ? Ceci remettra tous les paramètres, projets et configurations à leurs valeurs par défaut."
-          )
+          window.confirm($_('settings_actions.reset_confirm'))
         ) {
-          window.alert("🔄 Réinitialisation complète de l'application...");
+          window.alert($_('settings_actions.reset_processing'));
           appSettingsActions.resetSettings();
         }
       }}
     >
-      🔄 Réinitialiser l'application
+      🔄 {$_('settings_actions.reset_application')}
     </button>
 
     <!-- Bouton réinitialiser paramètres seulement -->
@@ -112,16 +108,14 @@
       class="rounded-lg bg-yellow-600 px-4 py-2 transition-colors hover:bg-yellow-700"
       onclick={() => {
         if (
-          window.confirm(
-            'Réinitialiser seulement les paramètres de cette page ?'
-          )
+          window.confirm($_('settings_actions.reset_settings_confirm'))
         ) {
           appSettingsActions.resetSettings();
         }
       }}
       disabled={saving}
     >
-      ⚙️ Réinitialiser les paramètres
+      ⚙️ {$_('settings_actions.reset_settings')}
     </button>
   </div>
 </section>

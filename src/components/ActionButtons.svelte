@@ -23,6 +23,7 @@
     reconstructionProgress,
   } from '$stores/reconstruction';
   import Icon from '@iconify/svelte';
+  import { _ } from 'svelte-i18n';
 
   // État réactif depuis le store projet
   $: currentFile = $projectStore.currentFile;
@@ -90,7 +91,7 @@
       if (success) {
         console.info('✅ Extraction terminée avec succès');
       } else {
-        console.error("❌ Échec de l'extraction");
+        console.error("❌ " + $_('actions.extraction_failed'));
       }
     } catch (error) {
       console.error("❌ Erreur exceptionnelle lors de l'extraction:", error);
@@ -248,7 +249,7 @@
         <button
           onclick={openOutputFolder}
           class="text-green-600 transition-colors hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
-          title="Ouvrir le dossier de sortie"
+          title={$_('actions.open_output_folder')}
         >
           <Icon icon="hugeicons:folder-open" class="h-5 w-5" />
         </button>
@@ -282,7 +283,7 @@
         <button
           onclick={openReconstructedFile}
           class="text-emerald-600 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
-          title="Ouvrir le fichier reconstruit"
+          title={$_('actions.open_reconstructed_file')}
         >
           <Icon icon="hugeicons:file-view" class="h-5 w-5" />
         </button>

@@ -2,30 +2,31 @@
   import Icon from '@iconify/svelte';
   /* eslint-env browser */
   import { apiService } from '$lib/api';
+  import { _ } from 'svelte-i18n';
   import { appSettings } from '../stores/app';
 </script>
 
 <div class="space-y-8">
   <div>
-    <h3 class="mb-4 text-xl font-semibold">Chemins d'accès</h3>
+    <h3 class="mb-4 text-xl font-semibold">{$_('settings.access_paths')}</h3>
 
     <div class="space-y-8">
       <!-- SDK Ren'Py -->
       <div>
         <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
-          🔧 SDK Ren'Py
+          🔧 {$_('settings.renpy_sdk')}
         </h3>
         <div class="space-y-4">
           <div>
             <label for="renpy-sdk-path" class="mb-2 block text-sm font-medium">
-              Chemin vers le SDK Ren'Py (dossier contenant renpy.exe):
+              {$_('settings.renpy_sdk_path')}
             </label>
             <div class="flex items-center gap-2">
               <input
                 type="text"
                 id="renpy-sdk-path"
                 bind:value={$appSettings.paths.renpySdk}
-                placeholder="Ex: C:\Ren'Py\ren'py-8.0.3"
+                placeholder={$_('settings.renpy_sdk_placeholder')}
                 class="w-full rounded-lg border-2 border-gray-300 p-3 text-gray-900 placeholder-gray-500 shadow-sm transition-colors duration-200 hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
                 readonly
               />
@@ -33,9 +34,7 @@
                 <button
                   class="flex items-center gap-1 rounded bg-slate-700 px-3 py-1 text-sm transition-colors hover:bg-slate-600"
                   onclick={() =>
-                    window.alert(
-                      "💡 Le SDK Ren'Py doit contenir le fichier renpy.exe. Vous pouvez télécharger la dernière version depuis le site officiel.\n\nLe dossier SDK doit contenir :\n• renpy.exe\n• renpy.py\n• Les scripts RenPy"
-                    )}
+                    window.alert($_('settings.renpy_sdk_help'))}
                 >
                   <Icon
                     icon="hugeicons:help-square"
@@ -49,7 +48,7 @@
                       {
                         path: $appSettings.paths.renpySdk,
                         dialog_type: 'folder',
-                        title: "Sélectionner le dossier SDK Ren'Py",
+                        title: $_('settings.select_sdk_folder'),
                         initialdir: 'C:\\',
                         must_exist: true,
                       },
@@ -74,10 +73,10 @@
       <!-- Éditeurs de code -->
       <div>
         <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
-          📝 Éditeurs de code - Chemins personnalisés
+          {$_('settings.code_editors')}
         </h3>
         <p class="mb-4 text-sm text-gray-400">
-          Spécifiez le chemin personnalisé pour votre éditeur (optionnel):
+          {$_('settings.code_editors_description')}
         </p>
         <!-- Colonne gauche -->
         <div class="space-y-6">
@@ -85,14 +84,14 @@
             for="path"
             class="mb-2 flex items-center gap-2 text-sm font-medium"
           >
-            Chemin vers l'exécutable:
+            {$_('settings.executable_path')}
           </label>
           <div class="flex items-center gap-2">
             <input
               type="text"
               id="path"
               bind:value={$appSettings.paths.editor}
-              placeholder="Ex: C:\Program Files\Notepad++\notepad++.exe"
+              placeholder={$_('settings.editor_placeholder')}
               class="w-full rounded-lg border-2 border-gray-300 p-2 text-sm text-slate-200 placeholder-gray-500 shadow-sm transition-colors duration-200 hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
             />
             <div class="flex flex-col gap-1">
